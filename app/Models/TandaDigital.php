@@ -19,5 +19,7 @@ class TandaDigital extends Model
         'id_dokumen',
     ];
 
+    
+
     // Define relationships if needed
 } 

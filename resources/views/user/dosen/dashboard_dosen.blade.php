@@ -5,57 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Dosen</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
 
-    <nav class="bg-white shadow-md">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <img src="logo.png" alt="Logo" class="h-10">
-                <a href="#" class="ml-6 text-black font-bold underline">Beranda</a>
-                <a href="#" class="ml-6 text-black">Buat Tanda Tangan</a>
-                <a href="#" class="ml-6 text-black">Riwayat</a>
+    @include('user.dosen.header.navbar')
+
+    <div class="container mx-auto px-4 py-8 flex">
+        <div class="flex-1">
+            <div class="flex justify-between space-x-4 mb-8">
+                <div class="w-1/2 bg-yellow-400 text-black p-8 rounded-lg text-center">
+                    <i class="fas fa-envelope text-4xl mb-4"></i>
+                    <h2 class="text-2xl font-bold">10 Surat diajukan</h2>
+                </div>
+                <div class="w-1/2 bg-green-400 text-black p-8 rounded-lg text-center">
+                    <i class="fas fa-envelope text-4xl mb-4"></i>
+                    <h2 class="text-2xl font-bold">10 Surat sudah tertanda</h2>
+                </div>
             </div>
-            <div class="flex items-center">
-                <span class="text-xl">🔔</span>
-                <span class="ml-4 text-xl">👤</span>
+
+            <div class="flex items-center space-x-4 mb-8">
+                <div class="flex flex-col">
+                    <label for="search" class="text-sm font-semibold mb-1">Cari Surat</label>
+                    <div class="flex items-center border border-gray-300 p-2 rounded-lg">
+                        <i class="fas fa-search mr-2"></i>
+                        <input id="search" type="text" placeholder="Nama surat, nomor surat..." class="outline-none">
+                    </div>
+                </div>
+                <div class="flex flex-col">
+                    <label for="status" class="text-sm font-semibold mb-1">Status</label>
+                    <select id="status" class="border border-gray-300 p-2 rounded-lg">
+                        <option value="sudah_tertanda">Sudah Tertanda</option>
+                        <option value="revisi">Revisi</option>
+                        <option value="belum_tertanda">Belum Tertanda</option>
+                    </select>
+                </div>
             </div>
-        </div>
-    </nav>
 
-    <div class="container mx-auto px-4 py-8 flex justify-between">
-        <div class="w-1/2 bg-yellow-400 text-white p-8 rounded-lg text-center">
-            <h2 class="text-2xl font-bold">10 Surat diajukan</h2>
-        </div>
-        <div class="w-1/2 bg-green-400 text-white p-8 rounded-lg text-center">
-            <h2 class="text-2xl font-bold">10 Surat sudah tertanda</h2>
-        </div>
-    </div>
+            <!-- New section for the list of letters -->
+            <div class="bg-gray-200 p-4 rounded-lg">
+                <ul class="space-y-2">
+                    <li class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-bold">Surat 1</h4>
+                        <p>Status: Sudah Tertanda</p>
+                    </li>
+                    <li class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-bold">Surat 2</h4>
+                        <p>Status: Revisi</p>
+                    </li>
+                    <li class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-bold">Surat 3</h4>
+                        <p>Status: Belum Tertanda</p>
+                    </li>
+                    <!-- Add more list items as needed -->
+                </ul>
+            </div>
 
-    <div class="container mx-auto px-4 py-4 flex justify-center">
-        <input type="text" placeholder="Nama surat, nomor surat..." class="border border-gray-300 p-2 rounded-lg mr-4">
-        <select class="border border-gray-300 p-2 rounded-lg">
-            <option value="tertanda">Tertanda</option>
-            <!-- Add more options as needed -->
-        </select>
-    </div>
+        </div>
 
-    <div class="container mx-auto px-4 py-8">
-        <div class="bg-gray-300 p-4 rounded-lg">
-            <p><strong>Robi</strong> telah mengajukan permintaan tanda tangan anda</p>
-            <button class="mt-2 bg-blue-500 text-white px-4 py-2 rounded-lg">Lihat Detail</button>
+        <aside class="w-1/4 bg-white p-4 rounded-lg shadow-lg ml-4">
+            <h3 class="text-xl font-bold mb-4">Notifikasi</h3>
+            <div class="bg-gray-200 p-2 rounded-lg mb-2">
+                <p><strong>Robi</strong> telah mengajukan permintaan tanda tangan anda</p>
+                <button class="bg-blue-500 text-white px-2 py-1 rounded-lg mt-2">Lihat Detail</button>
+            </div>
             <!-- Add more notifications as needed -->
-        </div>
+        </aside>
     </div>
 
-    <footer class="bg-gray-300 py-8">
-        <div class="container mx-auto text-center">
-            <p class="font-bold">Contact Us</p>
-            <p>📍 Locations</p>
-            <p>📞 Call: +6281234567</p>
-            <p>✉️ informatika@gmail.com</p>
-        </div>
-    </footer>
+ @include('user.dosen.header.footer')
 
 </body>
 </html>

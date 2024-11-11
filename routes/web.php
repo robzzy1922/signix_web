@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginAuthController;
 use App\Http\Controllers\OrmawaController;
-use App\Http\Controllers\DosenController;
+use App\Http\Controllers\DosenController; 
 
 
 Route::get('/', function () {
@@ -25,5 +25,7 @@ Route::prefix('dosen')->middleware('auth:dosen')->group(function () {
     Route::get('/dashboard', [DosenController::class, 'dashboardDosen'])->name('dosen.dashboard');
     // rute dosen lainnya
 });
+
+Route::get('/buat-tanda-tangan', [DosenController::class, 'create'])->name('user.dosen.create');
 
 Route::post('/logout', [LoginAuthController::class, 'logout'])->name('logout');

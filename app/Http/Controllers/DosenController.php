@@ -10,4 +10,9 @@ class DosenController extends Controller
     {
         return view('user.dosen.dashboard_dosen');
     }
+
+    public function create()
+    {
+        return view('user.dosen.create_tandatangan');
+    }
 }

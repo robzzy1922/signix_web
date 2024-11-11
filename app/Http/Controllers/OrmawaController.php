@@ -19,6 +19,7 @@ class OrmawaController extends Controller
     public function storePengajuan(Request $request)
     {
         dd($request->all());
+        
     }
 
     public function riwayat()
