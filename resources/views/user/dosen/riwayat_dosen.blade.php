@@ -1,5 +1,5 @@
-@extends('layouts.ormawa')
-@section('title', 'Riwayat Pengajuan')
+@extends('layouts.dosen')
+@section('title', 'Riwayat Pengesahan')
 @section('content')
     <div class="container mx-auto px-4 mt-8 max-w-5xl flex-grow">
         <h1 class="text-2xl font-bold mb-6">Riwayat Pengajuan</h1>

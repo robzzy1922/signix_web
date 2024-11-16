@@ -1,16 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    @vite('resources/css/app.css')
-    <title>Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-</head>
-<body class="flex flex-col min-h-screen">
-    @include('user.ormawa.header.navbar')
-      
+@extends('layouts.ormawa')
+@section('title', 'Dashboard Ormawa')
+@section('content')
   <div class="container mx-auto px-4 mt-8 max-w-5xl flex-grow">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- Surat yang diajukan -->
@@ -70,8 +60,4 @@
       </div>
     </div>
   </div>
-
- @include('user.ormawa.header.footer')
-
-</body>
-</html>
+@endsection

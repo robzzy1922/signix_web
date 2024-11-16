@@ -42,11 +42,11 @@ return [
         ],
         'ormawa' => [
             'driver' => 'session',
-            'provider' => 'ormawa',
+            'provider' => 'ormawas',
         ],
         'dosen' => [
             'driver' => 'session',
-            'provider' => 'dosen',
+            'provider' => 'dosens',
         ],
     ],
 
@@ -72,11 +72,11 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
-        'ormawa' => [
+        'ormawas' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\Ormawa::class),
         ],
-        'dosen' => [
+        'dosens' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\Dosen::class),
         ],

@@ -1,11 +1,11 @@
 <footer class="bg-gray-800 text-white mt-auto">
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-4">
         <div class="flex flex-wrap justify-between">
-            <div class="w-full md:w-1/3 mb-6 md:mb-0">
+            <div class="w-full md:w-1/3 mb-4 md:mb-0">
                 <h3 class="text-xl font-bold mb-2">SIGNIX</h3>
                 <p class="text-sm">Sistem Informasi Digital Signature untuk Organisasi Mahasiswa</p>
             </div>
-            <div class="w-full md:w-1/3 mb-6 md:mb-0">
+            <div class="w-full md:w-1/3 mb-4 md:mb-0">
                 <h3 class="text-xl font-bold mb-2">Quick Links</h3>
                 <ul class="text-sm">
                     <li><a href="#" class="hover:text-blue-400">Home</a></li>

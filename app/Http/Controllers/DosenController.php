@@ -15,4 +15,9 @@ class DosenController extends Controller
     {
         return view('user.dosen.create_tandatangan');
     }
+
+    public function riwayat()
+    {
+        return view('user.dosen.riwayat_dosen');
+    }
 }

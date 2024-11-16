@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use App\Models\Dosen;
+use Illuminate\Support\Facades\Auth;
 class OrmawaController extends Controller
 {
     public function dashboard()
@@ -13,7 +14,9 @@ class OrmawaController extends Controller
 
     public function pengajuan()
     {
-        return view('user.ormawa.pengajuan_ormawa');
+        $ormawa = Auth::guard('ormawa')->user();
+        $dosenList = Dosen::all();
+        return view('user.ormawa.pengajuan_ormawa', compact('dosenList', 'ormawa'));
     }
 
     public function storePengajuan(Request $request)

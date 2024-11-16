@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Ormawa;
 
 class LoginAuthController extends Controller
 {
     public function showLoginForm()
     {
-        return view('login');
+        return view('auth.login');
     }
 
     public function login(Request $request)
@@ -42,6 +43,12 @@ class LoginAuthController extends Controller
             return redirect()->intended($redirect);
         }
     
+        if ($role === 'ormawa') {
+            return back()->withErrors(['login' => 'NIM atau password salah, tolong masukkan ulang.']);
+        } elseif ($role === 'dosen') {
+            return back()->withErrors(['login' => 'NIP atau password salah, tolong masukkan ulang.']);
+        }
+    
         return back()->withErrors(['login' => 'Kredensial tidak valid']);
     }
 
@@ -57,9 +64,11 @@ class LoginAuthController extends Controller
         return redirect()->route('dosen.dashboard'); // Pastikan view 'dashboard' ada
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard()->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return redirect()->route('login');
     }
 }

@@ -1,16 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Dosen</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100">
-
-    @include('user.dosen.header.navbar')
-
+@extends('layouts.dosen')
+@section('title', 'Dashboard Dosen')
+@section('content')
     <div class="container mx-auto px-4 py-8 flex">
         <div class="flex-1">
             <div class="flex justify-between space-x-4 mb-8">
@@ -72,8 +62,4 @@
             <!-- Add more notifications as needed -->
         </aside>
     </div>
-
- @include('user.dosen.header.footer')
-
-</body>
-</html>
+@endsection

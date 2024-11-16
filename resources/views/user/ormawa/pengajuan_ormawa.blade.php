@@ -1,16 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    @vite('resources/css/app.css')
-    <title>Formulir Pengajuan</title>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-</head>
-<body class="flex flex-col min-h-screen">
-    @include('user.ormawa.header.navbar')
-
+@extends('layouts.ormawa')
+@section('title', 'Formulir Pengajuan')
+@section('content')
     <div class="container mx-auto px-4 mt-8 max-w-3xl flex-grow">
         <h1 class="text-2xl font-bold mb-6">FORMULIR PENGAJUAN</h1>
 
@@ -24,21 +14,21 @@
 
                 <div>
                     <label for="nama_pengaju" class="block mb-1 font-medium">Nama Pengaju</label>
-                    <input type="text" id="nama_pengaju" name="nama_pengaju" class="w-full px-3 py-2 border rounded-md" required>
+                    <input type="text" id="nama_pengaju" name="nama_pengaju" class="w-full px-3 py-2 border rounded-md" value="{{ $ormawa->nama_mahasiswa }}" readonly required>
                 </div>
 
                 <div>
                     <label for="nama_ormawa" class="block mb-1 font-medium">Nama Ormawa</label>
-                    <input type="text" id="nama_ormawa" name="nama_ormawa" class="w-full px-3 py-2 border rounded-md" required>
+                    <input type="text" id="nama_ormawa" name="nama_ormawa" class="w-full px-3 py-2 border rounded-md" value="{{ $ormawa->nama_ormawa }}" readonly required>
                 </div>
 
                 <div>
                     <label for="kepada_tujuan" class="block mb-1 font-medium">Kepada / Tujuan</label>
                     <select id="kepada_tujuan" name="kepada_tujuan" class="w-full px-3 py-2 border rounded-md" required>
                         <option value="">Pilih Tujuan</option>
-                        <option value="dekan">Dekan</option>
-                        <option value="wadek">Wakil Dekan</option>
-                        <option value="kaprodi">Kepala Program Studi</option>
+                        @foreach($dosenList as $dosen)
+                            <option value="{{ $dosen->id }}">{{ $dosen->nama_dosen }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -63,7 +53,4 @@
             </div>
         </form>
     </div>
-
-    @include('user.ormawa.header.footer')
-</body>
-</html>
+@endsection
