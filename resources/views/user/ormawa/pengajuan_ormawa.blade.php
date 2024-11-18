@@ -4,8 +4,15 @@
     <div class="container mx-auto px-4 mt-8 max-w-3xl flex-grow">
         <h1 class="text-2xl font-bold mb-6">FORMULIR PENGAJUAN</h1>
 
+        @if(session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-6" role="alert">
+                <strong class="font-bold">Success!</strong>
+                <span class="block sm:inline">{{ session('success') }}</span>
+            </div>
+        @endif
+
         <form action="{{ route('ormawa.pengajuan.store') }}" method="POST" enctype="multipart/form-data" class="mb-12">
-            @csrf
+            @csrf   
             <div class="space-y-4">
                 <div>
                     <label for="nomor_surat" class="block mb-1 font-medium">Nomor Surat</label>

@@ -18,6 +18,7 @@ Route::prefix('ormawa')->middleware(EnsureRoleIsAuthenticated::class . ':ormawa'
     Route::get('/pengajuan', [OrmawaController::class, 'pengajuan'])->name('ormawa.pengajuan');
     Route::post('/pengajuan', [OrmawaController::class, 'storePengajuan'])->name('ormawa.pengajuan.store');
     Route::get('/riwayat', [OrmawaController::class, 'riwayat'])->name('ormawa.riwayat');
+    Route::get('/dokumen/{id}', [OrmawaController::class, 'getDokumenContent'])->name('dokumen.content');
     // rute ormawa lainnya
 });
 

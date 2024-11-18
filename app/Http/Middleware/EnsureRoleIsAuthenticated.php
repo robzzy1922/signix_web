@@ -12,7 +12,7 @@ class EnsureRoleIsAuthenticated
     public function handle(Request $request, Closure $next, $role)
     {
         if (!Auth::guard($role)->check()) {
-            return redirect()->route('login')->withErrors(['login' => 'Anda harus login terlebih dahulu.']);
+            return redirect()->route('login');
         }
 
         return $next($request);

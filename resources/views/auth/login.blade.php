@@ -11,7 +11,7 @@
             <div class="bg-white shadow-lg rounded-lg flex overflow-hidden max-w-4xl w-full">
                 <!-- Left Side -->
                 <div class="w-1/2 bg-blue-50 ">
-                    <img src="{{ asset('images/gambar_login.png') }}" alt="Building" class="w-full rounded-lg shadow-md">
+                    <img src="{{ asset('images/gambar_login.png') }}" alt="Building" class="w-full h-full rounded-lg shadow-md">
                 </div>
 
                 <!-- Right Side -->
@@ -39,6 +39,11 @@
                             </div>
                         </div>
 
+                        <!-- Alert message for failed login -->
+                        @if ($errors->has('login'))
+                            <p class="text-red-600 mb-4">{{ $errors->first('login') }}</p>
+                        @endif
+
                         <!-- Input for email (Admin) -->
                         <div id="emailField" class="mb-4" style="display: none;">
                             <label for="email" class="block mb-2 text-gray-600">Email</label>
@@ -48,22 +53,22 @@
                         </div>
 
                         <!-- Input for NIM (Ormawa) -->
-                        <div id="nimField" class="mb-4" style="display: none;">
+                        <div id="nimField" class="mb-4" style="{{ old('role') === 'ormawa' ? 'display: block;' : 'display: none;' }}">
                             <label for="nim" class="block mb-2 text-gray-600">NIM</label>
                             <div class="flex items-center border border-gray-300 rounded-md">
-                                <input type="text" name="nim" id="nim" class="w-full px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-md">
+                                <input type="text" name="nim" id="nim" value="{{ old('nim') }}" class="w-full px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-md">
                             </div>
                         </div>
 
                         <!-- Input for NIP (Dosen) -->
-                        <div id="nipField" class="mb-4" style="display: none;">
+                        <div id="nipField" class="mb-4" style="{{ old('role') === 'dosen' ? 'display: block;' : 'display: none;' }}">
                             <label for="nip" class="block mb-2 text-gray-600">NIP</label>
                             <div class="flex items-center border border-gray-300 rounded-md">
-                                <input type="text" name="nip" id="nip" class="w-full px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-md">
+                                <input type="text" name="nip" id="nip" value="{{ old('nip') }}" class="w-full px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-md">
                             </div>
                         </div>
 
-                        <div class="mb-6" id="passwordField" style="display: none;">
+                        <div class="mb-6" id="passwordField" style="{{ old('role') ? 'display: block;' : 'display: none;' }}">
                             <label for="password" class="block mb-2 text-gray-600">Password</label>
                             <div class="flex items-center border border-gray-300 rounded-md">
                                 <span class="text-gray-500 pl-3">
@@ -120,7 +125,7 @@
         <script>
             function toggleInputField() {
                 var role = document.getElementById('role').value;
-                document.getElementById('emailField').style.display = (role === 'admin') ? 'block' : 'none';
+                document.getElementById('emailField').style.display = 'none';
                 document.getElementById('nimField').style.display = (role === 'ormawa') ? 'block' : 'none';
                 document.getElementById('nipField').style.display = (role === 'dosen') ? 'block' : 'none';
                 document.getElementById('passwordField').style.display = role ? 'block' : 'none';

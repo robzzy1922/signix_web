@@ -12,13 +12,20 @@ class Dokumen extends Model
     protected $table = 'dokumen';
 
     protected $fillable = [
-        'judul_dokumen',
-        'isi_dokumen',
-        'tanggal_pembuatan',
+        'nomor_surat',
+        'perihal',
         'status_dokumen',
+        'file',
+        'keterangan',
+        'tanggal_pengajuan',
         'id_ormawa',
         'id_dosen',
     ];
 
     // Define relationships if needed
+
+    public function dosen()
+    {
+        return $this->belongsTo(Dosen::class, 'id_dosen');
+    }
 } 

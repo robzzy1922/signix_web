@@ -10,10 +10,12 @@ return new class extends Migration
     {
         Schema::create('dokumen', function (Blueprint $table) {
             $table->id();
-            $table->string('judul_dokumen', 50);
-            $table->text('isi_dokumen');
-            $table->date('tanggal_pembuatan');
-            $table->string('status_dokumen', 50);
+            $table->string('nomor_surat');
+            $table->string('perihal');
+            $table->enum('status_dokumen', ['diajukan', 'disahkan', 'direvisi'])->default('diajukan');
+            $table->string('file');
+            $table->string('keterangan')->nullable();
+            $table->date('tanggal_pengajuan');
             $table->foreignId('id_ormawa')->constrained('ormawa')->onDelete('cascade');
             $table->foreignId('id_dosen')->constrained('dosen')->onDelete('cascade');
             $table->timestamps();

@@ -12,13 +12,16 @@
                 </svg>
             </div>
             <div>
-                <select class="border rounded-lg px-4 py-2">
-                    <option value="">Semua Status</option>
-                    <option value="diajukan">Diajukan</option>
-                    <option value="diproses">Diproses</option>
-                    <option value="ditandatangani">Ditandatangani</option>
-                    <option value="ditolak">Ditolak</option>
-                </select>
+                <form method="GET" action="{{ route('ormawa.riwayat') }}">
+                    <div>
+                        <select name="status" class="border rounded-lg px-4 py-2" onchange="this.form.submit()">
+                            <option value="">Semua Status</option>
+                            <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
+                            <option value="ditandatangani" {{ request('status') == 'ditandatangani' ? 'selected' : '' }}>Disahkan</option>
+                            <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Revisi</option>
+                        </select>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -29,39 +32,28 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Surat</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Pengajuan</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hal</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tujuan</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <!-- Sample rows, replace with actual data from your backend -->
+                    @foreach($dokumens as $dokumen)
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">001/ABC/2023</td>
-                        <td class="px-6 py-4 whitespace-nowrap">2023-05-01</td>
-                        <td class="px-6 py-4 whitespace-nowrap">Permohonan Dana</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ $dokumen->nomor_surat }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ $dokumen->tanggal_pengajuan }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ $dokumen->perihal }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ $dokumen->dosen->nama_dosen }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                Ditandatangani
+                                {{ ucfirst($dokumen->status_dokumen) }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="#" class="text-indigo-600 hover:text-indigo-900">Lihat Detail</a>
+                            <a href="#" class="text-indigo-600 hover:text-indigo-900" onclick="showModal({{ $dokumen->id }}, '{{ asset('storage/' . $dokumen->file) }}')">Lihat Detail</a>
                         </td>
                     </tr>
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">002/ABC/2023</td>
-                        <td class="px-6 py-4 whitespace-nowrap">2023-05-05</td>
-                        <td class="px-6 py-4 whitespace-nowrap">Izin Kegiatan</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                Diproses
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="#" class="text-indigo-600 hover:text-indigo-900">Lihat Detail</a>
-                        </td>
-                    </tr>
-                    <!-- Add more rows as needed -->
+                    @endforeach
                 </tbody>
             </table>
         </div>
@@ -95,4 +87,62 @@
             </nav>
         </div>
     </div>
+
+    <!-- Modal -->
+    <div id="detailModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900">Detail Dokumen</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <span class="sr-only">Close</span>
+                        &times;
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <!-- Document Display Area -->
+                    <div class="bg-gray-100 border border-blue-500 rounded-lg p-4 mb-4">
+                        <p id="modalContent" class="text-center">Loading...</p>
+                    </div>
+                    <!-- Buttons -->
+                    <div class="flex justify-between">
+                        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                            DOWNLOAD
+                        </button>
+                        <button class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600">
+                            LIHAT
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showModal(dokumenId, fileUrl) {
+            document.getElementById('modalContent').innerHTML = `<iframe src="${fileUrl}" width="100%" height="500px"></iframe>`;
+            document.getElementById('detailModal').classList.remove('hidden');
+
+            // Update the "LIHAT" button to open the document in a new tab
+            const lihatButton = document.querySelector('#detailModal .bg-yellow-500');
+            lihatButton.onclick = function() {
+                window.open(fileUrl, '_blank');
+            };
+
+            // Update the "DOWNLOAD" button to download the document
+            const downloadButton = document.querySelector('#detailModal .bg-blue-500');
+            downloadButton.onclick = function() {
+                const link = document.createElement('a');
+                link.href = fileUrl;
+                link.download = fileUrl.split('/').pop(); // Extracts the file name from the URL
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+    </script>
 @endsection
