@@ -17,8 +17,8 @@
                         <select name="status" class="border rounded-lg px-4 py-2" onchange="this.form.submit()">
                             <option value="">Semua Status</option>
                             <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
-                            <option value="ditandatangani" {{ request('status') == 'ditandatangani' ? 'selected' : '' }}>Disahkan</option>
-                            <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Revisi</option>
+                            <option value="disahkan" {{ request('status') == 'disahkan' ? 'selected' : '' }}>Disahkan</option>
+                            <option value="direvisi" {{ request('status') == 'direvisi' ? 'selected' : '' }}>Revisi</option>
                         </select>
                     </div>
                 </form>

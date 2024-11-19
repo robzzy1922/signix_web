@@ -19,7 +19,12 @@ Route::prefix('ormawa')->middleware(EnsureRoleIsAuthenticated::class . ':ormawa'
     Route::post('/pengajuan', [OrmawaController::class, 'storePengajuan'])->name('ormawa.pengajuan.store');
     Route::get('/riwayat', [OrmawaController::class, 'riwayat'])->name('ormawa.riwayat');
     Route::get('/dokumen/{id}', [OrmawaController::class, 'getDokumenContent'])->name('dokumen.content');
-    // rute ormawa lainnya
+    Route::get('/profile', [OrmawaController::class, 'showProfile'])->name('ormawa.profile');
+    Route::put('/profile/photo/update', [OrmawaController::class, 'updateProfilePhoto'])->name('profile.photo.update');
+    Route::delete('/profile/photo/remove', [OrmawaController::class, 'removeProfilePhoto'])->name('profile.photo.remove');
+    Route::get('/profile/photo/view', [OrmawaController::class, 'viewPhoto'])->name('profile.photo.view');
+    Route::put('/ormawa/profile/photo', [OrmawaController::class, 'updatePhoto'])->name('profile.photo.update');
+    Route::put('/profile/update', [OrmawaController::class, 'updateProfile'])->name('profile.update');
 });
 
 Route::prefix('dosen')->middleware(EnsureRoleIsAuthenticated::class . ':dosen')->group(function () {
@@ -28,4 +33,5 @@ Route::prefix('dosen')->middleware(EnsureRoleIsAuthenticated::class . ':dosen')-
     Route::post('/logout', [LoginAuthController::class, 'logout'])->name('logout');
     Route::get('/riwayat', [DosenController::class, 'riwayat'])->name('dosen.riwayat');
 });
+
 

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('email', 50)->unique();
             $table->string('password');
             $table->string('no_hp', 20);
+            $table->string('profile_photo_path')->nullable();
             $table->timestamps();
         });
     }
