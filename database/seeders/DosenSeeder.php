@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
 use Illuminate\Database\Seeder;
 use App\Models\Dosen;
 use Illuminate\Support\Facades\Hash;
@@ -23,7 +23,7 @@ class DosenSeeder extends Seeder
                 'no_hp' => '081234567890',
                 'prodi' => 'Teknik Informatika',
             ],
-        ];  
+        ];
 
         foreach ($data as $dosen) {
             Dosen::firstOrCreate(['nip' => $dosen['nip']], $dosen);

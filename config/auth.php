@@ -40,6 +40,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admins',
+        ],
         'ormawa' => [
             'driver' => 'session',
             'provider' => 'ormawas',
@@ -79,6 +83,10 @@ return [
         'dosens' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\Dosen::class),
+        ],
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => env('AUTH_MODEL', App\Models\Admin::class),
         ],
     ],
 

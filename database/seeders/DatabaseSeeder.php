@@ -7,6 +7,7 @@ use App\Models\Ormawa;
 use Illuminate\Support\Facades\Hash;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Database\Seeders\DosenSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -23,5 +24,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(OrmawaSeeder::class);
+        $this->call(DosenSeeder::class);
+        $this->call(AdminSeeder::class);
     }
 }
