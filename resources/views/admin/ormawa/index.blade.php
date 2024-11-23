@@ -104,19 +104,15 @@
                                     Edit
                                 </a>
 
-                                <form action="{{ route('admin.ormawa.index', $ormawa->id) }}" method="POST" class="inline-block">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-md"
-                                            onclick="return confirm('Apakah Anda yakin ingin menghapus data {{ $ormawa->namaMahasiswa }}?')">
-                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                        </svg>
-                                        Hapus
-                                    </button>
-                                </form>
+                                <button type="button"
+                                        onclick="showDeleteModal('{{ $ormawa->id }}', '{{ $ormawa->namaMahasiswa }}')"
+                                        class="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-md">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Hapus
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -138,9 +134,76 @@
         @endif
     </div>
 </div>
+
+<!-- Modal Delete Confirmation -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <!-- Backdrop with fade animation -->
+    <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+    </div>
+
+    <!-- Modal container with slide and fade animation -->
+    <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg
+                    opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95
+                    duration-300 ease-out
+                    motion-reduce:transition-none
+                    [&.modal-active]:opacity-100 [&.modal-active]:translate-y-0 [&.modal-active]:sm:scale-100"
+             id="modalContent">
+
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <!-- Warning icon -->
+                    <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">
+                            Konfirmasi Hapus
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">
+                                Apakah Anda yakin ingin menghapus data <span id="deleteItemName" class="font-medium text-gray-900"></span>?
+                                Tindakan ini tidak dapat dibatalkan.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                <button type="button"
+                        onclick="closeDeleteModal()"
+                        class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm
+                               transition-colors duration-200">
+                        Batal
+                    </button>
+                <form id="deleteForm" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            class="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm
+                                   transition-colors duration-200">
+                        Hapus
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
+<!-- Include SweetAlert2 CSS & JS -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 // Alert countdown and auto-hide
 if (document.getElementById('alert-success')) {
@@ -165,6 +228,45 @@ if (document.getElementById('alert-success')) {
 
     // Add transition classes
     alertEl.classList.add('transition-all', 'duration-300', 'transform');
+}
+
+function showDeleteModal(id, name) {
+    const modal = document.getElementById('deleteModal');
+    const modalContent = document.getElementById('modalContent');
+    const nameSpan = document.getElementById('deleteItemName');
+    const form = document.getElementById('deleteForm');
+
+    nameSpan.textContent = name;
+    form.action = `{{ route('admin.ormawa.index') }}/${id}`;
+
+    // Show modal
+    modal.classList.remove('hidden');
+
+    // Add animation class after a small delay
+    setTimeout(() => {
+        modalContent.classList.add('modal-active');
+    }, 50);
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    const modalContent = document.getElementById('modalContent');
+
+    // Remove animation class
+    modalContent.classList.remove('modal-active');
+
+    // Hide modal after animation completes
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('deleteModal');
+    if (event.target === modal) {
+        closeDeleteModal();
+    }
 }
 </script>
 @endpush
