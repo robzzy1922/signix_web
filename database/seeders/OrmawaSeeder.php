@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Ormawa;
+use App\Models\Ormawas;
 use Illuminate\Support\Facades\Hash;
 
 class OrmawaSeeder extends Seeder
@@ -12,18 +12,18 @@ class OrmawaSeeder extends Seeder
     {
         $data = [
             [
-                'nama_mahasiswa' => 'Robi Permana',
-                'nama_ormawa' => 'DPM',
+                'namaMahasiswa' => 'Robi Permana',
+                'namaOrmawa' => 'FORMADIKSI',
                 'nim' => '2305050',
                 'email' => 'robi.permana@example.com',
+                'noHp' => '081234567890',
                 'password' => Hash::make('12345'),
-                'no_hp' => '081234567890',
+                'profile' => null,
             ],
-            // Data lainnya...
         ];
-    
+
         foreach ($data as $ormawa) {
-            Ormawa::firstOrCreate(['nim' => $ormawa['nim']], $ormawa);
+            Ormawas::firstOrCreate(['nim' => $ormawa['nim']], $ormawa);
         }
     }
 }

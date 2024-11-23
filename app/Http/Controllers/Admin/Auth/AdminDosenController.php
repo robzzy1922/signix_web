@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Admin\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-class DosenController extends Controller
+class AdminDosenController extends Controller
 {
-    public function create()
+    public function index()
     {
-        return view('admin.dosen.create');
+        return view('admin.dosen.index');
     }
 
     public function store(Request $request)
@@ -23,6 +23,6 @@ class DosenController extends Controller
         // Simpan data Dosen (simulasi)
         // Dosen::create($request->all());
 
-        return redirect()->route('admin.dashboard')->with('success', 'Dosen berhasil ditambahkan!');
+        return redirect()->route('admin.adminDashboard')->with('success', 'Dosen berhasil ditambahkan!');
     }
 }

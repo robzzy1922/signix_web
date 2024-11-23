@@ -23,8 +23,10 @@ class DatabaseSeeder extends Seeder
             'email' => 'unique_test@example.com',
         ]);
 
-        $this->call(OrmawaSeeder::class);
-        $this->call(DosenSeeder::class);
-        $this->call(AdminSeeder::class);
+        $this->call([
+            OrmawaSeeder::class,
+            DosenSeeder::class,
+            AdminSeeder::class
+        ]);
     }
 }

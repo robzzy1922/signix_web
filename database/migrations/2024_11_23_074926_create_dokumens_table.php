@@ -6,9 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
     {
-        Schema::create('dokumen', function (Blueprint $table) {
+        Schema::create('dokumens', function (Blueprint $table) {
             $table->id();
             $table->string('nomor_surat');
             $table->string('perihal');
@@ -16,14 +19,17 @@ return new class extends Migration
             $table->string('file');
             $table->string('keterangan')->nullable();
             $table->date('tanggal_pengajuan');
-            $table->foreignId('id_ormawa')->constrained('ormawa')->onDelete('cascade');
+            $table->foreignId('id_ormawa')->constrained('ormawas')->onDelete('cascade');
             $table->foreignId('id_dosen')->constrained('dosen')->onDelete('cascade');
             $table->timestamps();
         });
     }
 
-    public function down()
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
-        Schema::dropIfExists('dokumen');
+        Schema::dropIfExists('dokumens');
     }
 };

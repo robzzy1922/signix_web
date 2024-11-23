@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Dosen extends Authenticatable
 {
     use Notifiable;
+    use HasFactory;
 
     protected $table = 'dosen';
 
@@ -17,7 +19,9 @@ class Dosen extends Authenticatable
         'email',
         'password',
         'no_hp',
+        'prodi',
+        'profile'
     ];
 
     // Define relationships if needed
-} 
+}

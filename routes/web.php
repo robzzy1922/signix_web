@@ -7,8 +7,10 @@ use App\Http\Controllers\LoginAuthController;
 use App\Http\Middleware\EnsureRoleIsAuthenticated;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Auth\DashboardController;
-use App\Http\Controllers\Admin\Auth\OrmawaController as AdminOrmawaController;
-use App\Http\Controllers\Admin\Auth\DosenController as AdminDosenController;
+use App\Http\Controllers\Admin\Auth\AdminOrmawaController;
+use App\Http\Controllers\Admin\Auth\AdminDosenController;
+use App\Http\Controllers\Admin\Auth\AdminLoginController;
+use App\Http\Controllers\Admin\Auth\AdminDashboardController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -45,16 +47,17 @@ Route::prefix('dosen')->middleware(EnsureRoleIsAuthenticated::class . ':dosen')-
 
 //admin
 Route::prefix('admin')->group(function () {
-    Route::get('login', [LoginController::class, 'showLoginForm'])->name('admin.login');
-    Route::post('login', [LoginController::class, 'login'])->name('admin.login.submit');
-    Route::post('logout', [LoginController::class, 'logout'])->name('admin.logout');
+    Route::get('login', [AdminLoginController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('login', [AdminLoginController::class, 'login'])->name('admin.login.submit');
+    Route::post('logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
 
-    // Pindahkan route dashboard ke dalam group prefix admin
     Route::middleware('auth:admin')->group(function () {
-        Route::get('dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('admin.adminDashboard');
+        Route::get('ormawa/index', [AdminOrmawaController::class, 'index'])->name('admin.ormawa.index');
         Route::get('ormawa/create', [AdminOrmawaController::class, 'create'])->name('admin.ormawa.create');
         Route::post('ormawa', [AdminOrmawaController::class, 'store'])->name('admin.ormawa.store');
-        Route::get('dosen/create', [AdminDosenController::class, 'create'])->name('admin.dosen.create');
+        Route::get('dosen/index', [AdminDosenController::class, 'index'])->name('admin.dosen.index');
+        // Route::get('dosen/create', [AdminDosenController::class, 'create'])->name('admin.dosen.create');
         Route::post('dosen', [AdminDosenController::class, 'store'])->name('admin.dosen.store');
     });
 });

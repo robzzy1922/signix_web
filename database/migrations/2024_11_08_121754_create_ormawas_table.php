@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Hash;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('ormawas', function (Blueprint $table) {
+            $table->id();
+            $table->string('namaMahasiswa');
+            $table->string('namaOrmawa');
+            $table->string('nim', 20)->unique();
+            $table->string('email', 50)->unique();
+            $table->string('noHp', 20);
+            $table->string('password')->default(Hash::make('password'));
+            $table->string('profile')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('ormawas');
+    }
+};

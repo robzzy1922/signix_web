@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Dokumen extends Model
 {
     use HasFactory;
-
-    protected $table = 'dokumen';
+    protected $table = 'dokumens';
 
     protected $fillable = [
         'nomor_surat',
@@ -22,10 +21,15 @@ class Dokumen extends Model
         'id_dosen',
     ];
 
-    // Define relationships if needed
+    // Relationship with Ormawa
+    public function ormawa()
+    {
+        return $this->belongsTo(Ormawa::class, 'id_ormawa');
+    }
 
+    // Relationship with Dosen
     public function dosen()
     {
         return $this->belongsTo(Dosen::class, 'id_dosen');
     }
-} 
+}

@@ -25,5 +25,6 @@ class Kernel extends HttpKernel
     protected $routeMiddleware = [
         // Middleware rute lainnya
         'auth.role' => \App\Http\Middleware\EnsureRoleIsAuthenticated::class,
+        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
     ];
 }
