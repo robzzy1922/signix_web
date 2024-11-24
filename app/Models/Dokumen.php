@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Ormawas;
+use App\Models\Dosen;
 
 class Dokumen extends Model
 {
@@ -24,7 +26,7 @@ class Dokumen extends Model
     // Relationship with Ormawa
     public function ormawa()
     {
-        return $this->belongsTo(Ormawa::class, 'id_ormawa');
+        return $this->belongsTo(Ormawas::class, 'id_ormawa');
     }
 
     // Relationship with Dosen

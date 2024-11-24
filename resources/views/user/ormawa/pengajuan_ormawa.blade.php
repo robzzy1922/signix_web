@@ -21,19 +21,19 @@
         <form action="{{ route('ormawa.pengajuan.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="space-y-4">
-                <div></div>
+                <div>
                     <label for="nomor_surat" class="block mb-1 font-medium">Nomor Surat</label>
                     <input type="text" id="nomor_surat" name="nomor_surat" class="w-full px-3 py-2 border rounded-md" required>
                 </div>
 
                 <div>
                     <label for="nama_pengaju" class="block mb-1 font-medium">Nama Pengaju</label>
-                    <input type="text" id="nama_pengaju" name="nama_pengaju" class="w-full px-3 py-2 bg-gray-200 border rounded-md" value="{{ $ormawa->nama_mahasiswa }}" readonly required>
+                    <input type="text" id="nama_pengaju" name="nama_pengaju" class="w-full px-3 py-2 bg-gray-200 border rounded-md" value="{{ $ormawa->namaMahasiswa }}" readonly required>
                 </div>
 
                 <div>
                     <label for="nama_ormawa" class="block mb-1 font-medium">Nama Ormawa</label>
-                    <input type="text" id="nama_ormawa" name="nama_ormawa" class="w-full px-3 py-2 bg-gray-200 border rounded-md" value="{{ $ormawa->nama_ormawa }}" readonly required>
+                    <input type="text" id="nama_ormawa" name="nama_ormawa" class="w-full px-3 py-2 bg-gray-200 border rounded-md" value="{{ $ormawa->namaOrmawa }}" readonly required>
                 </div>
 
                 <div>

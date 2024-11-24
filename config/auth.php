@@ -78,7 +78,7 @@ return [
         ],
         'ormawas' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\Ormawa::class),
+            'model' => env('AUTH_MODEL', App\Models\Ormawas::class),
         ],
         'dosens' => [
             'driver' => 'eloquent',

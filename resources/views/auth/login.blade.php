@@ -19,7 +19,7 @@
                     <div class="w-40 mb-[-50px]">
                         <img src="{{ asset('images/logo_signix.png') }}" alt="">
                     </div>
-                    
+
                     <form action="{{ route('login.submit') }}" method="POST" onsubmit="return validateForm()">
                         @csrf
 
@@ -129,7 +129,7 @@
                 document.getElementById('nimField').style.display = (role === 'ormawa') ? 'block' : 'none';
                 document.getElementById('nipField').style.display = (role === 'dosen') ? 'block' : 'none';
                 document.getElementById('passwordField').style.display = role ? 'block' : 'none';
-                
+
                 // Hide or show the submit button and "Lupa kata sandi?" link based on role selection
                 document.getElementById('submitButton').style.display = role ? 'block' : 'none';
                 document.getElementById('forgotPasswordLink').style.display = role ? 'block' : 'none';
@@ -138,7 +138,7 @@
             function validateForm() {
                 var role = document.getElementById('role').value;
                 var roleAlert = document.getElementById('roleAlert');
-                
+
                 if (!role) {
                     roleAlert.style.display = 'block';
                     return false; // Prevent form submission

@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Ormawas;
+use App\Models\Dosen;
+use App\Models\Dokumen;
 
 class TandaQr extends Model
 {
@@ -33,6 +36,6 @@ class TandaQr extends Model
     // Relationship with Ormawa model
     public function ormawa()
     {
-        return $this->belongsTo(Ormawa::class, 'id_ormawa');
+        return $this->belongsTo(Ormawas::class, 'id_ormawa');
     }
 }
