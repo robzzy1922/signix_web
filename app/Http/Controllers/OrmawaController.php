@@ -14,31 +14,30 @@ class OrmawaController extends Controller
 {
     public function dashboard(Request $request)
     {
-        $status = $request->input('status');
-        $search = $request->input('search');
+        $query = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id());
 
-        $dokumens = Dokumen::query()
-            ->when($status, function ($query) use ($status) {
-                return $query->where('status_dokumen', $status);
-            })
-            ->when($search, function ($query) use ($search) {
-                return $query->where(function ($q) use ($search) {
-                    $q->where('nomor_surat', 'like', "%{$search}%")
-                      ->orWhere('tanggal_pengajuan', 'like', "%{$search}%")
-                      ->orWhere('perihal', 'like', "%{$search}%")
-                      ->orWhereHas('dosen', function ($q) use ($search) {
-                          $q->where('nama_dosen', 'like', "%{$search}%");
-                      })
-                      ->orWhere('status_dokumen', 'like', "%{$search}%");
-                });
-            })
-            ->get();
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nomor_surat', 'like', "%$search%")
+                  ->orWhere('perihal', 'like', "%$search%");
+            });
+        }
 
-        $countDiajukan = Dokumen::where('status_dokumen', 'diajukan')->count();
-        $countDisahkan = Dokumen::where('status_dokumen', 'disahkan')->count();
-        $countRevisi = Dokumen::where('status_dokumen', 'direvisi')->count();
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status_dokumen', $request->status);
+        }
 
-        return view('user.ormawa.ormawa_dashboard', compact('dokumens', 'status', 'countDiajukan', 'countDisahkan', 'countRevisi'));
+        $dokumens = $query->latest()->get();
+
+        $countDiajukan = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id())
+                                ->where('status_dokumen', 'diajukan')->count();
+        $countDisahkan = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id())
+                                ->where('status_dokumen', 'disahkan')->count();
+        $countRevisi = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id())
+                              ->where('status_dokumen', 'direvisi')->count();
+
+        return view('user.ormawa.ormawa_dashboard', compact('dokumens', 'countDiajukan', 'countDisahkan', 'countRevisi'));
     }
 
     public function pengajuan()
@@ -50,60 +49,77 @@ class OrmawaController extends Controller
 
     public function storePengajuan(Request $request)
     {
+        // Tambahkan logging untuk melihat data yang diterima
+        Log::info('Received form data:', $request->all());
+
+        $validated = $request->validate([
+            'nomor_surat' => 'required|string|max:255',
+            'nama_pengaju' => 'required|string|max:255',
+            'nama_ormawa' => 'required|string|max:255',
+            'kepada_tujuan' => 'required|exists:dosen,id',
+            'hal' => 'required|string|max:255',
+            'unggah_dokumen' => 'required|file|mimes:pdf,doc,docx|max:2048',
+            'catatan' => 'nullable|string',
+        ]);
+
         try {
-            // Validate the request
-            $validated = $request->validate([
-                'nomor_surat' => 'required|string|max:255',
-                'kepada_tujuan' => 'required|exists:dosen,id',
-                'perihal' => 'required|string|max:255',
-                'unggah_dokumen' => 'required|file|mimes:pdf,doc,docx|max:2048',
-                'keterangan' => 'nullable|string',
-            ]);
+            // Handle file upload dengan nama file yang lebih terstruktur
+            $file = $request->file('unggah_dokumen');
+            $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+            $filePath = $file->storeAs('dokumen', $fileName, 'public');
 
-            // Handle file upload
-            if ($request->hasFile('unggah_dokumen')) {
-                $file = $request->file('unggah_dokumen');
-                $filePath = $file->store('dokumen', 'public');
-            } else {
-                throw new \Exception('File tidak ditemukan');
-            }
+            // Dapatkan ID Ormawa yang sedang login
+            $ormawaId = Auth::guard('ormawa')->id();
 
-            // Save to the database dengan menggunakan create
+            // Simpan ke database dengan data yang lebih lengkap
             $dokumen = new Dokumen();
             $dokumen->nomor_surat = $request->nomor_surat;
-            $dokumen->perihal = $request->perihal;
+            $dokumen->perihal = $request->hal;
             $dokumen->file = $filePath;
-            $dokumen->keterangan = $request->keterangan;
+            $dokumen->keterangan = $request->catatan;
             $dokumen->tanggal_pengajuan = now();
             $dokumen->status_dokumen = 'diajukan';
-            $dokumen->id_ormawa = Auth::guard('ormawa')->user()->id;
+            $dokumen->id_ormawa = $ormawaId;
             $dokumen->id_dosen = $request->kepada_tujuan;
 
-            if (!$dokumen->save()) {
-                throw new \Exception('Gagal menyimpan data ke database');
-            }
+            // Tambahkan logging untuk debugging
+            Log::info('Attempting to save document', [
+                'nomor_surat' => $dokumen->nomor_surat,
+                'id_ormawa' => $dokumen->id_ormawa,
+                'id_dosen' => $dokumen->id_dosen
+            ]);
 
-            return redirect()->route('ormawa.ormawa_ashboard')->with('success', 'Pengajuan berhasil diajukan.');
+            $dokumen->save();
+
+            Log::info('Document saved successfully', ['dokumen_id' => $dokumen->id]);
+
+            return redirect()
+                ->route('ormawa.pengajuan')
+                ->with('success', 'Dokumen berhasil diajukan!');
+
         } catch (\Exception $e) {
-            Log::error('Error in storePengajuan: ' . $e->getMessage());
-            return redirect()->back()
+            Log::error('Error in storePengajuan: ' . $e->getMessage(), [
+                'request' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Error: ' . $e->getMessage());
+                ->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }
 
     public function riwayat(Request $request)
     {
-        $ormawa = Auth::guard('ormawa')->user();
-        $status = $request->input('status_dokumen');
+        $query = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id());
 
-        $query = Dokumen::where('id_ormawa', $ormawa->id)->with('dosen');
-
-        if ($status) {
-            $query->where('status_dokumen', $status);
+        // Apply status filter if exists
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status_dokumen', $request->status);
         }
 
-        $dokumens = $query->get();
+        $dokumens = $query->latest()->get();
 
         return view('user.ormawa.riwayat_ormawa', compact('dokumens'));
     }
@@ -114,7 +130,7 @@ class OrmawaController extends Controller
         if ($dokumen) {
             $filePath = storage_path('app/public/' . $dokumen->file);
             if (file_exists($filePath)) {
-                return response()->file($filePath);
+                return response()->download($filePath, $dokumen->nomor_surat . '.pdf');
             }
             return response()->json(['error' => 'File not found'], 404);
         }
@@ -124,80 +140,6 @@ class OrmawaController extends Controller
     public function profile()
     {
         $ormawa = Auth::guard('ormawa')->user();
-        if (!$ormawa) {
-            return redirect()->route('login')->withErrors('User not authenticated.');
-        }
-        return view('user.ormawa.profile', compact('ormawa'));
-    }
-
-    public function updateProfilePhoto(Request $request)
-    {
-        $request->validate([
-            'profile_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-
-        $ormawa = Auth::guard('ormawa')->user();
-
-        // Delete old photo if exists
-        if ($ormawa->profile) {
-            Storage::delete($ormawa->profile);
-        }
-
-        // Store new photo
-        $path = $request->file('profile_photo')->store('profile_photos', 'public');
-
-        // Update user profile photo path
-        $ormawa->profile = $path;
-        $ormawa->save();
-
-        return redirect()->back()->with('success', 'Profile photo updated successfully.');
-    }
-
-    public function removeProfilePhoto()
-    {
-        $ormawa = auth()->user();
-
-        // Delete photo if exists
-        if ($ormawa->profile) {
-            Storage::delete($ormawa->profile);
-            $ormawa->profile = null;
-            $ormawa->save();
-        }
-
-        return redirect()->back()->with('success', 'Profile photo removed successfully.');
-    }
-
-    public function viewPhoto()
-    {
-        $ormawa = auth()->user()->ormawa;
-
-        if ($ormawa->profile) {
-            return response()->file(storage_path('app/' . $ormawa->profile));
-        }
-
-        return redirect()->back()->with('error', 'No profile photo to view.');
-    }
-
-    public function updatePhoto(Request $request)
-    {
-        $request->validate([
-            'profile_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-
-        $ormawa = auth()->user()->ormawa; // Assuming the user is related to Ormawa
-        if ($request->hasFile('profile_photo')) {
-            $file = $request->file('profile_photo');
-            $path = $file->store('profile_photos', 'public');
-            $ormawa->profile = $path;
-            $ormawa->save();
-        }
-
-        return redirect()->back()->with('success', 'Profile photo updated successfully.');
-    }
-
-    public function showProfile()
-    {
-        $ormawa = Auth::guard('ormawa')->user(); // Example of fetching the Ormawa model
         return view('user.ormawa.profile', compact('ormawa'));
     }
 
@@ -210,17 +152,55 @@ class OrmawaController extends Controller
     public function updateProfile(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:15',
-            'email' => 'required|email|max:255',
+            'namaMahasiswa' => 'required|string|max:255',
+            'email' => 'required|email',
+            'noHp' => 'required|string|max:15',
         ]);
 
         $ormawa = Auth::guard('ormawa')->user();
-        $ormawa->namaMahasiswa = $request->input('name');
-        $ormawa->noHp = $request->input('phone');
-        $ormawa->email = $request->input('email');
+        $ormawa->update([
+            'namaMahasiswa' => $request->namaMahasiswa,
+            'email' => $request->email,
+            'noHp' => $request->noHp,
+        ]);
         $ormawa->save();
 
-        return redirect()->back()->with('success', 'Profile updated successfully.');
+        return redirect()->route('ormawa.profile')->with('success', 'Profile updated successfully');
+    }
+
+    public function updatePhoto(Request $request)
+    {
+        $request->validate([
+            'profile_photo' => ['required', 'image', 'max:1024'] // 1MB Max
+        ]);
+
+        $ormawa = Auth::guard('ormawa')->user();
+
+        if ($ormawa->profile) {
+            Storage::disk('public')->delete($ormawa->profile);
+        }
+
+        $path = $request->file('profile_photo')->store('profile-photos', 'public');
+
+        $ormawa->update([
+            'profile' => $path
+        ]);
+
+        return back()->with('success', 'Profile photo updated successfully');
+    }
+
+    public function destroyPhoto()
+    {
+        $ormawa = Auth::guard('ormawa')->user();
+
+        if ($ormawa->profile) {
+            Storage::disk('public')->delete($ormawa->profile);
+
+            $ormawa->update([
+                'profile' => null
+            ]);
+        }
+
+        return back()->with('success', 'Profile photo removed successfully');
     }
 }

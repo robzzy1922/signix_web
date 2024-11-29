@@ -1,13 +1,13 @@
 @extends('layouts.ormawa')
 @section('title', 'Dashboard Ormawa')
 @section('content')
-  <div class="container flex-grow max-w-5xl px-4 mx-auto mt-8">
+  <div class="container flex-grow px-4 mx-auto mt-8 max-w-5xl">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
       <!-- Surat yang diajukan -->
       <a href="{{ route('ormawa.riwayat', ['status' => 'diajukan']) }}" class="block">
         <div class="p-4 bg-yellow-400 rounded-lg shadow">
           <div class="flex items-center">
-            <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="mr-2 w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
               <!-- Envelope icon SVG -->
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
               <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
@@ -21,7 +21,7 @@
       <a href="{{ route('ormawa.riwayat', ['status' => 'disahkan']) }}" class="block">
         <div class="p-4 bg-green-400 rounded-lg shadow">
           <div class="flex items-center">
-            <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="mr-2 w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
               <!-- Checkmark envelope icon SVG -->
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
               <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
@@ -36,7 +36,7 @@
       <a href="{{ route('ormawa.riwayat', ['status' => 'direvisi']) }}" class="block">
         <div class="p-4 bg-blue-400 rounded-lg shadow">
           <div class="flex items-center">
-            <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="mr-2 w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
               <!-- Pencil envelope icon SVG -->
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
               <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
@@ -49,12 +49,12 @@
     </div>
 
     <div class="mt-8">
-      <div class="flex flex-col items-center justify-between mb-4 space-y-2 md:flex-row md:space-y-0">
+      <div class="flex flex-col justify-between items-center mb-4 space-y-2 md:flex-row md:space-y-0">
         <div class="relative w-full md:w-64">
           <form method="GET" action="{{ route('ormawa.dashboard') }}" class="flex">
             <div class="relative flex-grow">
-              <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Surat" class="w-full py-2 pl-10 pr-4 border rounded-l-lg">
-              <svg class="absolute w-5 h-5 text-gray-400 left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Surat" class="py-2 pr-4 pl-10 w-full rounded-l-lg border">
+              <svg class="absolute top-3 left-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
             </div>
@@ -66,11 +66,11 @@
         <div>
           <form method="GET" action="{{ route('ormawa.dashboard') }}">
               <div>
-                  <select name="status" class="px-4 py-2 border rounded-lg" onchange="this.form.submit()">
+                  <select name="status" class="px-4 py-2 rounded-lg border" onchange="this.form.submit()">
                       <option value="">Semua Status</option>
                       <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
-                      <option value="ditandatangani" {{ request('status') == 'ditandatangani' ? 'selected' : '' }}>Disahkan</option>
-                      <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Revisi</option>
+                      <option value="disahkan" {{ request('status') == 'disahkan' ? 'selected' : '' }}>Disahkan</option>
+                      <option value="direvisi" {{ request('status') == 'direvisi' ? 'selected' : '' }}>Revisi</option>
                   </select>
               </div>
           </form>
@@ -89,6 +89,18 @@
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
+                @if ($dokumens->isEmpty())
+                        <tr>
+                            <td colspan="6" class="py-8 text-center">
+                                <div class="flex flex-col justify-center items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4V12M12 16H12.01M18.364 5.636L15 9M21 12H15M9 12H3M6.636 5.636L10 9M12 12L12 20M6.636 18.364L10 15M18.364 18.364L15 15"></path>
+                                    </svg>
+                                    <p class="mt-2 text-gray-600">Anda belum memiliki pengajuan surat.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endif
                 @foreach($dokumens as $dokumen)
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $dokumen->nomor_surat }}</td>
@@ -120,10 +132,10 @@
   </div>
 
   <!-- Modal -->
-  <div id="detailModal" class="fixed inset-0 z-10 hidden overflow-y-auto">
-      <div class="flex items-center justify-center min-h-screen">
-          <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
-              <div class="flex items-center justify-between">
+  <div id="detailModal" class="hidden overflow-y-auto fixed inset-0 z-10">
+      <div class="flex justify-center items-center min-h-screen">
+          <div class="p-6 w-full max-w-md bg-white rounded-lg shadow-xl">
+              <div class="flex justify-between items-center">
                   <h3 class="text-lg font-medium text-gray-900">Detail Dokumen</h3>
                   <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
                       <span class="sr-only">Close</span>
@@ -132,7 +144,7 @@
               </div>
               <div class="mt-4">
                   <!-- Document Display Area -->
-                  <div class="p-4 mb-4 bg-gray-100 border border-blue-500 rounded-lg">
+                  <div class="p-4 mb-4 bg-gray-100 rounded-lg border border-blue-500">
                       <p id="modalContent" class="text-center">Loading...</p>
                   </div>
                   <!-- Buttons -->

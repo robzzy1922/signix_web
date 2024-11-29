@@ -29,12 +29,13 @@ Route::middleware(['auth:ormawa'])->group(function () {
         Route::post('/pengajuan/store', [OrmawaController::class, 'storePengajuan'])->name('pengajuan.store');
         Route::get('/riwayat', [OrmawaController::class, 'riwayat'])->name('riwayat');
         Route::get('/dokumen/{id}', [OrmawaController::class, 'getDokumenContent'])->name('dokumen.content');
-        Route::get('/profile', [OrmawaController::class, 'showProfile'])->name('profile');
-        Route::put('/profile/photo/update', [OrmawaController::class, 'updateProfilePhoto'])->name('profile.photo.update');
-        Route::delete('/profile/photo/remove', [OrmawaController::class, 'removeProfilePhoto'])->name('profile.photo.remove');
-        Route::get('/profile/photo/view', [OrmawaController::class, 'viewPhoto'])->name('profile.photo.view');
-        Route::put('/ormawa/profile/photo', [OrmawaController::class, 'updatePhoto'])->name('profile.photo.update');
+        Route::get('/profile', [OrmawaController::class, 'profile'])->name('profile');
+        Route::get('/profile/edit', [OrmawaController::class, 'editProfile'])->name('profile.edit');
         Route::put('/profile/update', [OrmawaController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/ormawa/profile/photo', [OrmawaController::class, 'updatePhoto'])->name('ormawa.profile.photo.update');
+        Route::delete('/ormawa/profile/photo', [OrmawaController::class, 'destroyPhoto'])->name('ormawa.profile.photo.destroy');
+        Route::post('/profile/photo', [OrmawaController::class, 'updatePhoto'])->name('profile.photo.update');
+        Route::delete('/profile/photo', [OrmawaController::class, 'destroyPhoto'])->name('profile.photo.destroy');
     });
 });
 
@@ -45,6 +46,10 @@ Route::prefix('dosen')->middleware(EnsureRoleIsAuthenticated::class . ':dosen')-
     Route::get('/buat-tanda-tangan', [DosenController::class, 'create'])->name('user.dosen.create');
     Route::post('/logout', [LoginAuthController::class, 'logout'])->name('logout');
     Route::get('/riwayat', [DosenController::class, 'riwayat'])->name('dosen.riwayat');
+    Route::get('/dokumen/{id}', [DosenController::class, 'getDokumenContent'])->name('dokumen.content');
+    Route::get('/dosen/dokumen/{id}', [DosenController::class, 'showDokumen']);
+    Route::get('/dokumen/{id}', [DosenController::class, 'getDokumenDetail'])->name('dosen.dokumen.detail');
+    Route::post('/dosen/logout', [DosenController::class, 'logout'])->name('dosen.logout');
 });
 
 
@@ -85,5 +90,14 @@ Route::prefix('admin')->group(function () {
         Route::put('profile/update', [AdminLoginController::class, 'updateProfile'])->name('admin.profile.update');
         Route::put('profile/password', [AdminLoginController::class, 'updatePassword'])->name('admin.password.update');
         Route::get('/profile/edit', [AdminLoginController::class, 'editProfile'])->name('admin.profile.edit');
+        Route::get('dokumen/{id}', [AdminDokumenController::class, 'show']);
+        Route::get('dokumen/{id}/download', [AdminDokumenController::class, 'download']);
+        Route::get('dokumen/{id}/view', [AdminDokumenController::class, 'view']);
+
+        // Profile routes
+        Route::get('/profile', [AdminOrmawaController::class, 'editProfile'])->name('admin.profile.edit');
+        Route::put('/profile', [AdminOrmawaController::class, 'updateProfile'])->name('admin.profile.update');
+        Route::post('/profile/photo', [AdminOrmawaController::class, 'updateProfilePhoto'])->name('admin.profile.photo.update');
+        Route::delete('/profile/photo', [AdminOrmawaController::class, 'destroyProfilePhoto'])->name('admin.profile.photo.destroy');
     });
 });

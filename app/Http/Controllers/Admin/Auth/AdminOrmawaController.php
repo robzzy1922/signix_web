@@ -9,6 +9,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Auth;
 
 class AdminOrmawaController extends Controller
 {
@@ -207,5 +210,75 @@ class AdminOrmawaController extends Controller
                 ->back()
                 ->withErrors(['exception' => 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage()]);
         }
+    }
+
+    public function editProfile()
+    {
+        $admin = Auth::guard('admin')->user();
+        return view('admin.profile.edit', compact('admin'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:admins,email,' . $admin->id],
+        ]);
+
+        $admin->update([
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
+
+        if ($request->filled('current_password')) {
+            $request->validate([
+                'current_password' => ['required', 'current_password:admin'],
+                'password' => ['required', 'confirmed', Password::defaults()],
+            ]);
+
+            $admin->update([
+                'password' => Hash::make($request->password),
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Profile updated successfully!');
+    }
+
+    public function updateProfilePhoto(Request $request)
+    {
+        $request->validate([
+            'profile_photo' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
+        ]);
+
+        $admin = Auth::guard('admin')->user();
+
+        if ($admin->profile) {
+            Storage::delete('public/' . $admin->profile);
+        }
+
+        $path = $request->file('profile_photo')->store('admin-profiles', 'public');
+
+        $admin->update([
+            'profile' => $path,
+        ]);
+
+        return redirect()->back()->with('success', 'Profile photo updated successfully!');
+    }
+
+    public function destroyProfilePhoto()
+    {
+        $admin = Auth::guard('admin')->user();
+
+        if ($admin->profile) {
+            Storage::delete('public/' . $admin->profile);
+
+            $admin->update([
+                'profile' => null,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Profile photo removed successfully!');
     }
 }
