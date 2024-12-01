@@ -6,6 +6,7 @@ use App\Models\Dosen;
 use App\Models\Dokumen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class DosenController extends Controller
 {
@@ -103,6 +104,73 @@ class DosenController extends Controller
     {
         $dokumen = Dokumen::with(['ormawa', 'dosen'])->findOrFail($id);
         return response()->json($dokumen);
+    }
+
+    public function profile()
+    {
+        $dosen = Auth::guard('dosen')->user();
+        return view('user.dosen.profile', compact('dosen'));
+    }
+
+    public function editProfile()
+    {
+        $dosen = Auth::guard('dosen')->user();
+        return view('user.dosen.edit_profile', compact('dosen'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'namaMahasiswa' => 'required|string|max:255',
+            'email' => 'required|email',
+            'noHp' => 'required|string|max:15',
+        ]);
+
+        $dosen = Auth::guard('dosen')->user();
+        $dosen->update([
+            'nama_dosen' => $request->nama_dosen,
+            'email' => $request->email,
+            'no_hp' => $request->no_hp,
+        ]);
+        $dosen->save();
+
+        return redirect()->route('dosen.profile')->with('success', 'Profile updated successfully');
+    }
+
+    public function updatePhoto(Request $request)
+    {
+        $request->validate([
+            'profile_photo' => ['required', 'image', 'max:1024'] // 1MB Max
+        ]);
+
+        $dosen = Auth::guard('dosen')->user();
+
+        if ($dosen->profile) {
+            Storage::disk('public')->delete($dosen->profile);
+        }
+
+        $path = $request->file('profile_photo')->store('profile-photos', 'public');
+
+        $dosen->update([
+            'profile' => $path
+        ]);
+
+        return back()->with('success', 'Profile photo updated successfully');
+    }
+
+    public function destroyPhoto()
+    {
+        $dosen = Auth::guard('dosen')->user();
+
+        if ($dosen->profile) {
+            Storage::disk('public')->delete($dosen->profile);
+
+            $dosen->update([
+                'profile' => null
+            ]);
+        }
+
+        return back()->with('success', 'Profile photo removed successfully');
     }
 
     public function logout(Request $request)

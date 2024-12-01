@@ -1,60 +1,49 @@
-<nav class="bg-white shadow-sm">
-    <div class="container flex justify-between items-center px-4 py-2 mx-auto">
-        <!-- Logo -->
-        <div class="flex items-center">
-            <img src="{{ asset('images/logo_signix.png') }}" alt="SIGNIX Logo" class="mr-3 w-12" />
-        </div>
-
-        <!-- Menu Links -->
-        <div class="flex space-x-3">
-            <a href="{{ route('dosen.dashboard') }}" class="text-black font-medium hover:text-blue-500 {{ request()->routeIs('dosen.dashboard') ? 'border-b-2 border-blue-500' : '' }}">
-                Beranda
-            </a>
-            <a href="{{ route('user.dosen.create') }}" class="text-black font-medium hover:text-blue-500 {{ request()->routeIs('user.dosen.create') ? 'border-b-2 border-blue-500' : '' }}">
-                Buat Tanda Tangan
-            </a>
-            <a href="{{ route('dosen.riwayat') }}" class="text-black font-medium hover:text-blue-500 {{ request()->routeIs('dosen.riwayat') ? 'border-b-2 border-blue-500' : '' }}">
-                Riwayat
-            </a>
-        </div>
-
-        <!-- Notification and Profile Icon -->
-        <div class="flex items-center space-x-2">
-            <!-- Notification Dropdown -->
-            <div x-data="{ open: false }" class="relative">
-                <button @click="open = !open" class="text-black focus:outline-none">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <!-- Icon Bell SVG -->
-                        <path d="M12 24c1.104 0 2-.896 2-2h-4c0 1.104.896 2 2 2zm7-6v-5c0-3.071-1.641-5.645-4.5-6.32v-.68c0-.828-.672-1.5-1.5-1.5s-1.5.672-1.5 1.5v.68c-2.859.675-4.5 3.25-4.5 6.32v5l-1 1v1h14v-1l-1-1zm-9 0v-5c0-2.485 1.149-4.475 3-4.475s3 1.99 3 4.475v5h-6z"/>
-                    </svg>
-                </button>
-                <div x-show="open" @click.away="open = false" class="absolute right-0 z-10 py-1 mt-1 w-36 bg-white rounded-md shadow-lg" x-cloak>
-                    <!-- Notification items go here -->
-                    <a href="#" class="block px-3 py-1 text-sm text-gray-700 hover:bg-gray-100">Notification 1</a>
-                    <a href="#" class="block px-3 py-1 text-sm text-gray-700 hover:bg-gray-100">Notification 2</a>
-                    <a href="#" class="block px-3 py-1 text-sm text-gray-700 hover:bg-gray-100">Notification 3</a>
-                </div>
-            </div>
-
-            <!-- Profile Dropdown -->
-            <div x-data="{ open: false }" class="relative">
-                <button @click="open = !open" class="flex items-center text-black focus:outline-none">
-                    <span class="mr-2">{{ Auth::guard('dosen')->user()->nama_dosen }}</span>
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 12c2.485 0 4.5-2.015 4.5-4.5S14.485 3 12 3 7.5 5.015 7.5 7.5 9.515 12 12 12zm0 2c-3.315 0-10 1.68-10 5v2h20v-2c0-3.32-6.685-5-10-5z"/>
-                    </svg>
-                </button>
-                <div x-show="open" @click.away="open = false" class="absolute right-0 z-10 py-1 mt-1 w-36 bg-white rounded-md shadow-lg" x-cloak>
-                    <a href="#" class="block px-3 py-1 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-
-                    <form method="POST" action="{{ route('dosen.logout') }}">
-                        @csrf
-                        <button type="submit" class="block px-3 py-1 w-full text-sm text-left text-gray-700 hover:bg-gray-100">
-                            Logout
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
+<nav class="flex justify-between items-center p-4 bg-white shadow-sm">
+    <!-- Logo -->
+    <div class="flex items-center">
+      <img src="{{ asset('images/logo_signix.png') }}" alt="SIGNIX Logo" class="w-[100px] mr-4" />
     </div>
-</nav>
+
+    <!-- Menu Links -->
+    <div class="flex space-x-6">
+      <a href="{{ route('dosen.dashboard') }}" class="text-black font-medium hover:text-blue-500 {{ request()->routeIs('dosen.dashboard') ? 'border-b-2 border-blue-500' : '' }}">
+        {{ request()->routeIs('dosen.dashboard') ? 'Home' : 'Home' }}
+      </a>
+      <a href="{{ route('user.dosen.create') }}" class="text-black font-medium hover:text-blue-500 {{ request()->routeIs('user.dosen.create') ? 'border-b-2 border-blue-500' : '' }}">
+        {{ request()->routeIs('user.dosen.create') ? 'Buat Tanda Tangan' : 'Buat Tanda Tangan' }}
+      </a>
+      <a href="{{ route('dosen.riwayat') }}" class="text-black font-medium hover:text-blue-500 {{ request()->routeIs('dosen.riwayat') ? 'border-b-2 border-blue-500' : '' }}">
+        {{ request()->routeIs('dosen.riwayat') ? 'Riwayat' : 'Riwayat' }}
+      </a>
+    </div>
+
+    <!-- Notification and Profile Icon -->
+    <div class="flex items-center space-x-4">
+
+      <div x-data="{ open: false }" class="relative">
+        <button @click="open = !open" class="text-black">
+          @if(Auth::guard('dosen')->user()->profile && file_exists(public_path('profiles/' . Auth::guard('dosen')->user()->profile)))
+            <img src="{{ asset('profiles/' . Auth::guard('dosen')->user()->profile) }}"
+                 alt="Profile Picture"
+                 class="object-cover w-8 h-8 rounded-full">
+          @else
+            {{-- Fallback ke icon default jika tidak ada foto --}}
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 12c2.485 0 4.5-2.015 4.5-4.5S14.485 3 12 3 7.5 5.015 7.5 7.5 9.515 12 12 12zm0 2c-3.315 0-10 1.68-10 5v2h20v-2c0-3.32-6.685-5-10-5z"/>
+            </svg>
+          @endif
+        </button>
+        <div x-show="open" @click.away="open = false" class="absolute right-0 z-10 py-1 mt-2 w-48 bg-white rounded-md shadow-lg">
+          <div class="block px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
+            {{ Auth::guard('dosen')->user()->nama_dosen }}
+          </div>
+          <a href="{{ route('dosen.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+
+          <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="block px-4 py-2 w-full text-sm text-left text-gray-700 hover:bg-gray-100">Logout</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </nav>

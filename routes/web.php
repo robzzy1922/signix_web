@@ -49,7 +49,13 @@ Route::prefix('dosen')->middleware(EnsureRoleIsAuthenticated::class . ':dosen')-
     Route::get('/dokumen/{id}', [DosenController::class, 'getDokumenContent'])->name('dokumen.content');
     Route::get('/dosen/dokumen/{id}', [DosenController::class, 'showDokumen']);
     Route::get('/dokumen/{id}', [DosenController::class, 'getDokumenDetail'])->name('dosen.dokumen.detail');
+    Route::get('/profile', [DosenController::class, 'profile'])->name('dosen.profile');
     Route::post('/dosen/logout', [DosenController::class, 'logout'])->name('dosen.logout');
+    Route::get('/profile/edit', [DosenController::class, 'editProfile'])->name('dosen.profile.edit');
+    Route::put('/profile/update', [DosenController::class, 'updateProfile'])->name('dosen.profile.update');
+    Route::post('/profile/photo', [DosenController::class, 'updatePhoto'])->name('dosen.profile.photo.update');
+    Route::delete('/profile/photo', [DosenController::class, 'destroyPhoto'])->name('dosen.profile.photo.destroy');
+    Route::put('/profile/password', [DosenController::class, 'updatePassword'])->name('dosen.password.update');
 });
 
 
