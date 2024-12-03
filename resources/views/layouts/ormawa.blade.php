@@ -20,5 +20,10 @@
     @include('components.footer_ormawa')
 
     <script src="{{ asset('js/app.js') }}"></script>
+
+    <form method="POST" action="{{ route('ormawa.logout') }}">
+        @csrf
+        <button type="submit">Logout</button>
+    </form>
 </body>
 </html>

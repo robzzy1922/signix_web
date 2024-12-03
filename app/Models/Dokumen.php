@@ -14,13 +14,12 @@ class Dokumen extends Model
 
     protected $fillable = [
         'nomor_surat',
-        'perihal',
-        'status_dokumen',
-        'file',
-        'keterangan',
         'tanggal_pengajuan',
-        'id_ormawa',
-        'id_dosen',
+        'perihal',
+        'file',
+        'status_dokumen',
+        'qr_code_path',
+        'is_signed'
     ];
 
     // Relationship with Ormawa

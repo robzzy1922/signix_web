@@ -22,8 +22,8 @@
 
       <div x-data="{ open: false }" class="relative">
         <button @click="open = !open" class="text-black">
-          @if(Auth::guard('ormawa')->user()->photoPath)
-            <img src="{{ asset('profiles/' . Auth::guard('ormawa')->user()->photoPath) }}"
+          @if(Auth::guard('ormawa')->user()->profile && file_exists(public_path('profiles/' . Auth::guard('ormawa')->user()->profile)))
+            <img src="{{ asset('profiles/' . Auth::guard('ormawa')->user()->profile) }}"
                  alt="Profile Picture"
                  class="object-cover w-8 h-8 rounded-full">
           @else
@@ -39,7 +39,7 @@
           </div>
           <a href="{{ route('ormawa.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
 
-          <form method="POST" action="{{ route('logout') }}">
+          <form method="POST" action="{{ route('ormawa.logout') }}">
             @csrf
             <button type="submit" class="block px-4 py-2 w-full text-sm text-left text-gray-700 hover:bg-gray-100">Logout</button>
           </form>

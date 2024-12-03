@@ -36,6 +36,8 @@ Route::middleware(['auth:ormawa'])->group(function () {
         Route::delete('/ormawa/profile/photo', [OrmawaController::class, 'destroyPhoto'])->name('ormawa.profile.photo.destroy');
         Route::post('/profile/photo', [OrmawaController::class, 'updatePhoto'])->name('profile.photo.update');
         Route::delete('/profile/photo', [OrmawaController::class, 'destroyPhoto'])->name('profile.photo.destroy');
+        Route::post('/logout', [OrmawaController::class, 'logout'])->name('logout');
+        Route::get('/dokumen/{id}', [OrmawaController::class, 'showDokumen'])->name('dokumen.show');
     });
 });
 
@@ -44,11 +46,10 @@ Route::middleware(['auth:ormawa'])->group(function () {
 Route::prefix('dosen')->middleware(EnsureRoleIsAuthenticated::class . ':dosen')->group(function () {
     Route::get('/dashboard', [DosenController::class, 'dashboardDosen'])->name('dosen.dashboard');
     Route::get('/buat-tanda-tangan', [DosenController::class, 'create'])->name('user.dosen.create');
-    Route::post('/logout', [LoginAuthController::class, 'logout'])->name('logout');
+    Route::post('/logout', [DosenController::class, 'logout'])->name('dosen.logout');
     Route::get('/riwayat', [DosenController::class, 'riwayat'])->name('dosen.riwayat');
-    Route::get('/dokumen/{id}', [DosenController::class, 'getDokumenContent'])->name('dokumen.content');
-    Route::get('/dosen/dokumen/{id}', [DosenController::class, 'showDokumen']);
-    Route::get('/dokumen/{id}', [DosenController::class, 'getDokumenDetail'])->name('dosen.dokumen.detail');
+    Route::get('/dokumen/{id}', [DosenController::class, 'showDokumen'])->name('dosen.dokumen.show');
+    Route::get('/dokumen/{id}/content', [DosenController::class, 'getDokumenContent'])->name('dosen.dokumen.content');
     Route::get('/profile', [DosenController::class, 'profile'])->name('dosen.profile');
     Route::post('/dosen/logout', [DosenController::class, 'logout'])->name('dosen.logout');
     Route::get('/profile/edit', [DosenController::class, 'editProfile'])->name('dosen.profile.edit');
@@ -56,6 +57,17 @@ Route::prefix('dosen')->middleware(EnsureRoleIsAuthenticated::class . ':dosen')-
     Route::post('/profile/photo', [DosenController::class, 'updatePhoto'])->name('dosen.profile.photo.update');
     Route::delete('/profile/photo', [DosenController::class, 'destroyPhoto'])->name('dosen.profile.photo.destroy');
     Route::put('/profile/password', [DosenController::class, 'updatePassword'])->name('dosen.password.update');
+
+    // Perbaiki route untuk QR Code
+    Route::get('/dokumen/{id}/generate-qr', [DosenController::class, 'generateQrCode'])
+        ->name('dosen.dokumen.generateQr');
+    Route::post('/dokumen/{id}/save-qr-position', [DosenController::class, 'saveQrPosition'])
+        ->name('dosen.dokumen.saveQrPosition')
+        ->withoutMiddleware(['web']);
+
+    // Verification route (pindahkan ke dalam group dosen)
+    Route::get('/verify/document/{id}', [DosenController::class, 'verifyDocument'])
+        ->name('verify.document');
 });
 
 
@@ -107,3 +119,7 @@ Route::prefix('admin')->group(function () {
         Route::delete('/profile/photo', [AdminOrmawaController::class, 'destroyProfilePhoto'])->name('admin.profile.photo.destroy');
     });
 });
+
+// Tambahkan route ini di luar group middleware
+Route::get('/verify/document/{id}', [DosenController::class, 'verifyDocument'])
+    ->name('verify.document');

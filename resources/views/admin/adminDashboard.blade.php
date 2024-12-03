@@ -51,70 +51,121 @@
     <!-- Data Tables -->
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <!-- User Data -->
-        <div class="bg-white shadow-lg rounded-xl">
-            <div class="flex items-center justify-between p-6 border-b border-gray-200">
-                <h2 class="text-xl font-bold text-gray-800">Data User</h2>
-                <a href="#" class="px-4 py-2 text-sm text-blue-500 hover:text-blue-600 hover:underline">
-                    Lihat Semua
-                </a>
+        <div class="overflow-hidden bg-white rounded-xl shadow-lg">
+            <div class="flex justify-between items-center p-6 bg-gray-50 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800">Data User Terbaru</h2>
+                <div class="flex space-x-2">
+                    <a href="{{ route('admin.ormawa.index') }}" class="px-4 py-2 text-sm font-medium text-blue-600 rounded-lg transition-colors duration-200 hover:text-blue-700 hover:bg-blue-50">
+                        Ormawa
+                    </a>
+                    <a href="{{ route('admin.dosen.index') }}" class="px-4 py-2 text-sm font-medium text-blue-600 rounded-lg transition-colors duration-200 hover:text-blue-700 hover:bg-blue-50">
+                        Dosen
+                    </a>
+                </div>
             </div>
-            <div class="p-6">
+            <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
-                        <tr class="text-left border-b border-gray-200">
-                            <th class="pb-4 font-bold text-gray-700">Nama</th>
-                            <th class="pb-4 font-bold text-gray-700">Email</th>
-                            <th class="pb-4 font-bold text-gray-700">Role</th>
+                        <tr class="text-left bg-gray-50">
+                            <th class="px-6 py-3 font-semibold tracking-wider text-gray-600">Nama</th>
+                            <th class="px-6 py-3 font-semibold tracking-wider text-gray-600">Email</th>
+                            <th class="px-6 py-3 font-semibold tracking-wider text-gray-600">Role</th>
+                            <th class="px-6 py-3 font-semibold tracking-wider text-gray-600">Bergabung</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        <tr>
-                            <td class="py-2">John Doe</td>
-                            <td class="py-2">john@example.com</td>
-                            <td class="py-2">Admin</td>
-                        </tr>
-                        <tr>
-                            <td class="py-2">Jane Smith</td>
-                            <td class="py-2">jane@example.com</td>
-                            <td class="py-2">User</td>
-                        </tr>
+                    <tbody class="divide-y divide-gray-200">
+                        @forelse($recentUsers as $user)
+                            <tr class="transition-colors duration-200 hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex justify-center items-center w-8 h-8 bg-gray-200 rounded-full">
+                                            <span class="text-sm font-medium text-gray-600">
+                                                {{ substr($user['name'], 0, 1) }}
+                                            </span>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium text-gray-900">{{ $user['name'] }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                    {{ $user['email'] }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 text-xs font-semibold rounded-full
+                                        {{ $user['role'] === 'Dosen' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                        {{ $user['role'] }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                                    {{ $user['created_at']->diffForHumans() }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <svg class="mb-2 w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                        </svg>
+                                        <p class="text-gray-600">Tidak ada data user terbaru</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
 
         <!-- Recent Activities -->
-        <div class="bg-white shadow-lg rounded-xl">
-            <div class="flex items-center justify-between p-6 border-b border-gray-200">
-                <h2 class="text-xl font-bold text-gray-800">Aktivitas Terbaru</h2>
-                <a href="#" class="px-4 py-2 text-sm text-blue-500 hover:text-blue-600 hover:underline">
+        <div class="bg-white rounded-xl shadow-lg">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800">Aktivitas Dokumen Terbaru</h2>
+                <a href="{{ route('admin.dokumen.index') }}" class="px-4 py-2 text-sm text-blue-500 hover:text-blue-600 hover:underline">
                     Lihat Semua
                 </a>
             </div>
             <div class="p-6">
                 <div class="space-y-6">
-                    <div class="flex items-center">
-                        <div class="flex items-center justify-center w-8 h-8 text-blue-500 bg-blue-100 rounded-full">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
+                    @forelse($recentActivities as $activity)
+                        <div class="flex items-center">
+                            <div class="flex justify-center items-center w-8 h-8 rounded-full
+                                @if($activity->status_dokumen === 'disahkan')
+                                    text-green-500 bg-green-100
+                                @elseif($activity->status_dokumen === 'direvisi')
+                                    text-blue-500 bg-blue-100
+                                @else
+                                    text-yellow-500 bg-yellow-100
+                                @endif">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    @if($activity->status_dokumen === 'disahkan')
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    @elseif($activity->status_dokumen === 'direvisi')
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    @else
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    @endif
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-900">
+                                    {{ $activity->ormawa->namaOrmawa }} - {{ $activity->perihal }}
+                                </p>
+                                <p class="text-sm text-gray-500">
+                                    Status: <span class="font-medium">{{ ucfirst($activity->status_dokumen) }}</span>
+                                    @if($activity->dosen)
+                                        Kepada {{ $activity->dosen->nama_dosen }}
+                                    @endif
+                                </p>
+                                <p class="text-xs text-gray-400">{{ $activity->created_at->diffForHumans() }}</p>
+                            </div>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-gray-800">Surat baru ditambahkan</p>
-                            <p class="text-sm text-gray-500">2 menit yang lalu</p>
+                    @empty
+                        <div class="text-center text-gray-500">
+                            Tidak ada aktivitas dokumen terbaru
                         </div>
-                    </div>
-                    <div class="flex items-center">
-                        <div class="flex items-center justify-center w-8 h-8 text-green-500 bg-green-100 rounded-full">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-gray-800">Surat telah ditandatangani</p>
-                            <p class="text-sm text-gray-500">5 menit yang lalu</p>
-                        </div>
-                    </div>
+                    @endforelse
                 </div>
             </div>
         </div>

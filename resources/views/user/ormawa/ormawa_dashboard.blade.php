@@ -132,60 +132,146 @@
   </div>
 
   <!-- Modal -->
-  <div id="detailModal" class="hidden overflow-y-auto fixed inset-0 z-10">
-      <div class="flex justify-center items-center min-h-screen">
-          <div class="p-6 w-full max-w-md bg-white rounded-lg shadow-xl">
-              <div class="flex justify-between items-center">
+  <div id="detailModal" class="hidden overflow-y-auto fixed inset-0 z-50">
+      <div class="flex justify-center items-center px-4 min-h-screen">
+          <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+          <div class="relative w-full max-w-lg bg-white rounded-lg shadow-xl">
+              <div class="px-6 py-4 border-b border-gray-200">
                   <h3 class="text-lg font-medium text-gray-900">Detail Dokumen</h3>
-                  <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                  <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500">
                       <span class="sr-only">Close</span>
-                      &times;
+                      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                   </button>
               </div>
-              <div class="mt-4">
-                  <!-- Document Display Area -->
-                  <div class="p-4 mb-4 bg-gray-100 rounded-lg border border-blue-500">
-                      <p id="modalContent" class="text-center">Loading...</p>
-                  </div>
-                  <!-- Buttons -->
-                  <div class="flex justify-between">
-                      <button class="px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600">
-                          DOWNLOAD
-                      </button>
-                      <button class="px-4 py-2 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600">
-                          LIHAT
-                      </button>
-                  </div>
+
+              <div class="px-6 py-4" id="modalContent">
+                  <!-- Content will be loaded here -->
+              </div>
+
+              <div class="flex justify-end px-6 py-4 space-x-3 border-t border-gray-200">
+                  <button onclick="downloadDocument()"
+                          class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                      Download
+                  </button>
+                  <button onclick="viewDocument()"
+                          class="px-4 py-2 text-white bg-yellow-500 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2">
+                      Lihat
+                  </button>
+                  <button onclick="closeModal()"
+                          class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                      Tutup
+                  </button>
               </div>
           </div>
       </div>
   </div>
 
   <script>
+      let currentDocumentId = null;
+      let currentFileUrl = null;
+
       function showModal(dokumenId, fileUrl) {
-          document.getElementById('modalContent').innerHTML = `<iframe src="${fileUrl}" width="100%" height="500px"></iframe>`;
+          currentDocumentId = dokumenId;
+          currentFileUrl = fileUrl;
+
+          // Tampilkan loading state
+          document.getElementById('modalContent').innerHTML = `
+              <div class="flex justify-center items-center h-64">
+                  <div class="w-12 h-12 rounded-full border-b-2 border-blue-500 animate-spin"></div>
+              </div>
+          `;
+
           document.getElementById('detailModal').classList.remove('hidden');
 
-          // Update the "LIHAT" button to open the document in a new tab
-          const lihatButton = document.querySelector('#detailModal .bg-yellow-500');
-          lihatButton.onclick = function() {
-              window.open(fileUrl, '_blank');
-          };
-
-          // Update the "DOWNLOAD" button to download the document
-          const downloadButton = document.querySelector('#detailModal .bg-blue-500');
-          downloadButton.onclick = function() {
-              const link = document.createElement('a');
-              link.href = fileUrl;
-              link.download = fileUrl.split('/').pop(); // Extracts the file name from the URL
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-          };
+          // Gunakan route yang benar
+          fetch(`/ormawa/dokumen/${dokumenId}`)
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error('Network response was not ok');
+                  }
+                  return response.json();
+              })
+              .then(data => {
+                  console.log('Received data:', data); // Untuk debugging
+                  document.getElementById('modalContent').innerHTML = `
+                      <div class="space-y-4">
+                          <div class="p-4 mb-4 bg-gray-100 rounded-lg border border-blue-500">
+                              <object
+                                  data="${data.file_url}#toolbar=0"
+                                  type="application/pdf"
+                                  width="100%"
+                                  height="500px"
+                                  class="rounded-lg border"
+                              >
+                                  <p>Dokumen tidak dapat ditampilkan.
+                                     <a href="${data.file_url}" target="_blank" class="text-blue-500">Klik disini untuk membuka</a>
+                                  </p>
+                              </object>
+                          </div>
+                          <div>
+                              <p class="text-sm font-medium text-gray-500">Nomor Surat</p>
+                              <p class="mt-1">${data.nomor_surat || '-'}</p>
+                          </div>
+                          <div>
+                              <p class="text-sm font-medium text-gray-500">Tanggal Pengajuan</p>
+                              <p class="mt-1">${data.tanggal_pengajuan || '-'}</p>
+                          </div>
+                          <div>
+                              <p class="text-sm font-medium text-gray-500">Perihal</p>
+                              <p class="mt-1">${data.perihal || '-'}</p>
+                          </div>
+                          <div>
+                              <p class="text-sm font-medium text-gray-500">Status</p>
+                              <p class="mt-1">${data.status_dokumen || '-'}</p>
+                          </div>
+                          <div>
+                              <p class="text-sm font-medium text-gray-500">Keterangan</p>
+                              <p class="mt-1">${data.keterangan || '-'}</p>
+                          </div>
+                      </div>
+                  `;
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+                  document.getElementById('modalContent').innerHTML = `
+                      <div class="text-center text-red-500">
+                          Terjadi kesalahan saat memuat data. Silakan coba lagi.
+                      </div>
+                  `;
+              });
       }
 
       function closeModal() {
           document.getElementById('detailModal').classList.add('hidden');
+          currentDocumentId = null;
+          currentFileUrl = null;
       }
+
+      function downloadDocument() {
+          if (currentFileUrl) {
+              const link = document.createElement('a');
+              link.href = currentFileUrl;
+              link.download = currentFileUrl.split('/').pop();
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+          }
+      }
+
+      function viewDocument() {
+          if (currentFileUrl) {
+              window.open(currentFileUrl, '_blank');
+          }
+      }
+
+      // Close modal when clicking outside
+      document.getElementById('detailModal').addEventListener('click', function(e) {
+          if (e.target === this) {
+              closeModal();
+          }
+      });
   </script>
 @endsection

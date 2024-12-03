@@ -203,4 +203,33 @@ class OrmawaController extends Controller
 
         return back()->with('success', 'Profile photo removed successfully');
     }
+
+    public function logout()
+    {
+        Auth::guard('ormawa')->logout();
+        return redirect()->route('login');
+    }
+
+    public function showDokumen($id)
+    {
+        try {
+            $dokumen = Dokumen::with(['dosen', 'ormawa'])
+                ->where('id', $id)
+                ->where('id_ormawa', auth()->guard('ormawa')->id()) // Untuk keamanan
+                ->firstOrFail();
+
+            return response()->json([
+                'id' => $dokumen->id,
+                'nomor_surat' => $dokumen->nomor_surat,
+                'tanggal_pengajuan' => $dokumen->tanggal_pengajuan,
+                'perihal' => $dokumen->perihal,
+                'status_dokumen' => ucfirst($dokumen->status_dokumen),
+                'keterangan' => $dokumen->keterangan,
+                'file_url' => asset('storage/' . $dokumen->file)
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in showDokumen: ' . $e->getMessage());
+            return response()->json(['error' => 'Dokumen tidak ditemukan'], 404);
+        }
+    }
 }

@@ -39,7 +39,7 @@
           </div>
           <a href="{{ route('dosen.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
 
-          <form method="POST" action="{{ route('logout') }}">
+          <form method="POST" action="{{ route('dosen.logout') }}">
             @csrf
             <button type="submit" class="block px-4 py-2 w-full text-sm text-left text-gray-700 hover:bg-gray-100">Logout</button>
           </form>

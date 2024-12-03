@@ -5,7 +5,7 @@
         <div class="grid grid-cols-1 gap-4 mb-8 md:grid-cols-3">
             <!-- Surat yang diajukan -->
             <a href="{{ route('dosen.riwayat', ['status' => 'diajukan']) }}" class="block">
-                <div class="p-4 bg-yellow-400 rounded-lg shadow hover:bg-yellow-500 transition-colors">
+                <div class="p-4 bg-yellow-400 rounded-lg shadow transition-colors hover:bg-yellow-500">
                     <div class="flex items-center">
                         <i class="mr-2 text-2xl fas fa-envelope"></i>
                         <h2 class="text-lg font-bold">{{ $countDiajukan }} Surat diajukan</h2>
@@ -15,7 +15,7 @@
 
             <!-- Surat sudah tertanda -->
             <a href="{{ route('dosen.riwayat', ['status' => 'disahkan']) }}" class="block">
-                <div class="p-4 bg-green-400 rounded-lg shadow hover:bg-green-500 transition-colors">
+                <div class="p-4 bg-green-400 rounded-lg shadow transition-colors hover:bg-green-500">
                     <div class="flex items-center">
                         <i class="mr-2 text-2xl fas fa-check-circle"></i>
                         <h2 class="text-lg font-bold">{{ $countDisahkan }} Surat sudah tertanda</h2>
@@ -25,7 +25,7 @@
 
             <!-- Surat perlu direvisi -->
             <a href="{{ route('dosen.riwayat', ['status' => 'direvisi']) }}" class="block">
-                <div class="p-4 bg-blue-400 rounded-lg shadow hover:bg-blue-500 transition-colors">
+                <div class="p-4 bg-blue-400 rounded-lg shadow transition-colors hover:bg-blue-500">
                     <div class="flex items-center">
                         <i class="mr-2 text-2xl fas fa-edit"></i>
                         <h2 class="text-lg font-bold">{{ $countRevisi }} Surat perlu direvisi</h2>
@@ -90,7 +90,7 @@
                             <td class="px-6 py-4 whitespace-nowrap" data-nomor>{{ $dokumen->nomor_surat }}</td>
                             <td class="px-6 py-4 whitespace-nowrap" data-tanggal>{{ $dokumen->tanggal_pengajuan }}</td>
                             <td class="px-6 py-4 whitespace-nowrap" data-perihal>{{ $dokumen->perihal }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap" data-ormawa>{{ $dokumen->ormawa->nama_ormawa }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap" data-ormawa>{{ $dokumen->ormawa->namaOrmawa }}</td>
                             <td class="px-6 py-4 whitespace-nowrap" data-status>
                                 @php
                                     $statusClass = match($dokumen->status_dokumen) {
@@ -133,8 +133,58 @@
                     </button>
                 </div>
 
+                <style>
+                    .resize-drag {
+                        background-color: #29e;
+                        color: white;
+                        font-size: 20px;
+                        font-family: sans-serif;
+                        border-radius: 8px;
+                        padding: 20px;
+                        margin: 30px 20px;
+                        touch-action: none;
+                        user-select: none;
+                        position: absolute;
+                    }
+
+                    .resize-container {
+                        position: relative;
+                        width: 100%;
+                        height: 400px;
+                        border: 1px solid #ccc;
+                        overflow: hidden;
+                    }
+                </style>
+
                 <div class="px-6 py-4" id="modalContent">
                     <!-- Content will be loaded here -->
+                </div>
+
+                <!-- QR Code Editor Modal Content -->
+                <div id="qrCodeEditor" class="hidden">
+                    <div class="relative w-full h-[600px] bg-gray-100">
+                        <!-- PDF Preview -->
+                        <iframe id="pdfFrame" class="w-full h-full"></iframe>
+
+                        <!-- Draggable & Resizable QR Code Container -->
+                        <div id="qrCode" class="hidden absolute bg-white rounded-lg shadow-lg cursor-move"
+                             style="width: 100px; height: 100px; top: 50px; left: 50px;">
+                            <img id="qrImage" src="" alt="QR Code" class="object-contain w-full h-full"/>
+                            <!-- Resize handle -->
+                            <div class="absolute right-0 bottom-0 w-4 h-4 bg-blue-500 rounded-full opacity-50 cursor-se-resize"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end mt-4 space-x-2">
+                        <button onclick="saveQrPosition()"
+                                class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
+                            Simpan Posisi
+                        </button>
+                        <button onclick="cancelQrPosition()"
+                                class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300">
+                            Batal
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex justify-end px-6 py-4 space-x-3 border-t border-gray-200">
@@ -150,11 +200,16 @@
                             class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
                         Tutup
                     </button>
+                    <button onclick="generateQrCode({{ $dokumen->id }})"
+                            class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        Bubuhkan QR Code
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.10.11/interact.min.js"></script>
     <script>
     let currentDocumentId = null;
     let currentFileUrl = null;
@@ -169,9 +224,6 @@
             .then(data => {
                 document.getElementById('modalContent').innerHTML = `
                     <div class="space-y-4">
-                        <div class="p-4 mb-4 bg-gray-100 rounded-lg border border-blue-500">
-                            <iframe src="${currentFileUrl}" width="100%" height="500px"></iframe>
-                        </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Nomor Surat</p>
                             <p class="mt-1">${data.nomor_surat}</p>
@@ -201,6 +253,8 @@
 
     function closeModal() {
         document.getElementById('documentModal').classList.add('hidden');
+        document.getElementById('qrCodeEditor').classList.add('hidden');
+        document.getElementById('modalContent').classList.remove('hidden');
         currentDocumentId = null;
         currentFileUrl = null;
     }
@@ -220,6 +274,163 @@
         if (currentFileUrl) {
             window.open(currentFileUrl, '_blank');
         }
+    }
+
+    function generateQrCode(documentId) {
+        if (!documentId) return;
+
+        const button = document.querySelector(`button[onclick="generateQrCode(${documentId})"]`);
+        const originalText = button.innerHTML;
+        button.innerHTML = 'Generating...';
+        button.disabled = true;
+
+        fetch(`/dosen/dokumen/${documentId}/generate-qr`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Hide modal content and show QR editor
+                document.getElementById('modalContent').classList.add('hidden');
+                document.getElementById('qrCodeEditor').classList.remove('hidden');
+
+                // Set PDF preview
+                document.getElementById('pdfFrame').src = currentFileUrl;
+
+                // Set QR code image and show container
+                const qrCode = document.getElementById('qrCode');
+                const qrImage = document.getElementById('qrImage');
+
+                qrImage.onload = function() {
+                    qrCode.classList.remove('hidden');
+                    initializeInteract();
+                };
+
+                qrImage.src = data.qrCodeUrl;
+
+                // Reset position and size
+                qrCode.style.transform = 'translate(50px, 50px)';
+                qrCode.setAttribute('data-x', 50);
+                qrCode.setAttribute('data-y', 50);
+                qrCode.style.width = '100px';
+                qrCode.style.height = '100px';
+            } else {
+                alert(data.message || 'Failed to generate QR Code');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error generating QR Code');
+        })
+        .finally(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+    }
+
+    function initializeInteract() {
+        interact('#qrCode')
+            .draggable({
+                inertia: true,
+                modifiers: [
+                    interact.modifiers.restrictRect({
+                        restriction: 'parent',
+                        endOnly: true
+                    })
+                ],
+                autoScroll: true,
+                listeners: {
+                    move: dragMoveListener
+                }
+            })
+            .resizable({
+                edges: { left: true, right: true, bottom: true, top: true },
+                restrictEdges: {
+                    outer: 'parent',
+                    endOnly: true,
+                },
+                restrictSize: {
+                    min: { width: 50, height: 50 },
+                    max: { width: 200, height: 200 },
+                },
+                inertia: true,
+                listeners: {
+                    move: resizeMoveListener
+                }
+            });
+    }
+
+    function dragMoveListener(event) {
+        const target = event.target;
+        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+    }
+
+    function resizeMoveListener(event) {
+        const target = event.target;
+        let x = (parseFloat(target.getAttribute('data-x')) || 0);
+        let y = (parseFloat(target.getAttribute('data-y')) || 0);
+
+        // Update element width/height
+        target.style.width = `${event.rect.width}px`;
+        target.style.height = `${event.rect.height}px`;
+
+        // Translate when resizing from top or left edges
+        x += event.deltaRect.left;
+        y += event.deltaRect.top;
+
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+    }
+
+    function saveQrPosition() {
+        const qrElement = document.getElementById('qrCode');
+        const rect = qrElement.getBoundingClientRect();
+        const containerRect = document.getElementById('pdfFrame').getBoundingClientRect();
+
+        // Calculate relative position
+        const position = {
+            x: (parseFloat(qrElement.getAttribute('data-x')) || 0),
+            y: (parseFloat(qrElement.getAttribute('data-y')) || 0),
+            width: parseFloat(qrElement.style.width),
+            height: parseFloat(qrElement.style.height)
+        };
+
+        fetch(`/dosen/dokumen/${currentDocumentId}/save-qr-position`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(position)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Posisi QR code berhasil disimpan');
+                location.reload();
+            } else {
+                alert(data.message || 'Gagal menyimpan posisi QR code');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Gagal menyimpan posisi QR code');
+        });
+    }
+
+    function cancelQrPosition() {
+        document.getElementById('qrCodeEditor').classList.add('hidden');
+        document.getElementById('modalContent').classList.remove('hidden');
     }
 
     // Close modal when clicking outside
