@@ -68,6 +68,9 @@ Route::prefix('dosen')->middleware(EnsureRoleIsAuthenticated::class . ':dosen')-
     // Verification route (pindahkan ke dalam group dosen)
     Route::get('/verify/document/{id}', [DosenController::class, 'verifyDocument'])
         ->name('verify.document');
+
+    Route::get('/dokumen/{id}/edit-qr', [DosenController::class, 'editQrCode'])
+        ->name('dosen.dokumen.editQr');
 });
 
 

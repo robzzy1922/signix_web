@@ -200,7 +200,7 @@
                             class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
                         Tutup
                     </button>
-                    <button onclick="generateQrCode({{ $dokumen->id }})"
+                    <button onclick="window.location.href='{{ route('dosen.dokumen.editQr', $dokumen->id) }}'"
                             class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                         Bubuhkan QR Code
                     </button>
@@ -294,14 +294,11 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Hide modal content and show QR editor
                 document.getElementById('modalContent').classList.add('hidden');
                 document.getElementById('qrCodeEditor').classList.remove('hidden');
 
-                // Set PDF preview
                 document.getElementById('pdfFrame').src = currentFileUrl;
 
-                // Set QR code image and show container
                 const qrCode = document.getElementById('qrCode');
                 const qrImage = document.getElementById('qrImage');
 
@@ -312,7 +309,6 @@
 
                 qrImage.src = data.qrCodeUrl;
 
-                // Reset position and size
                 qrCode.style.transform = 'translate(50px, 50px)';
                 qrCode.setAttribute('data-x', 50);
                 qrCode.setAttribute('data-y', 50);

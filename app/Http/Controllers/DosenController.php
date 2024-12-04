@@ -195,29 +195,22 @@ class DosenController extends Controller
         try {
             $dokumen = Dokumen::findOrFail($id);
 
-            // Generate verification URL
             $verificationUrl = url("/verify/document/{$id}");
 
-            // Create renderer with larger size and proper styling
             $renderer = new ImageRenderer(
                 new RendererStyle(400, 1),
                 new SvgImageBackEnd()
             );
             $writer = new Writer($renderer);
 
-            // Generate QR code
             $qrCode = $writer->writeString($verificationUrl);
 
-            // Create unique filename
             $qrCodePath = 'qrcodes/qr_' . uniqid() . '.svg';
 
-            // Ensure directory exists
             Storage::disk('public')->makeDirectory('qrcodes', 0755, true, true);
 
-            // Save QR code image
             Storage::disk('public')->put($qrCodePath, $qrCode);
 
-            // Update document with QR code path
             $dokumen->update([
                 'qr_code_path' => $qrCodePath
             ]);
@@ -250,9 +243,18 @@ class DosenController extends Controller
                 'height' => 'required|numeric'
             ]);
 
+            // Pastikan QR code sudah di-generate
+            if (!$dokumen->qr_code_path || !Storage::disk('public')->exists($dokumen->qr_code_path)) {
+                throw new \Exception('QR Code belum di-generate');
+            }
+
             // Create new PDF with QR code
             $pdf = new Fpdi();
             $pdfPath = storage_path('app/public/' . $dokumen->file);
+            
+            if (!file_exists($pdfPath)) {
+                throw new \Exception('File PDF tidak ditemukan');
+            }
 
             // Import pages from existing PDF
             $pageCount = $pdf->setSourceFile($pdfPath);
@@ -266,6 +268,9 @@ class DosenController extends Controller
                 // Add QR code only on first page
                 if ($pageNo === 1) {
                     $qrPath = storage_path('app/public/' . $dokumen->qr_code_path);
+                    if (!file_exists($qrPath)) {
+                        throw new \Exception('File QR Code tidak ditemukan');
+                    }
                     $pdf->Image($qrPath, $validated['x'], $validated['y'], $validated['width'], $validated['height']);
                 }
             }
@@ -274,7 +279,7 @@ class DosenController extends Controller
             $newPdfPath = 'documents/signed_' . uniqid() . '.pdf';
             Storage::disk('public')->put($newPdfPath, $pdf->Output('S'));
 
-            // Update document status and file
+            // Update document
             $dokumen->update([
                 'file' => $newPdfPath,
                 'is_signed' => true,
@@ -312,5 +317,11 @@ class DosenController extends Controller
                 'message' => 'Dokumen tidak ditemukan'
             ]);
         }
+    }
+
+    public function editQrCode($id)
+    {
+        $dokumen = Dokumen::findOrFail($id);
+        return view('user.dosen.edit_qr', compact('dokumen'));
     }
 }
