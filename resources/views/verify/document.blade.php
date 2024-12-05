@@ -12,6 +12,9 @@
                     <p><span class="font-semibold">Nomor Surat:</span> {{ $dokumen->nomor_surat }}</p>
                     <p><span class="font-semibold">Tanggal:</span> {{ $dokumen->tanggal_pengajuan }}</p>
                     <p><span class="font-semibold">Perihal:</span> {{ $dokumen->perihal }}</p>
+                    <p><span class="font-semibold">Kode Pengesahan:</span> 
+                        <span class="font-mono bg-gray-100 px-2 py-1 rounded">{{ $dokumen->kode_pengesahan }}</span>
+                    </p>
                     <p><span class="font-semibold">Status:</span>
                         <span class="px-2 py-1 text-white bg-green-500 rounded">{{ ucfirst($dokumen->status_dokumen) }}</span>
                     </p>

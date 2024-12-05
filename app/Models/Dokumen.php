@@ -19,7 +19,12 @@ class Dokumen extends Model
         'file',
         'status_dokumen',
         'qr_code_path',
-        'is_signed'
+        'is_signed',
+        'qr_position_x',
+        'qr_position_y',
+        'qr_width',
+        'qr_height',
+        'kode_pengesahan'
     ];
 
     // Relationship with Ormawa

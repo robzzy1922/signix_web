@@ -9,9 +9,9 @@
       <a href="{{ route('dosen.dashboard') }}" class="text-black font-medium hover:text-blue-500 {{ request()->routeIs('dosen.dashboard') ? 'border-b-2 border-blue-500' : '' }}">
         {{ request()->routeIs('dosen.dashboard') ? 'Home' : 'Home' }}
       </a>
-      <a href="{{ route('user.dosen.create') }}" class="text-black font-medium hover:text-blue-500 {{ request()->routeIs('user.dosen.create') ? 'border-b-2 border-blue-500' : '' }}">
+      {{-- <a href="{{ route('user.dosen.create') }}" class="text-black font-medium hover:text-blue-500 {{ request()->routeIs('user.dosen.create') ? 'border-b-2 border-blue-500' : '' }}">
         {{ request()->routeIs('user.dosen.create') ? 'Buat Tanda Tangan' : 'Buat Tanda Tangan' }}
-      </a>
+      </a> --}}
       <a href="{{ route('dosen.riwayat') }}" class="text-black font-medium hover:text-blue-500 {{ request()->routeIs('dosen.riwayat') ? 'border-b-2 border-blue-500' : '' }}">
         {{ request()->routeIs('dosen.riwayat') ? 'Riwayat' : 'Riwayat' }}
       </a>

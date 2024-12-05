@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\Auth\AdminDosenController;
 use App\Http\Controllers\Admin\Auth\AdminLoginController;
 use App\Http\Controllers\Admin\Auth\AdminDashboardController;
 use App\Http\Controllers\Admin\Auth\AdminDokumenController;
+use App\Http\Controllers\DocumentController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -43,34 +44,34 @@ Route::middleware(['auth:ormawa'])->group(function () {
 
 
 //dosen
-Route::prefix('dosen')->middleware(EnsureRoleIsAuthenticated::class . ':dosen')->group(function () {
-    Route::get('/dashboard', [DosenController::class, 'dashboardDosen'])->name('dosen.dashboard');
-    Route::get('/buat-tanda-tangan', [DosenController::class, 'create'])->name('user.dosen.create');
-    Route::post('/logout', [DosenController::class, 'logout'])->name('dosen.logout');
-    Route::get('/riwayat', [DosenController::class, 'riwayat'])->name('dosen.riwayat');
-    Route::get('/dokumen/{id}', [DosenController::class, 'showDokumen'])->name('dosen.dokumen.show');
-    Route::get('/dokumen/{id}/content', [DosenController::class, 'getDokumenContent'])->name('dosen.dokumen.content');
-    Route::get('/profile', [DosenController::class, 'profile'])->name('dosen.profile');
-    Route::post('/dosen/logout', [DosenController::class, 'logout'])->name('dosen.logout');
-    Route::get('/profile/edit', [DosenController::class, 'editProfile'])->name('dosen.profile.edit');
-    Route::put('/profile/update', [DosenController::class, 'updateProfile'])->name('dosen.profile.update');
-    Route::post('/profile/photo', [DosenController::class, 'updatePhoto'])->name('dosen.profile.photo.update');
-    Route::delete('/profile/photo', [DosenController::class, 'destroyPhoto'])->name('dosen.profile.photo.destroy');
-    Route::put('/profile/password', [DosenController::class, 'updatePassword'])->name('dosen.password.update');
+Route::middleware(['auth:dosen'])->prefix('dosen')->name('dosen.')->group(function () {
+    Route::get('/dashboard', [DosenController::class, 'dashboardDosen'])->name('dashboard');
+    Route::get('/buat-tanda-tangan', [DosenController::class, 'create'])->name('create');
+    Route::post('/logout', [DosenController::class, 'logout'])->name('logout');
+    
+    // Perbaikan nama route riwayat
+    Route::get('/riwayat', [DosenController::class, 'riwayat'])->name('riwayat');
+    
+    Route::get('/dokumen/{id}', [DosenController::class, 'showDokumen'])->name('dokumen.show');
+    Route::get('/dokumen/{id}/content', [DosenController::class, 'getDokumenContent'])->name('dokumen.content');
+    Route::get('/profile', [DosenController::class, 'profile'])->name('profile');
+    Route::get('/profile/edit', [DosenController::class, 'editProfile'])->name('profile.edit');
+    Route::put('/profile/update', [DosenController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/photo', [DosenController::class, 'updatePhoto'])->name('profile.photo.update');
+    Route::delete('/profile/photo', [DosenController::class, 'destroyPhoto'])->name('profile.photo.destroy');
+    Route::put('/profile/password', [DosenController::class, 'updatePassword'])->name('password.update');
 
-    // Perbaiki route untuk QR Code
+    // Route untuk QR Code
     Route::get('/dokumen/{id}/generate-qr', [DosenController::class, 'generateQrCode'])
-        ->name('dosen.dokumen.generateQr');
-    Route::post('/dokumen/{id}/save-qr-position', [DosenController::class, 'saveQrPosition'])
-        ->name('dosen.dokumen.saveQrPosition')
-        ->withoutMiddleware(['web']);
+        ->name('dokumen.generateQr');
+    Route::post('/dokumen/{dokumen}/save-qr-position', [DosenController::class, 'saveQrPosition'])
+        ->name('dokumen.saveQrPosition');
+    Route::get('/dokumen/{id}/edit-qr', [DosenController::class, 'editQrCode'])
+        ->name('dokumen.editQr');
 
-    // Verification route (pindahkan ke dalam group dosen)
+    // Verification route
     Route::get('/verify/document/{id}', [DosenController::class, 'verifyDocument'])
         ->name('verify.document');
-
-    Route::get('/dokumen/{id}/edit-qr', [DosenController::class, 'editQrCode'])
-        ->name('dosen.dokumen.editQr');
 });
 
 
@@ -126,3 +127,9 @@ Route::prefix('admin')->group(function () {
 // Tambahkan route ini di luar group middleware
 Route::get('/verify/document/{id}', [DosenController::class, 'verifyDocument'])
     ->name('verify.document');
+
+Route::get('/verify/document/{id}/{kode?}', [DosenController::class, 'verifyDocument'])
+    ->name('verify.document');
+
+Route::get('/dosen/dokumen/{document}/generate-qr', [DocumentController::class, 'generateQrCode'])
+    ->name('dosen.dokumen.generate-qr');

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Document;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use App\Models\TandaQr;
 
 class DocumentController extends Controller
 {
@@ -34,15 +36,41 @@ class DocumentController extends Controller
     {
         // Validasi posisi
         $request->validate([
-        'left' => 'required|numeric',
-        'top' => 'required|numeric',
-    ]);
+            'x' => 'required|numeric',
+            'y' => 'required|numeric',
+            'width' => 'required|numeric',
+            'height' => 'required|numeric',
+        ]);
 
-    // Simpan posisi barcode di database atau file
-    $document->update([
-        'barcode_position_left' => $request->left,
-        'barcode_position_top' => $request->top,
-    ]);
+        // Simpan posisi QR code
+        $document->update([
+            'qr_position_x' => $request->x,
+            'qr_position_y' => $request->y,
+            'qr_width' => $request->width,
+            'qr_height' => $request->height,
+        ]);
+
+        // Generate PDF baru dengan QR code
+        $pdf = PDF::loadFile(storage_path('app/' . $document->file_path));
+        
+        // Tambahkan QR code ke PDF
+        $qrCodePath = storage_path('app/' . $document->qr_code_path);
+        $pdf->getCanvas()->addImage($qrCodePath, 
+            $request->x, 
+            $request->y, 
+            $request->x + $request->width, 
+            $request->y + $request->height
+        );
+
+        // Simpan PDF baru
+        $newPdfPath = 'documents/signed_' . $document->id . '.pdf';
+        Storage::put($newPdfPath, $pdf->output());
+
+        // Update dokumen dengan file baru dan status
+        $document->update([
+            'file_path' => $newPdfPath,
+            'status_dokumen' => 'disahkan'
+        ]);
 
         return response()->json(['success' => true]);
     }
@@ -62,5 +90,54 @@ class DocumentController extends Controller
 
         // Simpan hasilnya atau kembalikan kepada pengguna
         file_put_contents(storage_path('app/documents/signed_' . $document->id . '.pdf'), $output);
+    }
+
+    public function generateQrCode(Document $document)
+    {
+        try {
+            // Generate unique identifier for QR
+            $qrData = [
+                'document_id' => $document->id,
+                'timestamp' => now()->timestamp,
+                'validator' => auth()->id()
+            ];
+            
+            $qrString = json_encode($qrData);
+            
+            // Generate QR code using Simple QR Code
+            $qrCode = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')
+                ->size(300)
+                ->errorCorrection('H')
+                ->generate($qrString);
+                
+            // Save QR code to storage
+            $qrPath = 'qrcodes/doc_' . $document->id . '_' . time() . '.png';
+            Storage::put('public/' . $qrPath, $qrCode);
+
+            // Create TandaQr record
+            TandaQr::create([
+                'data_qr' => $qrString,
+                'tanggal_pembuatan' => now(),
+                'id_ormawa' => $document->id_ormawa,
+                'id_dosen' => auth()->id(),
+                'id_dokumen' => $document->id
+            ]);
+
+            // Update document with QR code path
+            $document->update([
+                'qr_code_path' => $qrPath
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'qrCodeUrl' => asset('storage/' . $qrPath)
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate QR code: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

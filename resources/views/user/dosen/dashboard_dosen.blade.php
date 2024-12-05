@@ -75,7 +75,7 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @if ($dokumens->where('dosen_id', Auth::id())->isEmpty())
+                    @if ($dokumens->isEmpty())
                         <tr>
                             <td colspan="6" class="py-8 text-center">
                                 <div class="flex flex-col justify-center items-center">
@@ -85,7 +85,7 @@
                             </td>
                         </tr>
                     @endif
-                    @foreach($dokumens->where('dosen_id', Auth::id()) as $dokumen)
+                    @foreach($dokumens as $dokumen)
                         <tr data-id="{{ $dokumen->id }}">
                             <td class="px-6 py-4 whitespace-nowrap" data-nomor>{{ $dokumen->nomor_surat }}</td>
                             <td class="px-6 py-4 whitespace-nowrap" data-tanggal>{{ $dokumen->tanggal_pengajuan }}</td>
@@ -200,7 +200,7 @@
                             class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
                         Tutup
                     </button>
-                    <button onclick="window.location.href='{{ route('dosen.dokumen.editQr', $dokumen->id) }}'"
+                    <button onclick="editQrCode()"
                             class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                         Bubuhkan QR Code
                     </button>
@@ -224,6 +224,9 @@
             .then(data => {
                 document.getElementById('modalContent').innerHTML = `
                     <div class="space-y-4">
+                        <div class="p-4 mb-4 bg-gray-100 rounded-lg border border-blue-500">
+                            <iframe src="${currentFileUrl}" width="100%" height="500px"></iframe>
+                        </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Nomor Surat</p>
                             <p class="mt-1">${data.nomor_surat}</p>
@@ -427,6 +430,12 @@
     function cancelQrPosition() {
         document.getElementById('qrCodeEditor').classList.add('hidden');
         document.getElementById('modalContent').classList.remove('hidden');
+    }
+
+    function editQrCode() {
+        if (currentDocumentId) {
+            window.location.href = `/dosen/dokumen/${currentDocumentId}/edit-qr`;
+        }
     }
 
     // Close modal when clicking outside
