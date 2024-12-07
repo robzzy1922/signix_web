@@ -7,6 +7,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\TandaQr;
+use App\Models\Dokumen;
+use Illuminate\Http\Response;
 
 class DocumentController extends Controller
 {
@@ -139,5 +141,22 @@ class DocumentController extends Controller
                 'message' => 'Failed to generate QR code: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function viewDocument($id)
+    {
+        $dokumen = Dokumen::findOrFail($id);
+        
+        if (!$dokumen->file || !Storage::disk('public')->exists($dokumen->file)) {
+            abort(404, 'Document not found');
+        }
+
+        $path = Storage::disk('public')->path($dokumen->file);
+        $content = file_get_contents($path);
+        $mimeType = Storage::disk('public')->mimeType($dokumen->file);
+
+        return response($content)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', 'inline; filename="' . basename($dokumen->file) . '"');
     }
 }

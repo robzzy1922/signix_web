@@ -254,27 +254,25 @@ class DosenController extends Controller
     public function saveQrPosition(Request $request, Dokumen $dokumen)
     {
         try {
-            // Validasi request
             $validated = $request->validate([
                 'x' => 'required|numeric',
                 'y' => 'required|numeric',
                 'width' => 'required|numeric',
                 'height' => 'required|numeric',
+                'page' => 'required|numeric'
             ]);
 
-            // Pastikan QR code sudah di-generate
             if (!$dokumen->qr_code_path || !Storage::disk('public')->exists($dokumen->qr_code_path)) {
                 throw new \Exception('QR Code belum di-generate');
             }
 
-            // Baca file PDF asli
             $sourcePdfPath = storage_path('app/public/' . $dokumen->file);
             if (!file_exists($sourcePdfPath)) {
                 throw new \Exception('File PDF sumber tidak ditemukan');
             }
 
             // Inisialisasi FPDI
-            $pdf = new FPDI();
+            $pdf = new \setasign\Fpdi\Fpdi();
             $pageCount = $pdf->setSourceFile($sourcePdfPath);
 
             // Proses setiap halaman
@@ -283,18 +281,23 @@ class DosenController extends Controller
                 $tplIdx = $pdf->importPage($pageNo);
                 $pdf->useTemplate($tplIdx);
 
-                // Tambahkan QR code hanya di halaman pertama
-                if ($pageNo === 1) {
+                // Tambahkan QR code hanya di halaman yang dipilih
+                if ($pageNo === (int)$validated['page']) {
                     $qrCodePath = storage_path('app/public/' . $dokumen->qr_code_path);
-                    if (!file_exists($qrCodePath)) {
-                        throw new \Exception('File QR Code tidak ditemukan');
-                    }
+                    
+                    // Dapatkan ukuran halaman
+                    $pageWidth = $pdf->GetPageWidth();
+                    $pageHeight = $pdf->GetPageHeight();
 
-                    // Konversi koordinat relatif ke absolut
-                    $x = ($validated['x'] / 100) * $pdf->GetPageWidth();
-                    $y = ($validated['y'] / 100) * $pdf->GetPageHeight();
-                    $width = ($validated['width'] / 100) * $pdf->GetPageWidth();
-                    $height = ($validated['height'] / 100) * $pdf->GetPageHeight();
+                    // Konversi persentase ke koordinat absolut
+                    $x = ($validated['x'] * $pageWidth) / 100;
+                    $y = ($validated['y'] * $pageHeight) / 100;
+                    $width = ($validated['width'] * $pageWidth) / 100;
+                    $height = ($validated['height'] * $pageHeight) / 100;
+
+                    // Pastikan QR code tidak keluar dari halaman
+                    $x = max(0, min($x, $pageWidth - $width));
+                    $y = max(0, min($y, $pageHeight - $height));
 
                     // Tambahkan QR code ke PDF
                     $pdf->Image($qrCodePath, $x, $y, $width, $height);
@@ -305,16 +308,23 @@ class DosenController extends Controller
             $newFileName = 'signed_' . time() . '_' . basename($dokumen->file);
             $newFilePath = 'dokumen/' . $newFileName;
             
-            // Simpan ke storage
-            Storage::disk('public')->put($newFilePath, $pdf->Output('S'));
+            // Pastikan direktori exists
+            $fullPath = storage_path('app/public/' . $newFilePath);
+            if (!file_exists(dirname($fullPath))) {
+                mkdir(dirname($fullPath), 0755, true);
+            }
 
-            // Update dokumen di database
+            // Simpan PDF ke storage
+            $pdf->Output($fullPath, 'F');
+            
+            // Update database
             $dokumen->update([
                 'file' => $newFilePath,
                 'qr_position_x' => $validated['x'],
                 'qr_position_y' => $validated['y'],
                 'qr_width' => $validated['width'],
                 'qr_height' => $validated['height'],
+                'qr_page' => $validated['page'],
                 'status_dokumen' => 'disahkan',
                 'is_signed' => true
             ]);

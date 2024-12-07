@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\Auth\AdminLoginController;
 use App\Http\Controllers\Admin\Auth\AdminDashboardController;
 use App\Http\Controllers\Admin\Auth\AdminDokumenController;
 use App\Http\Controllers\DocumentController;
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -133,3 +134,5 @@ Route::get('/verify/document/{id}/{kode?}', [DosenController::class, 'verifyDocu
 
 Route::get('/dosen/dokumen/{document}/generate-qr', [DocumentController::class, 'generateQrCode'])
     ->name('dosen.dokumen.generate-qr');
+
+Route::get('/view-document/{id}', [DocumentController::class, 'viewDocument'])->name('view.document');

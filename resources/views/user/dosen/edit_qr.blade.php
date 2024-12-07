@@ -237,19 +237,20 @@
                         endOnly: true
                     })
                 ],
+                autoScroll: true,
                 listeners: {
                     move: dragMoveListener
                 }
             })
             .resizable({
-                edges: { right: true, bottom: true },
+                edges: { left: true, right: true, bottom: true, top: true },
                 restrictEdges: {
                     outer: 'parent',
                     endOnly: true,
                 },
                 restrictSize: {
-                    min: { width: 50, height: 50 },
-                    max: { width: 200, height: 200 },
+                    min: { width: 50, height: 50 },    // Ukuran minimum yang lebih besar
+                    max: { width: 150, height: 150 },  // Ukuran maksimum yang lebih besar
                 },
                 inertia: true,
                 listeners: {
@@ -285,24 +286,36 @@
         target.setAttribute('data-y', y);
     }
 
+    // Fungsi untuk menghitung posisi relatif
+    function calculateRelativePosition(element, container) {
+        const elementRect = element.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        
+        // Hitung posisi relatif dalam persentase
+        const x = ((elementRect.left - containerRect.left) / containerRect.width) * 100;
+        const y = ((elementRect.top - containerRect.top) / containerRect.height) * 100;
+        
+        // Hitung ukuran relatif dalam persentase
+        const width = (elementRect.width / containerRect.width) * 100;
+        const height = (elementRect.height / containerRect.height) * 100;
+        
+        return {
+            x: x,
+            y: y,
+            width: width,
+            height: height,
+            page: pageNum
+        };
+    }
+
+    // Update fungsi saveQrPosition
     function saveQrPosition(dokumenId) {
         const qrElement = document.getElementById('qrCode');
-        const pdfContainer = document.getElementById('pdfContainer');
-        
-        // Dapatkan posisi relatif
-        const relativeX = parseFloat(qrElement.getAttribute('data-relative-x')) || 0;
-        const relativeY = parseFloat(qrElement.getAttribute('data-relative-y')) || 0;
-        
-        // Dapatkan ukuran
-        const width = parseFloat(qrElement.style.width);
-        const height = parseFloat(qrElement.style.height);
-        
-        const position = {
-            x: relativeX,
-            y: relativeY,
-            width: width,
-            height: height
-        };
+        const container = document.getElementById('pdfViewer');
+        const position = calculateRelativePosition(qrElement, container);
+
+        // Log position data for debugging
+        console.log('Saving position:', position);
 
         fetch(`/dosen/dokumen/${dokumenId}/save-qr-position`, {
             method: 'POST',
@@ -315,15 +328,15 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('QR code berhasil ditambahkan dan dokumen telah disahkan');
-                window.location.href = '{{ route('dosen.dashboard') }}';
+                alert('Posisi QR code berhasil disimpan');
+                window.location.href = '{{ route("dosen.dashboard") }}';
             } else {
-                alert(data.message || 'Gagal menyimpan QR code');
+                alert(data.message || 'Gagal menyimpan posisi QR code');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Gagal menyimpan QR code: ' + error.message);
+            alert('Gagal menyimpan posisi QR code');
         });
     }
 </script>
