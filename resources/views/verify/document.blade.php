@@ -60,7 +60,14 @@
                                 </svg>
                             </div>
                             <h1 class="text-3xl font-bold text-gray-900 mb-3">Dokumen Terverifikasi</h1>
-                            <p class="text-gray-600">Diverifikasi pada: {{ $timestamp }}</p>
+                            <p class="text-gray-600">
+                                Diverifikasi pada: 
+                                @if($dokumen->tanggal_verifikasi)
+                                    {{ \Carbon\Carbon::parse($dokumen->tanggal_verifikasi)->setTimezone('Asia/Jakarta')->format('d M Y H:i:s') }}
+                                @else
+                                    -
+                                @endif
+                            </p>
                         </div>
 
                     <div class="mt-10 border-t border-gray-200 pt-8">

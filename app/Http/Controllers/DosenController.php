@@ -317,7 +317,7 @@ class DosenController extends Controller
             // Simpan PDF ke storage
             $pdf->Output($fullPath, 'F');
             
-            // Update database
+            // Update database dengan timestamp yang benar
             $dokumen->update([
                 'file' => $newFilePath,
                 'qr_position_x' => $validated['x'],
@@ -326,7 +326,8 @@ class DosenController extends Controller
                 'qr_height' => $validated['height'],
                 'qr_page' => $validated['page'],
                 'status_dokumen' => 'disahkan',
-                'is_signed' => true
+                'is_signed' => true,
+                'tanggal_verifikasi' => now()
             ]);
 
             return response()->json([

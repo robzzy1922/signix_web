@@ -21,7 +21,12 @@ class Dokumen extends Model
         'status_dokumen',
         'is_signed',
         'qr_code_path',
-        'kode_pengesahan'
+        'kode_pengesahan',
+        'tanggal_verifikasi'
+    ];
+
+    protected $casts = [
+        'tanggal_verifikasi' => 'datetime',
     ];
 
     // Relationship with Ormawa
