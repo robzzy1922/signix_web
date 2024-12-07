@@ -433,9 +433,29 @@
     }
 
     function editQrCode() {
-        if (currentDocumentId) {
-            window.location.href = `/dosen/dokumen/${currentDocumentId}/edit-qr`;
-        }
+        if (!currentDocumentId) return;
+
+        // Generate QR Code first
+        fetch(`/dosen/dokumen/${currentDocumentId}/generate-qr`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Redirect to QR editor page
+                window.location.href = `/dosen/dokumen/${currentDocumentId}/edit-qr`;
+            } else {
+                alert(data.message || 'Gagal membuat QR Code');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error generating QR Code');
+        });
     }
 
     // Close modal when clicking outside

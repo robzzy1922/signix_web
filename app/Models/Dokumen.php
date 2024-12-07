@@ -13,17 +13,14 @@ class Dokumen extends Model
     protected $table = 'dokumens';
 
     protected $fillable = [
-        'nomor_surat',
-        'tanggal_pengajuan',
-        'perihal',
         'file',
-        'status_dokumen',
-        'qr_code_path',
-        'is_signed',
         'qr_position_x',
         'qr_position_y',
         'qr_width',
         'qr_height',
+        'status_dokumen',
+        'is_signed',
+        'qr_code_path',
         'kode_pengesahan'
     ];
 

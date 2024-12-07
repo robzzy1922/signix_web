@@ -17,6 +17,7 @@ use BaconQrCode\Writer;
 use BaconQrCode\Renderer\Image\EpsImageBackEnd;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
+use App\Models\TandaQr;
 
 class DosenController extends Controller
 {
@@ -203,26 +204,32 @@ class DosenController extends Controller
                 $dokumen->save();
             }
 
-            // Buat URL verifikasi yang mencakup kode pengesahan
+            // Buat URL verifikasi
             $verificationUrl = url("/verify/document/{$id}?kode={$dokumen->kode_pengesahan}");
 
-            // Pastikan direktori exists
-            $qrDirectory = storage_path('app/public/qrcodes');
-            if (!file_exists($qrDirectory)) {
-                mkdir($qrDirectory, 0755, true);
-            }
-
-            // Generate QR Code dalam format PNG
+            // Generate QR Code dengan path yang benar
             $qrCodePath = 'qrcodes/qr_' . $id . '_' . time() . '.png';
             $fullPath = storage_path('app/public/' . $qrCodePath);
 
-            // Gunakan SimpleSoftwareIO\QrCode\Facades\QrCode dengan format PNG
+            // Pastikan direktori exists
+            if (!file_exists(dirname($fullPath))) {
+                mkdir(dirname($fullPath), 0755, true);
+            }
+
+            // Generate QR code menggunakan SimpleSoftwareIO
             QrCode::format('png')
                   ->size(400)
                   ->margin(1)
-                  ->backgroundColor(255, 255, 255)
-                  ->color(0, 0, 0)
                   ->generate($verificationUrl, $fullPath);
+
+            // Simpan data ke tabel tanda_qrs
+            TandaQr::create([
+                'data_qr' => $verificationUrl,
+                'tanggal_pembuatan' => now(),
+                'id_ormawa' => $dokumen->id_ormawa,
+                'id_dosen' => auth()->guard('dosen')->id(),
+                'id_dokumen' => $dokumen->id
+            ]);
 
             // Update dokumen dengan path QR code
             $dokumen->update([
@@ -354,15 +361,48 @@ class DosenController extends Controller
 
     public function editQrCode($id)
     {
-        // Ambil dokumen berdasarkan ID
-        $dokumen = Dokumen::findOrFail($id);
-        
-        // Pastikan dosen yang login adalah dosen yang dituju
-        if ($dokumen->id_dosen != auth()->id()) {
-            abort(403, 'Unauthorized action.');
-        }
+        try {
+            $dokumen = Dokumen::findOrFail($id);
+            
+            if ($dokumen->id_dosen != auth()->id()) {
+                abort(403, 'Unauthorized action.');
+            }
 
-        // Pass dokumen ke view
-        return view('user.dosen.edit_qr', compact('dokumen'));
+            // Generate QR code jika belum ada
+            if (!$dokumen->qr_code_path || !Storage::disk('public')->exists($dokumen->qr_code_path)) {
+                // Generate kode pengesahan baru
+                $dokumen->kode_pengesahan = Str::random(10);
+                
+                // Set path QR code
+                $qrCodePath = 'qrcodes/qr_' . $dokumen->id . '_' . time() . '.png';
+                $fullPath = storage_path('app/public/' . $qrCodePath);
+                
+                // Buat direktori jika belum ada
+                if (!file_exists(dirname($fullPath))) {
+                    mkdir(dirname($fullPath), 0755, true);
+                }
+
+                // Generate QR code
+                QrCode::format('png')
+                      ->size(400)
+                      ->margin(1)
+                      ->generate(
+                          url("/verify/document/{$dokumen->id}?kode={$dokumen->kode_pengesahan}"),
+                          $fullPath
+                      );
+
+                // Update dokumen
+                $dokumen->update([
+                    'qr_code_path' => $qrCodePath,
+                    'kode_pengesahan' => $dokumen->kode_pengesahan
+                ]);
+            }
+
+            return view('user.dosen.edit_qr', compact('dokumen'));
+            
+        } catch (\Exception $e) {
+            \Log::error('Error in editQrCode: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memuat QR Code: ' . $e->getMessage());
+        }
     }
 }

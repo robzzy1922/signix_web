@@ -96,8 +96,10 @@
             <!-- QR Code Draggable -->
             <div id="qrCode" class="absolute bg-white rounded-lg shadow-lg cursor-move"
                  style="width: 100px; height: 100px; top: 50px; left: 50px;">
-                <img id="qrImage" src="{{ asset('storage/' . $dokumen->qr_code_path) }}" 
-                     alt="QR Code" class="w-full h-full object-contain"/>
+                <img id="qrImage" 
+                     src="{{ asset('storage/' . $dokumen->qr_code_path) }}" 
+                     alt="QR Code" 
+                     class="w-full h-full object-contain"/>
                 <div class="absolute right-0 bottom-0 w-4 h-4 bg-blue-500 rounded-full opacity-50 cursor-se-resize"></div>
             </div>
         </div>
