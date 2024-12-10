@@ -95,7 +95,7 @@
                             </div>
                             
                             <div class="flex items-center">
-                                <span class="w-1/3 text-gray-600">Tanggal:</span>
+                                <span class="w-1/3 text-gray-600">Tanggal Pengajuan:</span>
                                 <span class="w-2/3 font-medium text-gray-900 px-4 py-2">{{ $dokumen->tanggal_pengajuan }}</span>
                             </div>
                             

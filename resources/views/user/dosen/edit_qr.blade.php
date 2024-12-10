@@ -29,7 +29,31 @@
         z-index: 1000;
         background: white;
         border: 1px solid #ccc;
+        cursor: default;
+    }
+
+    .move-handle {
+        width: 32px;
+        height: 32px;
+        background: rgba(75, 85, 99, 0.9);
+        border: 2px solid white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: move;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 1001;
+        transition: background-color 0.2s;
+    }
+
+    .move-handle:hover {
+        background: rgba(55, 65, 81, 1);
     }
 
     .page-controls {
@@ -81,6 +105,28 @@
             </ol>
         </nav>
 
+        <!-- Add note section -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">Petunjuk Penempatan QR Code:</h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <ul class="list-disc list-inside">
+                            <li>Pastikan QR code ditempatkan di area yang kosong dan tidak menutupi teks penting</li>
+                            <li>Disarankan menempatkan QR code di pojok kanan bawah dokumen</li>
+                            <li>Ukuran QR code dapat disesuaikan dengan menarik sudut kanan bawah</li>
+                            <li>Gunakan ikon <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="display: inline;"><path d="M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10zM.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708l-2-2zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8z"/></svg> di tengah QR code untuk memindahkan posisi</li>
+                            </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Container PDF dan QR -->
         <div id="pdfContainer" class="relative w-full">
             <!-- PDF Viewer -->
@@ -94,12 +140,17 @@
             </div>
             
             <!-- QR Code Draggable -->
-            <div id="qrCode" class="absolute bg-white rounded-lg shadow-lg cursor-move"
+            <div id="qrCode" class="absolute bg-white rounded-lg shadow-lg"
                  style="width: 100px; height: 100px; top: 50px; left: 50px;">
-                <img id="qrImage" 
-                     src="{{ asset('storage/' . $dokumen->qr_code_path) }}" 
-                     alt="QR Code" 
-                     class="w-full h-full object-contain"/>
+                <img id="qrImage"
+                     src="{{ asset('storage/' . $dokumen->qr_code_path) }}"
+                     alt="QR Code"
+                     class="object-contain w-full h-full"/>
+                <div id="moveHandle" class="move-handle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10zM.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708l-2-2zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8z"/>
+                    </svg>
+                </div>
                 <div class="absolute right-0 bottom-0 w-4 h-4 bg-blue-500 rounded-full opacity-50 cursor-se-resize"></div>
             </div>
         </div>
@@ -228,8 +279,10 @@
 
     // Kode interact.js yang sudah ada
     function initializeInteract() {
+        // QR code draggable
         interact('#qrCode')
             .draggable({
+                enabled: true,
                 inertia: true,
                 modifiers: [
                     interact.modifiers.restrictRect({
@@ -240,17 +293,18 @@
                 autoScroll: true,
                 listeners: {
                     move: dragMoveListener
-                }
+                },
+                handle: '#moveHandle'
             })
             .resizable({
-                edges: { left: true, right: true, bottom: true, top: true },
+                edges: { right: true, bottom: true },
                 restrictEdges: {
                     outer: 'parent',
                     endOnly: true,
                 },
                 restrictSize: {
-                    min: { width: 50, height: 50 },    // Ukuran minimum yang lebih besar
-                    max: { width: 150, height: 150 },  // Ukuran maksimum yang lebih besar
+                    min: { width: 30, height: 30 },
+                    max: { width: 150, height: 150 },
                 },
                 inertia: true,
                 listeners: {
