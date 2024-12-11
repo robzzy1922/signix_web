@@ -27,15 +27,26 @@
     #qrCode {
         position: absolute;
         z-index: 1000;
-        background: white;
-        border: 1px solid #ccc;
+        background: transparent;
+        border: 1px solid rgba(0, 0, 0, 0.1);
         cursor: default;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    #qrImage {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: transparent;
     }
 
     .move-handle {
         width: 32px;
         height: 32px;
-        background: rgba(75, 85, 99, 0.9);
+        background: rgba(75, 85, 99, 0.7);
         border: 2px solid white;
         border-radius: 50%;
         display: flex;
@@ -82,6 +93,22 @@
     .page-controls button:disabled {
         background: #9CA3AF;
         cursor: not-allowed;
+    }
+
+    .resize-handle {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 10px;
+        height: 10px;
+        background: transparent;
+        cursor: se-resize;
+        border: 2px solid rgba(59, 130, 246, 0.5);
+        border-radius: 50%;
+    }
+
+    .resize-handle:hover {
+        background: rgba(59, 130, 246, 0.2);
     }
 </style>
 

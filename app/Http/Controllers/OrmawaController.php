@@ -34,10 +34,18 @@ class OrmawaController extends Controller
                                 ->where('status_dokumen', 'diajukan')->count();
         $countDisahkan = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id())
                                 ->where('status_dokumen', 'disahkan')->count();
+        $countButuhRevisi = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id())
+                                ->where('status_dokumen', 'butuh_revisi')->count();
         $countRevisi = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id())
                               ->where('status_dokumen', 'direvisi')->count();
 
-        return view('user.ormawa.ormawa_dashboard', compact('dokumens', 'countDiajukan', 'countDisahkan', 'countRevisi'));
+        return view('user.ormawa.ormawa_dashboard', compact(
+            'dokumens', 
+            'countDiajukan', 
+            'countDisahkan', 
+            'countButuhRevisi',
+            'countRevisi'
+        ));
     }
 
     public function pengajuan()
@@ -215,7 +223,7 @@ class OrmawaController extends Controller
         try {
             $dokumen = Dokumen::with(['dosen', 'ormawa'])
                 ->where('id', $id)
-                ->where('id_ormawa', auth()->guard('ormawa')->id()) // Untuk keamanan
+                ->where('id_ormawa', auth()->guard('ormawa')->id())
                 ->firstOrFail();
 
             return response()->json([
@@ -223,13 +231,78 @@ class OrmawaController extends Controller
                 'nomor_surat' => $dokumen->nomor_surat,
                 'tanggal_pengajuan' => $dokumen->tanggal_pengajuan,
                 'perihal' => $dokumen->perihal,
-                'status_dokumen' => ucfirst($dokumen->status_dokumen),
-                'keterangan' => $dokumen->keterangan,
+                'status_dokumen' => $dokumen->status_dokumen,
+                'keterangan_revisi' => $dokumen->keterangan_revisi,
                 'file_url' => asset('storage/' . $dokumen->file)
             ]);
         } catch (\Exception $e) {
             Log::error('Error in showDokumen: ' . $e->getMessage());
             return response()->json(['error' => 'Dokumen tidak ditemukan'], 404);
+        }
+    }
+
+    public function updateDokumen(Request $request, $id)
+    {
+        try {
+            $dokumen = Dokumen::findOrFail($id);
+            
+            // Validate request
+            $request->validate([
+                'dokumen' => 'required|file|mimes:pdf|max:2048'
+            ]);
+
+            // Delete old file if exists
+            if ($dokumen->file && Storage::disk('public')->exists($dokumen->file)) {
+                Storage::disk('public')->delete($dokumen->file);
+            }
+
+            // Store new file dengan nama yang lebih terstruktur
+            $file = $request->file('dokumen');
+            $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+            $filePath = $file->storeAs('dokumen', $fileName, 'public');
+            
+            // Update dokumen
+            $dokumen->update([
+                'file' => $filePath,
+                'status_dokumen' => 'direvisi',
+                'tanggal_revisi' => now() // tambahkan tanggal revisi jika diperlukan
+            ]);
+
+            // Log success
+            Log::info('Dokumen berhasil diupdate', [
+                'dokumen_id' => $dokumen->id,
+                'new_file' => $filePath
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dokumen berhasil diupdate'
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Dokumen tidak ditemukan', ['id' => $id]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Dokumen tidak ditemukan'
+            ], 404);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validasi gagal', ['errors' => $e->errors()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'File yang diunggah tidak valid. Pastikan file dalam format PDF dan ukuran maksimal 2MB'
+            ], 422);
+
+        } catch (\Exception $e) {
+            Log::error('Error saat update dokumen', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengupdate dokumen. Silakan coba lagi.'
+            ], 500);
         }
     }
 }

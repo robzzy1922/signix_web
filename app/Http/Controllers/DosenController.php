@@ -18,6 +18,7 @@ use BaconQrCode\Renderer\Image\EpsImageBackEnd;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 use App\Models\TandaQr;
+use Illuminate\Support\Facades\DB;
 
 class DosenController extends Controller
 {
@@ -52,8 +53,10 @@ class DosenController extends Controller
             ->where('status_dokumen', 'disahkan')->count();
         $countRevisi = Dokumen::where('id_dosen', $dosen_id)
             ->where('status_dokumen', 'direvisi')->count();
+        $countButuhRevisi = Dokumen::where('id_dosen', $dosen_id)
+            ->where('status_dokumen', 'butuh_revisi')->count();
 
-        return view('user.dosen.dashboard_dosen', compact('dokumens', 'status', 'countDiajukan', 'countDisahkan', 'countRevisi'));
+        return view('user.dosen.dashboard_dosen', compact('dokumens', 'status', 'countDiajukan', 'countDisahkan', 'countRevisi', 'countButuhRevisi'));
     }
 
     public function create()
@@ -414,6 +417,45 @@ class DosenController extends Controller
         } catch (\Exception $e) {
             \Log::error('Error in editQrCode: ' . $e->getMessage());
             return back()->with('error', 'Gagal memuat QR Code: ' . $e->getMessage());
+        }
+    }
+
+    public function submitRevisi(Request $request, $id)
+    {
+        try {
+            $dokumen = Dokumen::findOrFail($id);
+            
+            $validated = $request->validate([
+                'keterangan' => 'required|string|max:1000'
+            ]);
+
+            DB::beginTransaction();
+            try {
+                $dokumen->status_dokumen = 'butuh_revisi';
+                $dokumen->keterangan_revisi = $validated['keterangan'];
+                $dokumen->tanggal_revisi = now();
+                $dokumen->save();
+                
+                DB::commit();
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Dokumen berhasil direvisi'
+                ]);
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw $e;
+            }
+        } catch (\Exception $e) {
+            Log::error('Error in submitRevisi', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal melakukan revisi dokumen: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

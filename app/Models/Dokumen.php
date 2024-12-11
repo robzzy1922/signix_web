@@ -14,6 +14,8 @@ class Dokumen extends Model
 
     protected $fillable = [
         'file',
+        'nomor_surat',
+        'perihal',
         'qr_position_x',
         'qr_position_y',
         'qr_width',
@@ -22,7 +24,10 @@ class Dokumen extends Model
         'is_signed',
         'qr_code_path',
         'kode_pengesahan',
-        'tanggal_verifikasi'
+        'tanggal_verifikasi',
+        'keterangan',
+        'keterangan_revisi',
+        'tanggal_revisi'
     ];
 
     protected $casts = [
@@ -40,4 +45,5 @@ class Dokumen extends Model
     {
         return $this->belongsTo(Dosen::class, 'id_dosen');
     }
+    
 }

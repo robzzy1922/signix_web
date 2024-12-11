@@ -2,33 +2,95 @@
 @section('title', 'Dashboard Dosen')
 @section('content')
     <div class="container px-4 py-8 mx-auto">
-        <div class="grid grid-cols-1 gap-4 mb-8 md:grid-cols-3">
+        <div class="grid grid-cols-1 gap-4 mb-8 md:grid-cols-2 lg:grid-cols-4">
             <!-- Surat yang diajukan -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'diajukan']) }}" class="block">
-                <div class="p-4 bg-yellow-400 rounded-lg shadow transition-colors hover:bg-yellow-500">
-                    <div class="flex items-center">
-                        <i class="mr-2 text-2xl fas fa-envelope"></i>
-                        <h2 class="text-lg font-bold">{{ $countDiajukan }} Surat diajukan</h2>
+            <a href="{{ route('dosen.riwayat', ['status' => 'diajukan']) }}" class="block transform transition-all hover:scale-105">
+                <div class="p-6 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl shadow-lg">
+                    <div class="flex flex-col space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex flex-col items-start">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <div class="p-3 bg-yellow-300 bg-opacity-30 rounded-full mb-3">
+                                    <i class="text-3xl text-white fas fa-file-alt"></i>
+                                </div>
+                                <h2 class="text-lg font-semibold text-white">Dokumen Diajukan Ormawa</h2>
+                            </div>
+                            <span class="text-5xl font-bold text-white">{{ $countDiajukan }}</span>
+                        </div>
+                        <div class="absolute bottom-2 right-2 opacity-10">
+                            <i class="fas fa-folder-open text-6xl text-white"></i>
+                        </div>
                     </div>
                 </div>
             </a>
 
             <!-- Surat sudah tertanda -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'disahkan']) }}" class="block">
-                <div class="p-4 bg-green-400 rounded-lg shadow transition-colors hover:bg-green-500">
-                    <div class="flex items-center">
-                        <i class="mr-2 text-2xl fas fa-check-circle"></i>
-                        <h2 class="text-lg font-bold">{{ $countDisahkan }} Surat sudah tertanda</h2>
+            <a href="{{ route('dosen.riwayat', ['status' => 'disahkan']) }}" class="block transform transition-all hover:scale-105">
+                <div class="p-6 bg-gradient-to-br from-green-400 to-green-500 rounded-xl shadow-lg">
+                    <div class="flex flex-col space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex flex-col items-start">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div class="p-3 bg-green-300 bg-opacity-30 rounded-full mb-3">
+                                    <i class="text-3xl text-white fas fa-file-signature"></i>
+                                </div>
+                                <h2 class="text-lg font-semibold text-white">Dokumen Tertanda</h2>
+                            </div>
+                            <span class="text-5xl font-bold text-white">{{ $countDisahkan }}</span>
+                        </div>
+                        <div class="absolute bottom-2 right-2 opacity-10">
+                            <i class="fas fa-check-double text-6xl text-white"></i>
+                        </div>
                     </div>
                 </div>
             </a>
 
             <!-- Surat perlu direvisi -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'direvisi']) }}" class="block">
-                <div class="p-4 bg-blue-400 rounded-lg shadow transition-colors hover:bg-blue-500">
-                    <div class="flex items-center">
-                        <i class="mr-2 text-2xl fas fa-edit"></i>
-                        <h2 class="text-lg font-bold">{{ $countRevisi }} Surat perlu direvisi</h2>
+            <a href="{{ route('dosen.riwayat', ['status' => 'butuh_revisi']) }}" class="block transform transition-all hover:scale-105">
+                <div class="p-6 bg-gradient-to-br from-red-400 to-red-500 rounded-xl shadow-lg">
+                    <div class="flex flex-col space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex flex-col items-start">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <div class="p-3 bg-red-300 bg-opacity-30 rounded-full mb-3">
+                                    <i class="text-3xl text-white fas fa-file-medical-alt"></i>
+                                </div>
+                                <h2 class="text-lg font-semibold text-white">Perlu Direvisi Ormawa</h2>
+                            </div>
+                            <span class="text-5xl font-bold text-white">{{ $countButuhRevisi }}</span>
+                        </div>
+                        <div class="absolute bottom-2 right-2 opacity-10">
+                            <i class="fas fa-exclamation-circle text-6xl text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Surat sudah direvisi -->
+            <a href="{{ route('dosen.riwayat', ['status' => 'direvisi']) }}" class="block transform transition-all hover:scale-105">
+                <div class="p-6 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-lg">
+                    <div class="flex flex-col space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex flex-col items-start">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                <div class="p-3 bg-blue-300 bg-opacity-30 rounded-full mb-3">
+                                    <i class="text-3xl text-white fas fa-file-code"></i>
+                                </div>
+                                <h2 class="text-lg font-semibold text-white">Sudah Direvisi Ormawa</h2>
+                            </div>
+                            <span class="text-5xl font-bold text-white">{{ $countRevisi }}</span>
+                        </div>
+                        <div class="absolute bottom-2 right-2 opacity-10">
+                            <i class="fas fa-sync-alt text-6xl text-white"></i>
+                        </div>
                     </div>
                 </div>
             </a>
@@ -55,7 +117,8 @@
                         <option value="">Semua Status</option>
                         <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
                         <option value="disahkan" {{ request('status') == 'disahkan' ? 'selected' : '' }}>Tertanda</option>
-                        <option value="direvisi" {{ request('status') == 'direvisi' ? 'selected' : '' }}>Revisi</option>
+                        <option value="butuh_revisi" {{ request('status') == 'butuh_revisi' ? 'selected' : '' }}>Perlu direvisi</option>
+                        <option value="direvisi" {{ request('status') == 'direvisi' ? 'selected' : '' }}>Sudah direvisi</option>
                     </select>
                 </form>
             </div>
@@ -96,6 +159,7 @@
                                     $statusClass = match($dokumen->status_dokumen) {
                                         'diajukan' => 'bg-yellow-100 text-yellow-800',
                                         'disahkan' => 'bg-green-100 text-green-800',
+                                        'butuh_revisi' => 'bg-red-100 text-red-800',
                                         'direvisi' => 'bg-blue-100 text-blue-800',
                                         default => 'bg-gray-100 text-gray-800'
                                     };
@@ -187,7 +251,7 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end px-6 py-4 space-x-3 border-t border-gray-200">
+                <div class="flex justify-end px-6 py-4 space-x-3 border-t border-gray-200" id="modalButtons">
                     <button onclick="downloadDocument()"
                             class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         Download
@@ -195,6 +259,10 @@
                     <button onclick="viewDocument()"
                             class="px-4 py-2 text-white bg-yellow-500 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2">
                         Lihat
+                    </button>
+                    <button onclick="showRevisiForm()"
+                            class="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                        Revisi
                     </button>
                     <button onclick="closeModal()"
                             class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
@@ -204,6 +272,41 @@
                             class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                         Bubuhkan QR Code
                     </button>
+                </div>
+
+                <!-- Form Revisi -->
+                <div id="revisiForm" class="hidden p-6">
+                    <form id="formRevisi" class="space-y-4">
+                        @csrf
+                        <div>
+                            <label for="keteranganRevisi" class="block text-sm font-medium text-gray-700">
+                                Keterangan Revisi
+                            </label>
+                            <textarea
+                                id="keteranganRevisi"
+                                name="keterangan"
+                                rows="4"
+                                class="mt-1 block w-full rounded-md border-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required
+                            ></textarea>
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button
+                                type="button"
+                                onclick="cancelRevisi()"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onclick="submitRevisi()"
+                                class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                            >
+                                Kirim Revisi
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -353,7 +456,7 @@
                     endOnly: true,
                 },
                 restrictSize: {
-                    min: { width: 50, height: 50 },
+                    min: { width: 30, height: 30 },
                     max: { width: 200, height: 200 },
                 },
                 inertia: true,
@@ -455,6 +558,64 @@
         .catch(error => {
             console.error('Error:', error);
             alert('Error generating QR Code');
+        });
+    }
+
+    function showRevisiForm() {
+        document.getElementById('modalContent').classList.add('hidden');
+        document.getElementById('revisiForm').classList.remove('hidden');
+        document.getElementById('modalBx    uttons').classList.add('hidden');
+    }
+
+    function cancelRevisi() {
+        document.getElementById('revisiForm').classList.add('hidden');
+        document.getElementById('modalContent').classList.remove('hidden');
+        document.getElementById('modalButtons').classList.remove('hidden');
+        document.getElementById('formRevisi').reset();
+    }
+
+    function submitRevisi() {
+        const keterangan = document.getElementById('keteranganRevisi').value;
+        
+        if (!keterangan.trim()) {
+            alert('Keterangan revisi tidak boleh kosong');
+            return;
+        }
+
+        // Debug: Log URL dan data yang akan dikirim
+        console.log('Submitting to:', `/dosen/dokumen/${currentDocumentId}/revisi`);
+        console.log('Data:', { keterangan: keterangan });
+
+        fetch(`/dosen/dokumen/${currentDocumentId}/revisi`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                keterangan: keterangan
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.message || 'Network response was not ok');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Dokumen berhasil direvisi');
+                window.location.reload();
+            } else {
+                throw new Error(data.message || 'Gagal melakukan revisi');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat melakukan revisi: ' + error.message);
         });
     }
 

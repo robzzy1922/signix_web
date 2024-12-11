@@ -38,6 +38,10 @@ Route::middleware(['auth:ormawa'])->group(function () {
         Route::delete('/profile/photo', [OrmawaController::class, 'destroyPhoto'])->name('profile.photo.destroy');
         Route::post('/logout', [OrmawaController::class, 'logout'])->name('logout');
         Route::get('/dokumen/{id}', [OrmawaController::class, 'showDokumen'])->name('dokumen.show');
+        Route::post('/ormawa/dokumen/{id}/update', [OrmawaController::class, 'updateDokumen'])
+            ->name('ormawa.dokumen.update');
+        Route::post('/dokumen/{id}/update', [OrmawaController::class, 'updateDokumen'])
+            ->name('dokumen.update');
     });
 });
 
@@ -71,6 +75,11 @@ Route::middleware(['auth:dosen'])->prefix('dosen')->name('dosen.')->group(functi
     // Verification route
     Route::get('/verify/document/{id}', [DosenController::class, 'verifyDocument'])
         ->name('verify.document');
+
+    Route::post('/dokumen/{id}/revisi', [DosenController::class, 'submitRevisi'])->name('dokumen.revisi');
+    Route::post('/dosen/dokumen/{id}/revisi', [DosenController::class, 'submitRevisi'])
+        ->name('dosen.dokumen.revisi')
+        ->middleware('auth:dosen');
 });
 
 

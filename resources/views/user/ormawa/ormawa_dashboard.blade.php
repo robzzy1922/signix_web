@@ -2,50 +2,74 @@
 @section('title', 'Dashboard Ormawa')
 @section('content')
   <div class="container flex-grow px-4 mx-auto mt-8 max-w-5xl">
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <!-- Surat yang diajukan -->
-      <a href="{{ route('ormawa.riwayat', ['status' => 'diajukan']) }}" class="block">
-        <div class="p-4 bg-yellow-400 rounded-lg shadow">
-          <div class="flex items-center">
-            <svg class="mr-2 w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-              <!-- Envelope icon SVG -->
-              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-            </svg>
-            <h2 class="text-lg font-bold">{{ $countDiajukan }} Surat yang diajukan</h2>
-          </div>
-        </div>
-      </a>
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <!-- Dokumen Diajukan -->
+        <a href="{{ route('ormawa.riwayat', ['status' => 'diajukan']) }}" class="block">
+            <div class="p-6 bg-yellow-400 rounded-xl shadow-lg hover:shadow-xl hover:bg-yellow-500  transition-color duration-300">
+                <div class="flex flex-col">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <h2 class="text-xl font-bold text-white">Dokumen Diajukan</h2>
+                        </div>
+                        <span class="text-4xl font-bold text-white">{{ $countDiajukan }}</span>
+                    </div>
+                </div>
+            </div>
+        </a>
 
-      <!-- Surat sudah disahkan -->
-      <a href="{{ route('ormawa.riwayat', ['status' => 'disahkan']) }}" class="block">
-        <div class="p-4 bg-green-400 rounded-lg shadow">
-          <div class="flex items-center">
-            <svg class="mr-2 w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-              <!-- Checkmark envelope icon SVG -->
-              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-              <path d="M9.293 12.293a1 1 0 011.414 0L12 13.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"></path>
-            </svg>
-            <h2 class="text-lg font-bold">{{ $countDisahkan }} Surat sudah disahkan</h2>
-          </div>
-        </div>
-      </a>
+        <!-- Dokumen Tertanda -->
+        <a href="{{ route('ormawa.riwayat', ['status' => 'disahkan']) }}" class="block">
+            <div class="p-6 bg-green-400 rounded-xl shadow-lg hover:shadow-xl hover:bg-green-500  transition-color duration-300">
+                <div class="flex flex-col">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <h2 class="text-xl font-bold text-white">Dokumen Tertanda</h2>
+                        </div>
+                        <span class="text-4xl font-bold text-white">{{ $countDisahkan }}</span>
+                    </div>
+                </div>
+            </div>
+        </a>
 
-      <!-- Surat perlu direvisi -->
-      <a href="{{ route('ormawa.riwayat', ['status' => 'direvisi']) }}" class="block">
-        <div class="p-4 bg-blue-400 rounded-lg shadow">
-          <div class="flex items-center">
-            <svg class="mr-2 w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-              <!-- Pencil envelope icon SVG -->
-              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-              <path d="M13.293 3.293a1 1 0 011.414 0l2 2a1 1 0 010 1.414l-9 9a1 1 0 01-.39.242l-3 1a1 1 0 01-1.266-1.265l1-3a1 1 0 01.242-.391l9-9z"></path>
-            </svg>
-            <h2 class="text-lg font-bold">{{ $countRevisi }} Surat perlu direvisi</h2>
-          </div>
-        </div>
-      </a>
+        <!-- Perlu Direvisi -->
+        <a href="{{ route('ormawa.riwayat', ['status' => 'butuh_revisi']) }}" class="block">
+            <div class="p-6 bg-red-400 rounded-xl shadow-lg hover:shadow-xl hover:bg-red-500  transition-color duration-300">
+                <div class="flex flex-col">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <h2 class="text-xl font-bold text-white">Perlu Direvisi</h2>
+                        </div>
+                        <span class="text-4xl font-bold text-white">{{ $countButuhRevisi }}</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+
+        <!-- Sudah Direvisi -->
+        <a href="{{ route('ormawa.riwayat', ['status' => 'direvisi']) }}" class="block">
+            <div class="p-6 bg-blue-400 rounded-xl shadow-lg hover:shadow-xl hover:bg-blue-500  transition-color duration-300">
+                <div class="flex flex-col">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            <h2 class="text-xl font-bold text-white">Sudah Direvisi</h2>
+                        </div>
+                        <span class="text-4xl font-bold text-white">{{ $countRevisi }}</span>
+                    </div>
+                </div>
+            </div>
+        </a>
     </div>
 
     <div class="mt-8">
@@ -70,6 +94,7 @@
                       <option value="">Semua Status</option>
                       <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
                       <option value="disahkan" {{ request('status') == 'disahkan' ? 'selected' : '' }}>Disahkan</option>
+                      <option value="butuh_revisi" {{ request('status') == 'butuh_revisi' ? 'selected' : '' }}>Perlu Direvisi</option>
                       <option value="direvisi" {{ request('status') == 'direvisi' ? 'selected' : '' }}>Revisi</option>
                   </select>
               </div>
@@ -112,6 +137,7 @@
                             $statusClass = match($dokumen->status_dokumen) {
                                 'diajukan' => 'bg-yellow-100 text-yellow-800',
                                 'disahkan' => 'bg-green-100 text-green-800',
+                                'butuh_revisi' => 'bg-red-100 text-red-800',
                                 'direvisi' => 'bg-blue-100 text-blue-800',
                                 default => 'bg-gray-100 text-gray-800'
                             };
@@ -123,7 +149,6 @@
                     <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                         <a href="#" class="text-indigo-600 hover:text-indigo-900" onclick="showModal({{ $dokumen->id }}, '{{ asset('storage/' . $dokumen->file) }}')">Lihat Detail</a>
                     </td>
-                </tr>
                 @endforeach
             </tbody>
         </table>
@@ -173,76 +198,68 @@
       let currentDocumentId = null;
       let currentFileUrl = null;
 
-      function showModal(dokumenId, fileUrl) {
-          currentDocumentId = dokumenId;
-          currentFileUrl = fileUrl;
-
-          // Tampilkan loading state
-          document.getElementById('modalContent').innerHTML = `
-              <div class="flex justify-center items-center h-64">
-                  <div class="w-12 h-12 rounded-full border-b-2 border-blue-500 animate-spin"></div>
-              </div>
-          `;
-
-          document.getElementById('detailModal').classList.remove('hidden');
-
-          // Gunakan route yang benar
-          fetch(`/ormawa/dokumen/${dokumenId}`)
-              .then(response => {
-                  if (!response.ok) {
-                      throw new Error('Network response was not ok');
-                  }
-                  return response.json();
-              })
-              .then(data => {
-                  console.log('Received data:', data); // Untuk debugging
-                  document.getElementById('modalContent').innerHTML = `
-                      <div class="space-y-4">
-                          <div class="p-4 mb-4 bg-gray-100 rounded-lg border border-blue-500">
-                              <object
-                                  data="${data.file_url}#toolbar=0"
-                                  type="application/pdf"
-                                  width="100%"
-                                  height="500px"
-                                  class="rounded-lg border"
-                              >
-                                  <p>Dokumen tidak dapat ditampilkan.
-                                     <a href="${data.file_url}" target="_blank" class="text-blue-500">Klik disini untuk membuka</a>
-                                  </p>
-                              </object>
-                          </div>
-                          <div>
-                              <p class="text-sm font-medium text-gray-500">Nomor Surat</p>
-                              <p class="mt-1">${data.nomor_surat || '-'}</p>
-                          </div>
-                          <div>
-                              <p class="text-sm font-medium text-gray-500">Tanggal Pengajuan</p>
-                              <p class="mt-1">${data.tanggal_pengajuan || '-'}</p>
-                          </div>
-                          <div>
-                              <p class="text-sm font-medium text-gray-500">Perihal</p>
-                              <p class="mt-1">${data.perihal || '-'}</p>
-                          </div>
-                          <div>
-                              <p class="text-sm font-medium text-gray-500">Status</p>
-                              <p class="mt-1">${data.status_dokumen || '-'}</p>
-                          </div>
-                          <div>
-                              <p class="text-sm font-medium text-gray-500">Keterangan</p>
-                              <p class="mt-1">${data.keterangan || '-'}</p>
-                          </div>
-                      </div>
-                  `;
-              })
-              .catch(error => {
-                  console.error('Error:', error);
-                  document.getElementById('modalContent').innerHTML = `
-                      <div class="text-center text-red-500">
-                          Terjadi kesalahan saat memuat data. Silakan coba lagi.
-                      </div>
-                  `;
-              });
-      }
+      function showModal(documentId) {
+        currentDocumentId = documentId;
+        
+        fetch(`/ormawa/dokumen/${documentId}`)
+            .then(response => response.json())
+            .then(data => {
+                currentFileUrl = data.file_url;
+                document.getElementById('modalContent').innerHTML = `
+                    <div class="space-y-4">
+                        <iframe 
+                            src="${data.file_url}" 
+                            class="w-full h-[500px]" 
+                            frameborder="0"
+                        ></iframe>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Nomor Surat</p>
+                            <p class="mt-1">${data.nomor_surat}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Tanggal Pengajuan</p>
+                            <p class="mt-1">${data.tanggal_pengajuan}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Perihal</p>
+                            <p class="mt-1">${data.perihal}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Status</p>
+                            <p class="mt-1">${data.status_dokumen}</p>
+                        </div>
+                        ${data.status_dokumen === 'butuh_revisi' ? `
+                            <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400">
+                                <p class="text-sm font-medium text-yellow-800">Keterangan Revisi:</p>
+                                <p class="mt-1 text-yellow-700">${data.keterangan_revisi || '-'}</p>
+                            </div>
+                            <div class="mt-4">
+                                <form id="updateDokumenForm" class="space-y-4" enctype="multipart/form-data">
+                                    <input type="file" name="dokumen" accept=".pdf" class="w-full p-2 border rounded-lg" required>
+                                    <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600">
+                                        Update Dokumen
+                                    </button>
+                                </form>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                // Add event listener for form submission
+                if (data.status_dokumen === 'butuh_revisi') {
+                    document.getElementById('updateDokumenForm').addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        updateDokumen(documentId, this);
+                    });
+                }
+                
+                document.getElementById('detailModal').classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat memuat detail dokumen');
+            });
+}
 
       function closeModal() {
           document.getElementById('detailModal').classList.add('hidden');
@@ -265,6 +282,34 @@
           if (currentFileUrl) {
               window.open(currentFileUrl, '_blank');
           }
+      }
+
+      function updateDokumen(documentId, form) {
+          const formData = new FormData(form);
+          
+          // Tambahkan CSRF token
+          formData.append('_token', '{{ csrf_token() }}');
+
+          fetch(`/ormawa/dokumen/${documentId}/update`, {
+              method: 'POST',
+              body: formData,
+              headers: {
+                  'X-Requested-With': 'XMLHttpRequest'
+              }
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  alert('Dokumen berhasil diupdate!');
+                  window.location.reload();
+              } else {
+                  throw new Error(data.message || 'Terjadi kesalahan saat mengupdate dokumen');
+              }
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              alert(error.message || 'Terjadi kesalahan saat mengupdate dokumen');
+          });
       }
 
       // Close modal when clicking outside

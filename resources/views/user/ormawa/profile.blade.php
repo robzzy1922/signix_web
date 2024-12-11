@@ -23,9 +23,9 @@
                 <div class="flex justify-center items-center space-x-6">
                     <div class="flex relative flex-col items-center">
                         @if($ormawa->profile)
-                            <img src="{{ Storage::url($ormawa->profile) }}"
-                                 alt="Profile Photo"
-                                 class="object-cover w-40 h-40 rounded-full border-4 border-white shadow-lg">
+                        <img src="{{ asset('profiles/' . Auth::guard('ormawa')->user()->profile) }}"
+                        alt="Profile Picture"
+                        class="object-cover w-20 h-20 rounded-full">
                         @else
                             <div class="flex justify-center items-center w-40 h-40 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full border-4 border-white shadow-lg">
                                 <span class="text-5xl font-semibold text-white">{{ substr($ormawa->namaMahasiswa, 0, 1) }}</span>
