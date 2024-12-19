@@ -23,7 +23,7 @@
                 <div class="flex justify-center items-center space-x-6">
                     <div class="flex relative flex-col items-center">
                         @if($dosen->profile)
-                            <img src="{{ Storage::url($dosen->profile) }}"
+                            <img src="{{ asset('profiles/' . Auth::guard('dosen')->user()->profile) }}"
                                  alt="Profile Photo"
                                  class="object-cover w-40 h-40 rounded-full border-4 border-white shadow-lg">
                         @else
