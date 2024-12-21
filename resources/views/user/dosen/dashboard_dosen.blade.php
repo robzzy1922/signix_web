@@ -50,7 +50,7 @@
             </a>
 
             <!-- Surat perlu direvisi -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'butuh_revisi']) }}" class="block transform transition-all hover:scale-105">
+            <a href="{{ route('dosen.riwayat', ['status' => 'butuh revisi']) }}" class="block transform transition-all hover:scale-105">
                 <div class="p-6 bg-gradient-to-br from-red-400 to-red-500 rounded-xl shadow-lg">
                     <div class="flex flex-col space-y-3">
                         <div class="flex items-center justify-between">
@@ -73,7 +73,7 @@
             </a>
 
             <!-- Surat sudah direvisi -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'direvisi']) }}" class="block transform transition-all hover:scale-105">
+            <a href="{{ route('dosen.riwayat', ['status' => 'sudah direvisi']) }}" class="block transform transition-all hover:scale-105">
                 <div class="p-6 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-lg">
                     <div class="flex flex-col space-y-3">
                         <div class="flex items-center justify-between">
@@ -117,8 +117,8 @@
                         <option value="">Semua Status</option>
                         <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
                         <option value="disahkan" {{ request('status') == 'disahkan' ? 'selected' : '' }}>Tertanda</option>
-                        <option value="butuh_revisi" {{ request('status') == 'butuh_revisi' ? 'selected' : '' }}>Perlu direvisi</option>
-                        <option value="direvisi" {{ request('status') == 'direvisi' ? 'selected' : '' }}>Sudah direvisi</option>
+                        <option value="butuh revisi" {{ request('status') == 'butuh revisi' ? 'selected' : '' }}>Perlu direvisi</option>
+                        <option value="sudah direvisi" {{ request('status') == 'sudah direvisi' ? 'selected' : '' }}>Sudah direvisi</option>
                     </select>
                 </form>
             </div>
@@ -159,8 +159,8 @@
                                     $statusClass = match($dokumen->status_dokumen) {
                                         'diajukan' => 'bg-yellow-100 text-yellow-800',
                                         'disahkan' => 'bg-green-100 text-green-800',
-                                        'butuh_revisi' => 'bg-red-100 text-red-800',
-                                        'direvisi' => 'bg-blue-100 text-blue-800',
+                                        'butuh revisi' => 'bg-red-100 text-red-800',
+                                        'sudah direvisi' => 'bg-blue-100 text-blue-800',
                                         default => 'bg-gray-100 text-gray-800'
                                     };
                                 @endphp

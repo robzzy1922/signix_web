@@ -9,7 +9,6 @@
                 <h3 class="text-xl font-bold mb-2">Quick Links</h3>
                 <ul class="text-sm">
                     <li><a href="#" class="hover:text-blue-400">Home</a></li>
-                    <li><a href="#" class="hover:text-blue-400">Pengajuan</a></li>
                     <li><a href="#" class="hover:text-blue-400">Riwayat</a></li>
                     <li><a href="#" class="hover:text-blue-400">FAQ</a></li>
                 </ul>

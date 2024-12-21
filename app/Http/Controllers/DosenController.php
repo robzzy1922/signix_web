@@ -52,9 +52,9 @@ class DosenController extends Controller
         $countDisahkan = Dokumen::where('id_dosen', $dosen_id)
             ->where('status_dokumen', 'disahkan')->count();
         $countRevisi = Dokumen::where('id_dosen', $dosen_id)
-            ->where('status_dokumen', 'direvisi')->count();
+            ->where('status_dokumen', 'sudah direvisi')->count();
         $countButuhRevisi = Dokumen::where('id_dosen', $dosen_id)
-            ->where('status_dokumen', 'butuh_revisi')->count();
+            ->where('status_dokumen', 'butuh revisi')->count();
 
         return view('user.dosen.dashboard_dosen', compact('dokumens', 'status', 'countDiajukan', 'countDisahkan', 'countRevisi', 'countButuhRevisi'));
     }
@@ -135,16 +135,16 @@ class DosenController extends Controller
     public function updateProfile(Request $request)
     {
         $request->validate([
-            'namaMahasiswa' => 'required|string|max:255',
+            'namaDosen' => 'required|string|max:255',
             'email' => 'required|email',
             'noHp' => 'required|string|max:15',
         ]);
 
         $dosen = Auth::guard('dosen')->user();
         $dosen->update([
-            'nama_dosen' => $request->nama_dosen,
+            'nama_dosen' => $request->namaDosen,
             'email' => $request->email,
-            'no_hp' => $request->no_hp,
+            'no_hp' => $request->noHp,
         ]);
         $dosen->save();
 
@@ -153,24 +153,37 @@ class DosenController extends Controller
 
     public function updatePhoto(Request $request)
     {
+        // Validasi file
         $request->validate([
-            'profile_photo' => ['required', 'image', 'max:1024'] // 1MB Max
+            'profile_photo' => ['required', 'image', 'max:1024'], // Maksimal 1MB
         ]);
 
+        // Ambil pengguna yang sedang login
         $dosen = Auth::guard('dosen')->user();
 
-        if ($dosen->profile) {
-            Storage::disk('public')->delete($dosen->profile);
+        // Periksa apakah pengguna ditemukan
+        if (!$dosen) {
+            return back()->with('error', 'Failed to update profile photo. User not found.');
         }
 
-        $path = $request->file('profile_photo')->store('profile-photos', 'public');
+        // Hapus foto profil lama jika ada
+        if ($dosen->profile && file_exists(public_path('profiles/' . $dosen->profile))) {
+            unlink(public_path('profiles/' . $dosen->profile));
+        }
 
+        // Simpan file baru ke folder public/profiles
+        $file = $request->file('profile_photo');
+        $filename = time() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path('profiles'), $filename);
+
+        // Update database
         $dosen->update([
-            'profile' => $path
+            'profile' => $filename,
         ]);
 
-        return back()->with('success', 'Profile photo updated successfully');
+        return back()->with('success', 'Profile photo updated successfully.');
     }
+
 
     public function destroyPhoto()
     {
@@ -431,7 +444,7 @@ class DosenController extends Controller
 
             DB::beginTransaction();
             try {
-                $dokumen->status_dokumen = 'butuh_revisi';
+                $dokumen->status_dokumen = 'butuh revisi';
                 $dokumen->keterangan_revisi = $validated['keterangan'];
                 $dokumen->tanggal_revisi = now();
                 $dokumen->save();

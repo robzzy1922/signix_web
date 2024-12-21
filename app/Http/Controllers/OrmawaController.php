@@ -35,9 +35,9 @@ class OrmawaController extends Controller
         $countDisahkan = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id())
                                 ->where('status_dokumen', 'disahkan')->count();
         $countButuhRevisi = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id())
-                                ->where('status_dokumen', 'butuh_revisi')->count();
+                                ->where('status_dokumen', 'butuh revisi')->count();
         $countRevisi = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id())
-                              ->where('status_dokumen', 'direvisi')->count();
+                              ->where('status_dokumen', 'sudah direvisi')->count();
 
         return view('user.ormawa.ormawa_dashboard', compact(
             'dokumens', 
@@ -122,6 +122,14 @@ class OrmawaController extends Controller
     {
         $query = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id());
 
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nomor_surat', 'like', "%$search%")
+                  ->orWhere('perihal', 'like', "%$search%")
+                  ->orWhere('status_dokumen', 'like', "%$search%");
+            });
+        }
         // Apply status filter if exists
         if ($request->has('status') && $request->status != '') {
             $query->where('status_dokumen', $request->status);
@@ -264,7 +272,7 @@ class OrmawaController extends Controller
             // Update dokumen
             $dokumen->update([
                 'file' => $filePath,
-                'status_dokumen' => 'direvisi',
+                'status_dokumen' => 'sudah direvisi',
                 'tanggal_revisi' => now() // tambahkan tanggal revisi jika diperlukan
             ]);
 

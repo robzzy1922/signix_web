@@ -29,8 +29,9 @@
                             onchange="this.form.submit()">
                         <option value="">Semua Status</option>
                         <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
-                        <option value="disahkan" {{ request('status') == 'disahkan' ? 'selected' : '' }}>Tertanda</option>
-                        <option value="direvisi" {{ request('status') == 'direvisi' ? 'selected' : '' }}>Revisi</option>
+                        <option value="disahkan" {{ request('status') == 'disahkan' ? 'selected' : '' }}>Disahkan</option>
+                        <option value="butuh_revisi" {{ request('status') == 'butuh_revisi' ? 'selected' : '' }}>Butuh Revisi</option>
+                        <option value="direvisi" {{ request('status') == 'direvisi' ? 'selected' : '' }}>Direvisi</option>
                     </select>
                 </form>
             </div>

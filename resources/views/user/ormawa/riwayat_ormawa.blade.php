@@ -5,12 +5,19 @@
         <h1 class="mb-6 text-2xl font-bold">Riwayat Pengajuan</h1>
 
         <div class="flex justify-between items-center mb-4">
-            <div class="relative w-64">
-                <input type="text" placeholder="Cari Pengajuan" class="py-2 pr-4 pl-10 w-full rounded-lg border">
-                <svg class="absolute top-3 left-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-            </div>
+            <div class="relative w-full md:w-64">
+                <form method="GET" action="{{ route('ormawa.riwayat') }}" class="flex">
+                  <div class="relative flex-grow">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Pengajuan" class="py-2 pr-4 pl-10 w-full rounded-l-lg border">
+                    <svg class="absolute top-3 left-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                  </div>
+                  <button type="submit" class="px-4 py-2 text-white bg-blue-500 rounded-r-lg hover:bg-blue-600">
+                    Cari
+                  </button>
+                </form>
+              </div>
             <div>
                 <form method="GET" action="{{ route('ormawa.riwayat') }}">
                     <div>
@@ -18,7 +25,8 @@
                             <option value="">Semua Status</option>
                             <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
                             <option value="disahkan" {{ request('status') == 'disahkan' ? 'selected' : '' }}>Disahkan</option>
-                            <option value="direvisi" {{ request('status') == 'direvisi' ? 'selected' : '' }}>Revisi</option>
+                            <option value="butuh_revisi" {{ request('status') == 'butuh_revisi' ? 'selected' : '' }}>Perlu Direvisi</option>
+                            <option value="direvisi" {{ request('status') == 'direvisi' ? 'selected' : '' }}>Direvisi</option>
                         </select>
                     </div>
                 </form>
@@ -61,6 +69,7 @@
                             $statusClass = match($dokumen->status_dokumen) {
                                 'diajukan' => 'bg-yellow-100 text-yellow-800',
                                 'disahkan' => 'bg-green-100 text-green-800',
+                                'butuh revisi' => 'bg-red-100 text-red-800',
                                 'direvisi' => 'bg-blue-100 text-blue-800',
                                 default => 'bg-gray-100 text-gray-800'
                             };

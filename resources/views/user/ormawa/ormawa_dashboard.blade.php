@@ -137,8 +137,8 @@
                             $statusClass = match($dokumen->status_dokumen) {
                                 'diajukan' => 'bg-yellow-100 text-yellow-800',
                                 'disahkan' => 'bg-green-100 text-green-800',
-                                'butuh_revisi' => 'bg-red-100 text-red-800',
-                                'direvisi' => 'bg-blue-100 text-blue-800',
+                                'butuh revisi' => 'bg-red-100 text-red-800',
+                                'sudah direvisi' => 'bg-blue-100 text-blue-800',
                                 default => 'bg-gray-100 text-gray-800'
                             };
                         @endphp
@@ -228,7 +228,7 @@
                             <p class="text-sm font-medium text-gray-500">Status</p>
                             <p class="mt-1">${data.status_dokumen}</p>
                         </div>
-                        ${data.status_dokumen === 'butuh_revisi' ? `
+                        ${data.status_dokumen === 'butuh revisi' ? `
                             <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400">
                                 <p class="text-sm font-medium text-yellow-800">Keterangan Revisi:</p>
                                 <p class="mt-1 text-yellow-700">${data.keterangan_revisi || '-'}</p>
@@ -246,7 +246,7 @@
                 `;
                 
                 // Add event listener for form submission
-                if (data.status_dokumen === 'butuh_revisi') {
+                if (data.status_dokumen === 'butuh revisi') {
                     document.getElementById('updateDokumenForm').addEventListener('submit', function(e) {
                         e.preventDefault();
                         updateDokumen(documentId, this);
