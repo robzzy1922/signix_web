@@ -101,7 +101,8 @@
           </form>
       </div>
       </div>
-      <div class="p-4 bg-white rounded-lg shadow">
+<div class="p-4 w-full bg-white rounded-lg shadow overflow-x-auto"> <!-- Added overflow-x-auto -->
+    <div class="min-w-full overflow-x-auto"> <!-- Added wrapper div -->
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -115,7 +116,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @if ($dokumens->isEmpty())
-                        <tr>
+                    <tr>
                             <td colspan="6" class="py-8 text-center">
                                 <div class="flex flex-col justify-center items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,10 +150,12 @@
                     <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                         <a href="#" class="text-indigo-600 hover:text-indigo-900" onclick="showModal({{ $dokumen->id }}, '{{ asset('storage/' . $dokumen->file) }}')">Lihat Detail</a>
                     </td>
+                </tr>
                 @endforeach
             </tbody>
         </table>
       </div>
+</div>
     </div>
   </div>
 
@@ -200,16 +203,16 @@
 
       function showModal(documentId) {
         currentDocumentId = documentId;
-        
+
         fetch(`/ormawa/dokumen/${documentId}`)
             .then(response => response.json())
             .then(data => {
                 currentFileUrl = data.file_url;
                 document.getElementById('modalContent').innerHTML = `
                     <div class="space-y-4">
-                        <iframe 
-                            src="${data.file_url}" 
-                            class="w-full h-[500px]" 
+                        <iframe
+                            src="${data.file_url}"
+                            class="w-full h-[500px]"
                             frameborder="0"
                         ></iframe>
                         <div>
@@ -244,7 +247,7 @@
                         ` : ''}
                     </div>
                 `;
-                
+
                 // Add event listener for form submission
                 if (data.status_dokumen === 'butuh revisi') {
                     document.getElementById('updateDokumenForm').addEventListener('submit', function(e) {
@@ -252,7 +255,7 @@
                         updateDokumen(documentId, this);
                     });
                 }
-                
+
                 document.getElementById('detailModal').classList.remove('hidden');
             })
             .catch(error => {
@@ -286,7 +289,7 @@
 
       function updateDokumen(documentId, form) {
           const formData = new FormData(form);
-          
+
           // Tambahkan CSRF token
           formData.append('_token', '{{ csrf_token() }}');
 

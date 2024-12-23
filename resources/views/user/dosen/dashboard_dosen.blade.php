@@ -25,7 +25,6 @@
                     </div>
                 </div>
             </a>
-
             <!-- Surat sudah tertanda -->
             <a href="{{ route('dosen.riwayat', ['status' => 'disahkan']) }}" class="block transform transition-all hover:scale-105">
                 <div class="p-6 bg-gradient-to-br from-green-400 to-green-500 rounded-xl shadow-lg">
@@ -72,6 +71,7 @@
                 </div>
             </a>
 
+            
             <!-- Surat sudah direvisi -->
             <a href="{{ route('dosen.riwayat', ['status' => 'sudah direvisi']) }}" class="block transform transition-all hover:scale-105">
                 <div class="p-6 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-lg">
@@ -125,12 +125,13 @@
         </div>
 
         <!-- Table Section -->
-        <div class="p-4 bg-white rounded-lg shadow">
+        <div class="p-4 w-full bg-white rounded-lg shadow overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">No. Surat</th>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Tanggal Pengajuan</th>
+                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Nama Pengaju</th>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Hal</th>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Dari</th>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Status</th>
@@ -152,6 +153,7 @@
                         <tr data-id="{{ $dokumen->id }}">
                             <td class="px-6 py-4 whitespace-nowrap" data-nomor>{{ $dokumen->nomor_surat }}</td>
                             <td class="px-6 py-4 whitespace-nowrap" data-tanggal>{{ $dokumen->tanggal_pengajuan }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap" data-namaPengirim>{{ $dokumen->ormawa->namaMahasiswa }}</td>
                             <td class="px-6 py-4 whitespace-nowrap" data-perihal>{{ $dokumen->perihal }}</td>
                             <td class="px-6 py-4 whitespace-nowrap" data-ormawa>{{ $dokumen->ormawa->namaOrmawa }}</td>
                             <td class="px-6 py-4 whitespace-nowrap" data-status>
@@ -187,38 +189,15 @@
             <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
             <div class="relative w-full max-w-lg bg-white rounded-lg shadow-xl">
-                <div class="px-6 py-4 border-b border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                     <h3 class="text-lg font-medium text-gray-900">Detail Dokumen</h3>
-                    <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500">
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
                         <span class="sr-only">Close</span>
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
-
-                <style>
-                    .resize-drag {
-                        background-color: #29e;
-                        color: white;
-                        font-size: 20px;
-                        font-family: sans-serif;
-                        border-radius: 8px;
-                        padding: 20px;
-                        margin: 30px 20px;
-                        touch-action: none;
-                        user-select: none;
-                        position: absolute;
-                    }
-
-                    .resize-container {
-                        position: relative;
-                        width: 100%;
-                        height: 400px;
-                        border: 1px solid #ccc;
-                        overflow: hidden;
-                    }
-                </style>
 
                 <div class="px-6 py-4" id="modalContent">
                     <!-- Content will be loaded here -->
@@ -251,7 +230,7 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end px-6 py-4 space-x-3 border-t border-gray-200" id="modalButtons">
+                <div class="flex flex-col md:flex-row justify-end px-6 py-4 space-y-2 md:space-y-0 md:space-x-3 border-t border-gray-200" id="modalButtons">
                     <button onclick="downloadDocument()"
                             class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         Download
@@ -564,7 +543,7 @@
     function showRevisiForm() {
         document.getElementById('modalContent').classList.add('hidden');
         document.getElementById('revisiForm').classList.remove('hidden');
-        document.getElementById('modalBx    uttons').classList.add('hidden');
+        document.getElementById('modalButtons').classList.add('hidden');
     }
 
     function cancelRevisi() {
@@ -576,7 +555,7 @@
 
     function submitRevisi() {
         const keterangan = document.getElementById('keteranganRevisi').value;
-        
+
         if (!keterangan.trim()) {
             alert('Keterangan revisi tidak boleh kosong');
             return;
@@ -627,3 +606,4 @@
     });
     </script>
 @endsection
+

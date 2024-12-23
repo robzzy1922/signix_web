@@ -2,10 +2,10 @@
 @section('title', 'Riwayat Pengesahan')
 @section('content')
     <div class="container flex-grow px-4 mx-auto mt-8 max-w-5xl">
-        <h1 class="mb-6 text-2xl font-bold">Riwayat Pengajuan</h1>
+        <h1 class="mb-6 text-2xl font-bold">Riwayat Dokumen</h1>
 
-        <div class="flex justify-between items-center mb-4">
-            <div class="relative w-64">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
+            <div class="w-full md:w-64">
                 <form method="GET" action="{{ route('dosen.riwayat') }}" class="flex">
                     <div class="relative flex-grow">
                         <input type="text"
@@ -22,11 +22,9 @@
                     </button>
                 </form>
             </div>
-            <div>
+            <div class="w-full md:w-auto">
                 <form method="GET" action="{{ route('dosen.riwayat') }}">
-                    <select name="status"
-                            class="px-4 py-2 rounded-lg border"
-                            onchange="this.form.submit()">
+                    <select name="status" class="w-full md:w-auto px-4 py-2 rounded-lg border text-sm" onchange="this.form.submit()">
                         <option value="">Semua Status</option>
                         <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
                         <option value="disahkan" {{ request('status') == 'disahkan' ? 'selected' : '' }}>Disahkan</option>
@@ -37,7 +35,7 @@
             </div>
         </div>
 
-        <div class="overflow-hidden bg-white rounded-lg shadow-md">
+        <div class="overflow-x-auto bg-white rounded-lg shadow-md">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -86,24 +84,16 @@
             <nav class="inline-flex relative z-0 -space-x-px rounded-md shadow-sm" aria-label="Pagination">
                 <a href="#" class="inline-flex relative items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white rounded-l-md border border-gray-300 hover:bg-gray-50">
                     <span class="sr-only">Previous</span>
-                    <!-- Heroicon name: solid/chevron-left -->
-                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                     </svg>
                 </a>
-                <a href="#" class="inline-flex relative items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">
-                    1
-                </a>
-                <a href="#" class="inline-flex relative items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">
-                    2
-                </a>
-                <a href="#" class="inline-flex relative items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">
-                    3
-                </a>
+                <a href="#" class="hidden md:inline-flex relative items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">1</a>
+                <a href="#" class="hidden md:inline-flex relative items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">2</a>
+                <a href="#" class="hidden md:inline-flex relative items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">3</a>
                 <a href="#" class="inline-flex relative items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white rounded-r-md border border-gray-300 hover:bg-gray-50">
                     <span class="sr-only">Next</span>
-                    <!-- Heroicon name: solid/chevron-right -->
-                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                     </svg>
                 </a>

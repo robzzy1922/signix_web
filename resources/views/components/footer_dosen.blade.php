@@ -3,14 +3,13 @@
         <div class="flex flex-wrap justify-between">
             <div class="w-full md:w-1/3 mb-4 md:mb-0">
                 <h3 class="text-xl font-bold mb-2">SIGNIX</h3>
-                <p class="text-sm">Sistem Informasi Digital Signature untuk Organisasi Mahasiswa</p>
+                <p class="text-sm">Sistem pengesahan dokumen menggunakan QR Code</p>
             </div>
             <div class="w-full md:w-1/3 mb-4 md:mb-0">
                 <h3 class="text-xl font-bold mb-2">Quick Links</h3>
                 <ul class="text-sm">
-                    <li><a href="#" class="hover:text-blue-400">Home</a></li>
-                    <li><a href="#" class="hover:text-blue-400">Riwayat</a></li>
-                    <li><a href="#" class="hover:text-blue-400">FAQ</a></li>
+                    <li><a href="{{ route('dosen.dashboard') }}" class="hover:text-blue-400">Home</a></li>
+                    <li><a href="{{ route("dosen.riwayat") }}" class="hover:text-blue-400">Riwayat</a></li>
                 </ul>
             </div>
             <div class="w-full md:w-1/3">
@@ -18,7 +17,7 @@
                 <ul class="text-sm">
                     <li>Locations</li>
                     <li>Call: +6281234567</li>
-                    <li>Email: informatika@gmail.com</li>
+                    <li>Email: teknik.informatika@gmail.com</li>
                 </ul>
             </div>
         </div>
