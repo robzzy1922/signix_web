@@ -15,10 +15,11 @@ class LoginAuthController extends Controller
 
     public function login(Request $request)
     {
+
         $role = $request->input('role');
-        $password = $request->input('password');
         $credentials = [];
-    
+        $password = $request->input('password');
+
         switch ($role) {
             case 'admin':
                 $credentials = ['email' => $request->input('email'), 'password' => $password];
@@ -38,17 +39,17 @@ class LoginAuthController extends Controller
             default:
                 return back()->withErrors(['role' => 'Role tidak valid']);
         }
-    
+
         if (Auth::guard($guard)->attempt($credentials)) {
             return redirect()->intended($redirect);
         }
-    
+
         if ($role === 'ormawa') {
             return back()->withErrors(['login' => 'NIM atau password salah, tolong masukkan ulang.']);
         } elseif ($role === 'dosen') {
             return back()->withErrors(['login' => 'NIP atau password salah, tolong masukkan ulang.']);
         }
-    
+
         return back()->withErrors(['login' => 'Kredensial tidak valid']);
     }
 
