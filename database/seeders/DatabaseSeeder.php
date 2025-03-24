@@ -2,11 +2,16 @@
 
 namespace Database\Seeders;
 
+use App\Models\Kemahasiswaan;
 use App\Models\User;
 use App\Models\Ormawa;
 use Illuminate\Support\Facades\Hash;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+
+use Database\Seeders\OrmawaSeeder;
+use Database\Seeders\AdminSeeder;
+use Database\Seeders\KemahasiswaanSeeder;
 use Database\Seeders\DosenSeeder;
 
 class DatabaseSeeder extends Seeder
@@ -20,13 +25,14 @@ class DatabaseSeeder extends Seeder
 
         User::factory()->create([
             'name' => 'Test User',
-            'email' => 'unique_test@example.com',
+
         ]);
 
         $this->call([
-            OrmawaSeeder::class,
+            AdminSeeder::class,
+            KemahasiswaanSeeder::class,
             DosenSeeder::class,
-            AdminSeeder::class
+            OrmawaSeeder::class,
         ]);
     }
 }

@@ -213,7 +213,7 @@ class DosenController extends Controller
     {
         try {
             $dokumen = Dokumen::findOrFail($id);
-            
+
             // Generate kode pengesahan jika belum ada
             if (!$dokumen->kode_pengesahan) {
                 $dokumen->kode_pengesahan = Str::random(10);
@@ -259,7 +259,7 @@ class DosenController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('QR Code Generation Error: ' . $e->getMessage());
+            Log::error('QR Code Generation Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal membuat QR Code: ' . $e->getMessage()
@@ -300,7 +300,7 @@ class DosenController extends Controller
                 // Tambahkan QR code hanya di halaman yang dipilih
                 if ($pageNo === (int)$validated['page']) {
                     $qrCodePath = storage_path('app/public/' . $dokumen->qr_code_path);
-                    
+
                     // Dapatkan ukuran halaman
                     $pageWidth = $pdf->GetPageWidth();
                     $pageHeight = $pdf->GetPageHeight();
@@ -323,7 +323,7 @@ class DosenController extends Controller
             // Simpan PDF yang sudah ditandatangani
             $newFileName = 'signed_' . time() . '_' . basename($dokumen->file);
             $newFilePath = 'dokumen/' . $newFileName;
-            
+
             // Pastikan direktori exists
             $fullPath = storage_path('app/public/' . $newFilePath);
             if (!file_exists(dirname($fullPath))) {
@@ -332,7 +332,7 @@ class DosenController extends Controller
 
             // Simpan PDF ke storage
             $pdf->Output($fullPath, 'F');
-            
+
             // Update database dengan timestamp yang benar
             $dokumen->update([
                 'file' => $newFilePath,
@@ -390,7 +390,7 @@ class DosenController extends Controller
     {
         try {
             $dokumen = Dokumen::findOrFail($id);
-            
+
             if ($dokumen->id_dosen != auth()->id()) {
                 abort(403, 'Unauthorized action.');
             }
@@ -399,11 +399,11 @@ class DosenController extends Controller
             if (!$dokumen->qr_code_path || !Storage::disk('public')->exists($dokumen->qr_code_path)) {
                 // Generate kode pengesahan baru
                 $dokumen->kode_pengesahan = Str::random(10);
-                
+
                 // Set path QR code
                 $qrCodePath = 'qrcodes/qr_' . $dokumen->id . '_' . time() . '.png';
                 $fullPath = storage_path('app/public/' . $qrCodePath);
-                
+
                 // Buat direktori jika belum ada
                 if (!file_exists(dirname($fullPath))) {
                     mkdir(dirname($fullPath), 0755, true);
@@ -426,7 +426,7 @@ class DosenController extends Controller
             }
 
             return view('user.dosen.edit_qr', compact('dokumen'));
-            
+
         } catch (\Exception $e) {
             \Log::error('Error in editQrCode: ' . $e->getMessage());
             return back()->with('error', 'Gagal memuat QR Code: ' . $e->getMessage());
@@ -437,7 +437,7 @@ class DosenController extends Controller
     {
         try {
             $dokumen = Dokumen::findOrFail($id);
-            
+
             $validated = $request->validate([
                 'keterangan' => 'required|string|max:1000'
             ]);
@@ -448,9 +448,9 @@ class DosenController extends Controller
                 $dokumen->keterangan_revisi = $validated['keterangan'];
                 $dokumen->tanggal_revisi = now();
                 $dokumen->save();
-                
+
                 DB::commit();
-                
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Dokumen berhasil direvisi'

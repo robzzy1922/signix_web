@@ -36,6 +36,11 @@ class LoginAuthController extends Controller
                 $guard = 'dosen';
                 $redirect = '/dosen/dashboard';
                 break;
+            case 'kemahasiswaan':
+                $credentials = ['nip' => $request->input('nip'), 'password' => $password];
+                $guard = 'kemahasiswaan';
+                $redirect = '/kemahasiswaan/dashboard';
+                break;
             default:
                 return back()->withErrors(['role' => 'Role tidak valid']);
         }
@@ -48,22 +53,15 @@ class LoginAuthController extends Controller
             return back()->withErrors(['login' => 'NIM atau password salah, tolong masukkan ulang.']);
         } elseif ($role === 'dosen') {
             return back()->withErrors(['login' => 'NIP atau password salah, tolong masukkan ulang.']);
+        } elseif ($role === 'kemahasiswaan') {
+            return back()->withErrors(['login' => 'NIP atau password salah, tolong masukkan ulang.']);
         }
 
         return back()->withErrors(['login' => 'Kredensial tidak valid']);
     }
 
-    public function dashboardOrmawa()
-    {
-        // Logika untuk menampilkan dashboard
-        return redirect()->route('ormawa.dashboard'); // Pastikan view 'dashboard' ada
-    }
 
-    public function dashboardDosen()
-    {
-        // Logika untuk menampilkan dashboard
-        return redirect()->route('dosen.dashboard'); // Pastikan view 'dashboard' ada
-    }
+
 
     public function logout(Request $request)
     {

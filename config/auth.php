@@ -52,6 +52,10 @@ return [
             'driver' => 'session',
             'provider' => 'dosens',
         ],
+        'kemahasiswaan' => [
+            'driver' => 'session',
+            'provider' => 'kemahasiswaan',
+        ],
     ],
 
     /*
@@ -85,6 +89,10 @@ return [
             'model' => env('AUTH_MODEL', App\Models\Dosen::class),
         ],
         'admins' => [
+            'driver' => 'eloquent',
+            'model' => env('AUTH_MODEL', App\Models\Admin::class),
+        ],
+        'kemahasiswaan' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\Admin::class),
         ],
