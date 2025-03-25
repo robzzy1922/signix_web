@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class KemahasiswaanController extends Controller
 {
-    public function dashboardDosen(Request $request)
+    public function dashboardKemahasiswaan(Request $request)
     {
         $status = $request->input('status');
         $search = $request->input('search');

@@ -15,9 +15,15 @@ class LoginAuthController extends Controller
 
     public function login(Request $request)
     {
-
+        $credentials = $request->only('nip', 'password');
         $role = $request->input('role');
-        $credentials = [];
+
+        if ($role === 'kemahasiswaan') {
+            if (Auth::guard('kemahasiswaan')->attempt($credentials)) {
+                return redirect()->route('kemahasiswaan.dashboard');
+            }
+        }
+
         $password = $request->input('password');
 
         switch ($role) {
@@ -36,11 +42,6 @@ class LoginAuthController extends Controller
                 $guard = 'dosen';
                 $redirect = '/dosen/dashboard';
                 break;
-            case 'kemahasiswaan':
-                $credentials = ['nip' => $request->input('nip'), 'password' => $password];
-                $guard = 'kemahasiswaan';
-                $redirect = '/kemahasiswaan/dashboard';
-                break;
             default:
                 return back()->withErrors(['role' => 'Role tidak valid']);
         }
@@ -53,15 +54,10 @@ class LoginAuthController extends Controller
             return back()->withErrors(['login' => 'NIM atau password salah, tolong masukkan ulang.']);
         } elseif ($role === 'dosen') {
             return back()->withErrors(['login' => 'NIP atau password salah, tolong masukkan ulang.']);
-        } elseif ($role === 'kemahasiswaan') {
-            return back()->withErrors(['login' => 'NIP atau password salah, tolong masukkan ulang.']);
         }
 
         return back()->withErrors(['login' => 'Kredensial tidak valid']);
     }
-
-
-
 
     public function logout(Request $request)
     {

@@ -3,16 +3,17 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DosenController;
 use App\Http\Controllers\OrmawaController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\LoginAuthController;
+use App\Http\Controllers\KemahasiswaanController;
 use App\Http\Middleware\EnsureRoleIsAuthenticated;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Auth\DashboardController;
-use App\Http\Controllers\Admin\Auth\AdminOrmawaController;
 use App\Http\Controllers\Admin\Auth\AdminDosenController;
 use App\Http\Controllers\Admin\Auth\AdminLoginController;
-use App\Http\Controllers\Admin\Auth\AdminDashboardController;
+use App\Http\Controllers\Admin\Auth\AdminOrmawaController;
 use App\Http\Controllers\Admin\Auth\AdminDokumenController;
-use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\Admin\Auth\AdminDashboardController;
 
 
 
@@ -51,10 +52,10 @@ Route::middleware(['auth:dosen'])->prefix('dosen')->name('dosen.')->group(functi
     Route::get('/dashboard', [DosenController::class, 'dashboardDosen'])->name('dashboard');
     Route::get('/buat-tanda-tangan', [DosenController::class, 'create'])->name('create');
     Route::post('/logout', [DosenController::class, 'logout'])->name('logout');
-    
+
     // Perbaikan nama route riwayat
     Route::get('/riwayat', [DosenController::class, 'riwayat'])->name('riwayat');
-    
+
     Route::get('/dokumen/{id}', [DosenController::class, 'showDokumen'])->name('dokumen.show');
     Route::get('/dokumen/{id}/content', [DosenController::class, 'getDokumenContent'])->name('dokumen.content');
     Route::get('/profile', [DosenController::class, 'profile'])->name('profile');
@@ -80,6 +81,11 @@ Route::middleware(['auth:dosen'])->prefix('dosen')->name('dosen.')->group(functi
     Route::post('/dosen/dokumen/{id}/revisi', [DosenController::class, 'submitRevisi'])
         ->name('dosen.dokumen.revisi')
         ->middleware('auth:dosen');
+});
+
+//kemahasiswaan
+Route::middleware(['auth:kemahasiswaan'])->prefix('kemahasiswaan')->name('kemahasiswaan.')->group(function () {
+    Route::get('/dashboard', [KemahasiswaanController::class, 'dashboardKemahasiswaan'])->name('dashboard');
 });
 
 

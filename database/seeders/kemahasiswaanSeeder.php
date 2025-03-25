@@ -18,7 +18,7 @@ class kemahasiswaanSeeder extends Seeder
             [
                 'nama_kemahasiswaan' => 'Kemahasiswaan 1',
                 'nip' => '12345',
-                'email' => 'kemahasiswaan@example.com',
+                'email' => 'kemahasiswaan@gmail.com',
                 'password' => Hash::make('12345'),
                 'no_hp' => '081234567890',
                 'prodi' => 'Teknik Informatika',

@@ -2,16 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Kemahasiswaan extends Model
+class Kemahasiswaan extends Authenticatable
 {
-
     use Notifiable;
-    use HasFactory;
+
     protected $table = 'kemahasiswaan';
+    protected $guard = 'kemahasiswaan';
 
     protected $fillable = [
         'nama_kemahasiswaan',
@@ -21,5 +20,10 @@ class Kemahasiswaan extends Model
         'no_hp',
         'prodi',
         'profile'
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 }

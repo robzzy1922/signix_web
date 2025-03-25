@@ -19,8 +19,9 @@ return new class extends Migration
             $table->string('email', 50)->unique();
             $table->string('no_hp', 20);
             $table->string('prodi', 50);
-            $table->string('password')->default(Hash::make('password'));
+            $table->string('password');
             $table->string('profile')->nullable();
+            $table->rememberToken(); // Tambahkan ini
             $table->timestamps();
         });
     }

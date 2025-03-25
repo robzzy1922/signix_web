@@ -14,8 +14,8 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'web'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+        'guard' => 'web',
+        'passwords' => 'users',
     ],
 
     /*
@@ -40,21 +40,17 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'admin' => [
-            'driver' => 'session',
-            'provider' => 'admins',
-        ],
-        'ormawa' => [
-            'driver' => 'session',
-            'provider' => 'ormawas',
-        ],
         'dosen' => [
             'driver' => 'session',
-            'provider' => 'dosens',
+            'provider' => 'dosen',
         ],
         'kemahasiswaan' => [
             'driver' => 'session',
             'provider' => 'kemahasiswaan',
+        ],
+        'ormawa' => [
+            'driver' => 'session',
+            'provider' => 'ormawa',
         ],
     ],
 
@@ -78,23 +74,19 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => App\Models\User::class,
         ],
-        'ormawas' => [
+        'dosen' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\Ormawas::class),
-        ],
-        'dosens' => [
-            'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\Dosen::class),
-        ],
-        'admins' => [
-            'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\Admin::class),
+            'model' => App\Models\Dosen::class,
         ],
         'kemahasiswaan' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\Admin::class),
+            'model' => App\Models\Kemahasiswaan::class,
+        ],
+        'ormawa' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Ormawas::class
         ],
     ],
 
