@@ -21,6 +21,7 @@ return new class extends Migration
             $table->date('tanggal_pengajuan');
             $table->foreignId('id_ormawa')->constrained('ormawas')->onDelete('cascade');
             $table->foreignId('id_dosen')->constrained('dosen')->onDelete('cascade');
+            $table->foreignId('id_kemahasiswaan')->constrained('kemahasiswaan')->onDelete('cascade');
             $table->timestamps();
         });
     }

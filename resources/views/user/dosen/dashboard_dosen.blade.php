@@ -4,92 +4,92 @@
     <div class="container px-4 py-8 mx-auto">
         <div class="grid grid-cols-1 gap-4 mb-8 md:grid-cols-2 lg:grid-cols-4">
             <!-- Surat yang diajukan -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'diajukan']) }}" class="block transform transition-all hover:scale-105">
+            <a href="{{ route('dosen.riwayat', ['status' => 'diajukan']) }}" class="block transition-all transform hover:scale-105">
                 <div class="p-6 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl shadow-lg">
                     <div class="flex flex-col space-y-3">
-                        <div class="flex items-center justify-between">
+                        <div class="flex justify-between items-center">
                             <div class="flex flex-col items-start">
                                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                <div class="p-3 bg-yellow-300 bg-opacity-30 rounded-full mb-3">
+                                <div class="p-3 mb-3 bg-yellow-300 bg-opacity-30 rounded-full">
                                     <i class="text-3xl text-white fas fa-file-alt"></i>
                                 </div>
                                 <h2 class="text-lg font-semibold text-white">Dokumen Diajukan Ormawa</h2>
                             </div>
                             <span class="text-5xl font-bold text-white">{{ $countDiajukan }}</span>
                         </div>
-                        <div class="absolute bottom-2 right-2 opacity-10">
-                            <i class="fas fa-folder-open text-6xl text-white"></i>
+                        <div class="absolute right-2 bottom-2 opacity-10">
+                            <i class="text-6xl text-white fas fa-folder-open"></i>
                         </div>
                     </div>
                 </div>
             </a>
             <!-- Surat sudah tertanda -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'disahkan']) }}" class="block transform transition-all hover:scale-105">
+            <a href="{{ route('dosen.riwayat', ['status' => 'disahkan']) }}" class="block transition-all transform hover:scale-105">
                 <div class="p-6 bg-gradient-to-br from-green-400 to-green-500 rounded-xl shadow-lg">
                     <div class="flex flex-col space-y-3">
-                        <div class="flex items-center justify-between">
+                        <div class="flex justify-between items-center">
                             <div class="flex flex-col items-start">
                                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <div class="p-3 bg-green-300 bg-opacity-30 rounded-full mb-3">
+                                <div class="p-3 mb-3 bg-green-300 bg-opacity-30 rounded-full">
                                     <i class="text-3xl text-white fas fa-file-signature"></i>
                                 </div>
                                 <h2 class="text-lg font-semibold text-white">Dokumen Tertanda</h2>
                             </div>
                             <span class="text-5xl font-bold text-white">{{ $countDisahkan }}</span>
                         </div>
-                        <div class="absolute bottom-2 right-2 opacity-10">
-                            <i class="fas fa-check-double text-6xl text-white"></i>
+                        <div class="absolute right-2 bottom-2 opacity-10">
+                            <i class="text-6xl text-white fas fa-check-double"></i>
                         </div>
                     </div>
                 </div>
             </a>
 
             <!-- Surat perlu direvisi -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'butuh revisi']) }}" class="block transform transition-all hover:scale-105">
+            <a href="{{ route('dosen.riwayat', ['status' => 'butuh_revisi']) }}" class="block transition-all transform hover:scale-105">
                 <div class="p-6 bg-gradient-to-br from-red-400 to-red-500 rounded-xl shadow-lg">
                     <div class="flex flex-col space-y-3">
-                        <div class="flex items-center justify-between">
+                        <div class="flex justify-between items-center">
                             <div class="flex flex-col items-start">
                                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
-                                <div class="p-3 bg-red-300 bg-opacity-30 rounded-full mb-3">
+                                <div class="p-3 mb-3 bg-red-300 bg-opacity-30 rounded-full">
                                     <i class="text-3xl text-white fas fa-file-medical-alt"></i>
                                 </div>
                                 <h2 class="text-lg font-semibold text-white">Perlu Direvisi Ormawa</h2>
                             </div>
                             <span class="text-5xl font-bold text-white">{{ $countButuhRevisi }}</span>
                         </div>
-                        <div class="absolute bottom-2 right-2 opacity-10">
-                            <i class="fas fa-exclamation-circle text-6xl text-white"></i>
+                        <div class="absolute right-2 bottom-2 opacity-10">
+                            <i class="text-6xl text-white fas fa-exclamation-circle"></i>
                         </div>
                     </div>
                 </div>
             </a>
 
-            
+
             <!-- Surat sudah direvisi -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'sudah direvisi']) }}" class="block transform transition-all hover:scale-105">
+            <a href="{{ route('dosen.riwayat', ['status' => 'direvisi']) }}" class="block transition-all transform hover:scale-105">
                 <div class="p-6 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-lg">
                     <div class="flex flex-col space-y-3">
-                        <div class="flex items-center justify-between">
+                        <div class="flex justify-between items-center">
                             <div class="flex flex-col items-start">
                                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
-                                <div class="p-3 bg-blue-300 bg-opacity-30 rounded-full mb-3">
+                                <div class="p-3 mb-3 bg-blue-300 bg-opacity-30 rounded-full">
                                     <i class="text-3xl text-white fas fa-file-code"></i>
                                 </div>
                                 <h2 class="text-lg font-semibold text-white">Sudah Direvisi Ormawa</h2>
                             </div>
                             <span class="text-5xl font-bold text-white">{{ $countRevisi }}</span>
                         </div>
-                        <div class="absolute bottom-2 right-2 opacity-10">
-                            <i class="fas fa-sync-alt text-6xl text-white"></i>
+                        <div class="absolute right-2 bottom-2 opacity-10">
+                            <i class="text-6xl text-white fas fa-sync-alt"></i>
                         </div>
                     </div>
                 </div>
@@ -125,7 +125,7 @@
         </div>
 
         <!-- Table Section -->
-        <div class="p-4 w-full bg-white rounded-lg shadow overflow-x-auto">
+        <div class="overflow-x-auto p-4 w-full bg-white rounded-lg shadow">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -189,7 +189,7 @@
             <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
             <div class="relative w-full max-w-lg bg-white rounded-lg shadow-xl">
-                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-medium text-gray-900">Detail Dokumen</h3>
                     <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
                         <span class="sr-only">Close</span>
@@ -230,7 +230,7 @@
                     </div>
                 </div>
 
-                <div class="flex flex-col md:flex-row justify-end px-6 py-4 space-y-2 md:space-y-0 md:space-x-3 border-t border-gray-200" id="modalButtons">
+                <div class="flex flex-col justify-end px-6 py-4 space-y-2 border-t border-gray-200 md:flex-row md:space-y-0 md:space-x-3" id="modalButtons">
                     <button onclick="downloadDocument()"
                             class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         Download
@@ -265,7 +265,7 @@
                                 id="keteranganRevisi"
                                 name="keterangan"
                                 rows="4"
-                                class="mt-1 block w-full rounded-md border-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="block mt-1 w-full rounded-md border-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                 required
                             ></textarea>
                         </div>

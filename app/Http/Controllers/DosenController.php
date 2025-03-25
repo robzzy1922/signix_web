@@ -221,7 +221,7 @@ class DosenController extends Controller
             }
 
             // Buat URL verifikasi
-            $verificationUrl = url("/verify/document/{$id}?kode={$dokumen->kode_pengesahan}");
+            $verificationUrl = route('verify.document', ['id' => $id, 'kode' => $dokumen->kode_pengesahan]);
 
             // Generate QR Code dengan path yang benar
             $qrCodePath = 'qrcodes/qr_' . $id . '_' . time() . '.png';
@@ -352,7 +352,7 @@ class DosenController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error in saveQrPosition: ' . $e->getMessage());
+            Log::error('Error in saveQrPosition: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menyimpan QR code: ' . $e->getMessage()
@@ -391,7 +391,7 @@ class DosenController extends Controller
         try {
             $dokumen = Dokumen::findOrFail($id);
 
-            if ($dokumen->id_dosen != auth()->id()) {
+            if ($dokumen->id_dosen != auth()->guard('dosen')->id()) {
                 abort(403, 'Unauthorized action.');
             }
 
@@ -414,7 +414,7 @@ class DosenController extends Controller
                       ->size(400)
                       ->margin(1)
                       ->generate(
-                          url("/verify/document/{$dokumen->id}?kode={$dokumen->kode_pengesahan}"),
+                          route('verify.document', ['id' => $dokumen->id, 'kode' => $dokumen->kode_pengesahan]),
                           $fullPath
                       );
 
@@ -428,7 +428,7 @@ class DosenController extends Controller
             return view('user.dosen.edit_qr', compact('dokumen'));
 
         } catch (\Exception $e) {
-            \Log::error('Error in editQrCode: ' . $e->getMessage());
+            Log::error('Error in editQrCode: ' . $e->getMessage());
             return back()->with('error', 'Gagal memuat QR Code: ' . $e->getMessage());
         }
     }

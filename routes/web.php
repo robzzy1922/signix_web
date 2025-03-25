@@ -86,6 +86,37 @@ Route::middleware(['auth:dosen'])->prefix('dosen')->name('dosen.')->group(functi
 //kemahasiswaan
 Route::middleware(['auth:kemahasiswaan'])->prefix('kemahasiswaan')->name('kemahasiswaan.')->group(function () {
     Route::get('/dashboard', [KemahasiswaanController::class, 'dashboardKemahasiswaan'])->name('dashboard');
+    Route::get('/buat-tanda-tangan', [KemahasiswaanController::class, 'create'])->name('create');
+    Route::post('/logout', [KemahasiswaanController::class, 'logout'])->name('logout');
+
+    // Perbaikan nama route riwayat
+    Route::get('/riwayat', [KemahasiswaanController::class, 'riwayat'])->name('riwayat');
+
+    Route::get('/dokumen/{id}', [KemahasiswaanController::class, 'showDokumen'])->name('dokumen.show');
+    Route::get('/dokumen/{id}/content', [KemahasiswaanController::class, 'getDokumenContent'])->name('dokumen.content');
+    Route::get('/profile', [KemahasiswaanController::class, 'profile'])->name('profile');
+    Route::get('/profile/edit', [KemahasiswaanController::class, 'editProfile'])->name('profile.edit');
+    Route::put('/profile/update', [KemahasiswaanController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/photo', [KemahasiswaanController::class, 'updatePhoto'])->name('profile.photo.update');
+    Route::delete('/profile/photo', [KemahasiswaanController::class, 'destroyPhoto'])->name('profile.photo.destroy');
+    Route::put('/profile/password', [KemahasiswaanController::class, 'updatePassword'])->name('password.update');
+
+    // Route untuk QR Code
+    Route::get('/dokumen/{id}/generate-qr', [KemahasiswaanController::class, 'generateQrCode'])
+        ->name('dokumen.generateQr');
+    Route::post('/dokumen/{dokumen}/save-qr-position', [KemahasiswaanController::class, 'saveQrPosition'])
+        ->name('dokumen.saveQrPosition');
+    Route::get('/dokumen/{id}/edit-qr', [KemahasiswaanController::class, 'editQrCode'])
+        ->name('dokumen.editQr');
+
+    // Verification route
+    Route::get('/verify/document/{id}', [KemahasiswaanController::class, 'verifyDocument'])
+        ->name('verify.document');
+
+    Route::post('/dokumen/{id}/revisi', [KemahasiswaanController::class, 'submitRevisi'])->name('dokumen.revisi');
+    Route::post('/kemahasiswaan/dokumen/{id}/revisi', [KemahasiswaanController::class, 'submitRevisi'])
+        ->name('kemahasiswaan.dokumen.revisi')
+        ->middleware('auth:kemahasiswaan');
 });
 
 

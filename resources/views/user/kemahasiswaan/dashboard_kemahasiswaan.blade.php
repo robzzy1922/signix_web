@@ -49,7 +49,7 @@
             </a>
 
             <!-- Surat perlu direvisi -->
-            <a href="{{ route('kemahasiswaan.riwayat', ['status' => 'butuh revisi']) }}" class="block transition-all transform hover:scale-105">
+            <a href="{{ route('kemahasiswaan.riwayat', ['status' => 'butuh_revisi']) }}" class="block transition-all transform hover:scale-105">
                 <div class="p-6 bg-gradient-to-br from-red-400 to-red-500 rounded-xl shadow-lg">
                     <div class="flex flex-col space-y-3">
                         <div class="flex justify-between items-center">
@@ -73,7 +73,7 @@
 
 
             <!-- Surat sudah direvisi -->
-            <a href="{{ route('kemahasiswaan.riwayat', ['status' => 'sudah direvisi']) }}" class="block transition-all transform hover:scale-105">
+            <a href="{{ route('kemahasiswaan.riwayat', ['status' => 'direvisi']) }}" class="block transition-all transform hover:scale-105">
                 <div class="p-6 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-lg">
                     <div class="flex flex-col space-y-3">
                         <div class="flex justify-between items-center">
