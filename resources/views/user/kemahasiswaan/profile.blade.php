@@ -1,5 +1,5 @@
 @extends('layouts.kemahasiswaan')
-@section('title', 'Profil Mahasiswa')
+@section('title', 'Profil Kemahasiswaan')
 @section('content')
     <div class="container px-4 py-8 mx-auto">
         <!-- Alert Component -->
@@ -22,13 +22,13 @@
             <div class="p-8 bg-gray-50 border-b">
                 <div class="flex justify-center items-center space-x-6">
                     <div class="flex relative flex-col items-center">
-                        @if($mahasiswa->profile)
+                        @if($kemahasiswaan->profile)
                             <img src="{{ asset('profiles/' . Auth::guard('kemahasiswaan')->user()->profile) }}"
                                  alt="Profile Photo"
                                  class="object-cover w-40 h-40 rounded-full border-4 border-white shadow-lg">
                         @else
                             <div class="flex justify-center items-center w-40 h-40 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full border-4 border-white shadow-lg">
-                                <span class="text-5xl font-semibold text-white">{{ substr($mahasiswa->nama_mahasiswa, 0, 1) }}</span>
+                                <span class="text-5xl font-semibold text-white">{{ substr($kemahasiswaan->nama_kemahasiswaan, 0, 1) }}</span>
                             </div>
                         @endif
 
@@ -41,7 +41,7 @@
                                 </label>
                             </form>
 
-                            @if($mahasiswa->profile)
+                            @if($kemahasiswaan->profile)
                                 <form action="{{ route('kemahasiswaan.profile.photo.destroy') }}" method="POST" class="inline">
                                     @csrf
                                     @method('DELETE')
@@ -64,21 +64,21 @@
                     <div class="space-y-2">
                         <label for="namaMahasiswa" class="block text-sm font-semibold text-gray-700">Name</label>
                         <input type="text" name="namaMahasiswa" id="namaMahasiswa"
-                               value="{{ old('namaMahasiswa', $mahasiswa->nama_mahasiswa) }}"
+                               value="{{ old('namaMahasiswa', $kemahasiswaan->nama_kemahasiswaan) }}"
                                class="block px-4 py-3 w-full rounded-lg border border-gray-300 shadow-sm transition duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
                     </div>
 
                     <div class="space-y-2">
                         <label for="email" class="block text-sm font-semibold text-gray-700">Email</label>
                         <input type="email" name="email" id="email"
-                               value="{{ old('email', $mahasiswa->email) }}"
+                               value="{{ old('email', $kemahasiswaan->email) }}"
                                class="block px-4 py-3 w-full rounded-lg border border-gray-300 shadow-sm transition duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
                     </div>
 
                     <div class="space-y-2">
                         <label for="noHp" class="block text-sm font-semibold text-gray-700">Phone Number</label>
                         <input type="text" name="noHp" id="noHp"
-                               value="{{ old('noHp', $mahasiswa->no_hp) }}"
+                               value="{{ old('noHp', $kemahasiswaan->no_hp) }}"
                                class="block px-4 py-3 w-full rounded-lg border border-gray-300 shadow-sm transition duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
                     </div>
                 </div>

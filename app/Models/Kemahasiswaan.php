@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Model;
 
 class Kemahasiswaan extends Authenticatable
 {
@@ -13,9 +14,10 @@ class Kemahasiswaan extends Authenticatable
     protected $guard = 'kemahasiswaan';
 
     protected $fillable = [
+        'nama',
+        'email',
         'nama_kemahasiswaan',
         'nip',
-        'email',
         'password',
         'no_hp',
         'prodi',
@@ -26,4 +28,9 @@ class Kemahasiswaan extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function dokumens()
+    {
+        return $this->hasMany(Dokumen::class, 'id_kemahasiswaan');
+    }
 }
