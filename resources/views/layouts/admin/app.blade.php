@@ -9,7 +9,7 @@
 </head>
 <body class="bg-gray-100">
     <div x-data class="flex min-h-screen relative">
-        <aside 
+        <aside
             class="fixed md:relative bg-[#2A3042] text-white min-h-screen z-40 transition-all duration-300"
             :class="$store.sidebar.open ? 'w-64' : 'w-16'"
             @click.away="if (window.innerWidth < 768) $store.sidebar.open = false">
@@ -32,6 +32,12 @@
                     </svg>
                     <span x-show="$store.sidebar.open">Dosen</span>
                 </a>
+                <a href="{{ route('admin.kemahasiswaan.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('admin.kemahasiswaan.*') ? 'bg-[#fd7e14]' : 'hover:bg-gray-700' }}">
+                    <svg class="w-5 h-5" :class="$store.sidebar.open ? 'mr-3' : 'mx-auto'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                    <span x-show="$store.sidebar.open">Kemahasiswaan</span>
+                </a>
                 <a href="{{ route('admin.ormawa.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('admin.ormawa.*') ? 'bg-[#fd7e14]' : 'hover:bg-gray-700' }}">
                     <svg class="w-5 h-5" :class="$store.sidebar.open ? 'mr-3' : 'mx-auto'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -51,7 +57,7 @@
             <header class="bg-white shadow">
                 <div class="flex items-center justify-between px-6 py-4">
                     <div class="flex items-center">
-                        <button 
+                        <button
                             @click="$store.sidebar.toggle()"
                             class="p-2 rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none mr-4">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

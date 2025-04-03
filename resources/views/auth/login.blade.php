@@ -135,7 +135,7 @@
     </div>
 
     <div id="forgotPasswordSection"
-        class="flex hidden fixed inset-0 justify-center items-center p-4 bg-gray-800 bg-opacity-75">
+        class="flex fixed inset-0 justify-center items-center p-4 bg-gray-800 bg-opacity-75">
         <div class="p-6 mx-4 w-full max-w-sm bg-white rounded-lg shadow-lg md:p-8">
             <div class="flex justify-center mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-500" fill="none" viewBox="0 0 24 24"

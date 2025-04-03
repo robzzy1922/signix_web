@@ -47,6 +47,19 @@ class LoginAuthController extends Controller
         }
 
         if (Auth::guard($guard)->attempt($credentials)) {
+            if ($request->expectsJson()) {
+                $user = Auth::guard($guard)->user();
+                $token = bcrypt($user->id);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Login berhasil',
+                    'user' => $user,
+                    'role' => $role,
+                    'token' => $token
+                ]);
+            }
+
             return redirect()->intended($redirect);
         }
 
@@ -54,6 +67,10 @@ class LoginAuthController extends Controller
             return back()->withErrors(['login' => 'NIM atau password salah, tolong masukkan ulang.']);
         } elseif ($role === 'dosen') {
             return back()->withErrors(['login' => 'NIP atau password salah, tolong masukkan ulang.']);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'error', 'message' => 'Kredensial tidak valid'], 401);
         }
 
         return back()->withErrors(['login' => 'Kredensial tidak valid']);

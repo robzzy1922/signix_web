@@ -129,7 +129,7 @@ class KemahasiswaanController extends Controller
     public function editProfile()
     {
         $kemahasiswaan = Auth::guard('kemahasiswaan')->user();
-        return view('user.kemahasiswaan.edit_profile', compact('kemahasiswaan'));
+        return view('user.kemahasiswaan.profile', compact('kemahasiswaan'));
     }
 
     public function updateProfile(Request $request)

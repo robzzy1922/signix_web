@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\Auth\AdminLoginController;
 use App\Http\Controllers\Admin\Auth\AdminOrmawaController;
 use App\Http\Controllers\Admin\Auth\AdminDokumenController;
 use App\Http\Controllers\Admin\Auth\AdminDashboardController;
+use App\Http\Controllers\Admin\Auth\AdminKemahasiswaanController;
 
 
 
@@ -144,6 +145,16 @@ Route::prefix('admin')->group(function () {
         Route::get('dosen/{dosen}/edit', [AdminDosenController::class, 'edit'])->name('admin.dosen.edit');
         Route::put('dosen/{dosen}', [AdminDosenController::class, 'update'])->name('admin.dosen.update');
         Route::delete('dosen/{dosen}', [AdminDosenController::class, 'destroy'])->name('admin.dosen.destroy');
+
+        //kemahasiswaan
+        Route::get('kemahasiswaan/index', [AdminKemahasiswaanController::class, 'index'])->name('admin.kemahasiswaan.index');
+        Route::get('kemahasiswaan/create', [AdminKemahasiswaanController::class, 'create'])->name('admin.kemahasiswaan.create');
+        Route::post('kemahasiswaan', [AdminKemahasiswaanController::class, 'store'])->name('admin.kemahasiswaan.store');
+        Route::get('kemahasiswaan/{kemahasiswaan}/edit', [AdminKemahasiswaanController::class, 'edit'])->name('admin.kemahasiswaan.edit');
+        Route::put('kemahasiswaan/{kemahasiswaan}', [AdminKemahasiswaanController::class, 'update'])->name('admin.kemahasiswaan.update');
+        Route::delete('kemahasiswaan/{kemahasiswaan}', [AdminKemahasiswaanController::class, 'destroy'])->name('admin.kemahasiswaan.destroy');
+
+
 
         //dokumen
         Route::get('dokumen/index', [AdminDokumenController::class, 'index'])->name('admin.dokumen.index');

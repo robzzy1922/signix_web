@@ -52,6 +52,10 @@ return [
             'driver' => 'session',
             'provider' => 'ormawa',
         ],
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admin',
+        ],
     ],
 
     /*
@@ -87,6 +91,10 @@ return [
         'ormawa' => [
             'driver' => 'eloquent',
             'model' => App\Models\Ormawas::class
+        ],
+        'admin' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class
         ],
     ],
 
