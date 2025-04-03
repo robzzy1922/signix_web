@@ -5,9 +5,9 @@
     <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
         <!-- Dokumen Diajukan -->
         <a href="{{ route('ormawa.riwayat', ['status' => 'diajukan']) }}" class="block">
-            <div class="p-6 bg-yellow-400 rounded-xl shadow-lg hover:shadow-xl hover:bg-yellow-500  transition-color duration-300">
+            <div class="p-6 bg-yellow-400 rounded-xl shadow-lg duration-300 hover:shadow-xl hover:bg-yellow-500 transition-color">
                 <div class="flex flex-col">
-                    <div class="flex items-center justify-between">
+                    <div class="flex justify-between items-center">
                         <div class="flex items-center space-x-3">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -22,9 +22,9 @@
 
         <!-- Dokumen Tertanda -->
         <a href="{{ route('ormawa.riwayat', ['status' => 'disahkan']) }}" class="block">
-            <div class="p-6 bg-green-400 rounded-xl shadow-lg hover:shadow-xl hover:bg-green-500  transition-color duration-300">
+            <div class="p-6 bg-green-400 rounded-xl shadow-lg duration-300 hover:shadow-xl hover:bg-green-500 transition-color">
                 <div class="flex flex-col">
-                    <div class="flex items-center justify-between">
+                    <div class="flex justify-between items-center">
                         <div class="flex items-center space-x-3">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -39,9 +39,9 @@
 
         <!-- Perlu Direvisi -->
         <a href="{{ route('ormawa.riwayat', ['status' => 'butuh_revisi']) }}" class="block">
-            <div class="p-6 bg-red-400 rounded-xl shadow-lg hover:shadow-xl hover:bg-red-500  transition-color duration-300">
+            <div class="p-6 bg-red-400 rounded-xl shadow-lg duration-300 hover:shadow-xl hover:bg-red-500 transition-color">
                 <div class="flex flex-col">
-                    <div class="flex items-center justify-between">
+                    <div class="flex justify-between items-center">
                         <div class="flex items-center space-x-3">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -56,9 +56,9 @@
 
         <!-- Sudah Direvisi -->
         <a href="{{ route('ormawa.riwayat', ['status' => 'direvisi']) }}" class="block">
-            <div class="p-6 bg-blue-400 rounded-xl shadow-lg hover:shadow-xl hover:bg-blue-500  transition-color duration-300">
+            <div class="p-6 bg-blue-400 rounded-xl shadow-lg duration-300 hover:shadow-xl hover:bg-blue-500 transition-color">
                 <div class="flex flex-col">
-                    <div class="flex items-center justify-between">
+                    <div class="flex justify-between items-center">
                         <div class="flex items-center space-x-3">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -101,8 +101,8 @@
           </form>
       </div>
       </div>
-<div class="p-4 w-full bg-white rounded-lg shadow overflow-x-auto"> <!-- Added overflow-x-auto -->
-    <div class="min-w-full overflow-x-auto"> <!-- Added wrapper div -->
+<div class="overflow-x-auto p-4 w-full bg-white rounded-lg shadow"> <!-- Added overflow-x-auto -->
+    <div class="overflow-x-auto min-w-full"> <!-- Added wrapper div -->
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -110,6 +110,7 @@
                     <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Tanggal Pengajuan</th>
                     <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Hal</th>
                     <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Kepada/Tujuan</th>
+                    <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Sebagai</th>
                     <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Status</th>
                     <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Aksi</th>
                 </tr>
@@ -132,7 +133,16 @@
                     <td class="px-6 py-4 whitespace-nowrap">{{ $dokumen->nomor_surat }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $dokumen->tanggal_pengajuan }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $dokumen->perihal }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $dokumen->dosen->nama_dosen }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        @if ($dokumen->dosen)
+                            {{ $dokumen->dosen->nama_dosen }}
+                        @elseif ($dokumen->kemahasiswaan)
+                            {{ $dokumen->kemahasiswaan->nama_kemahasiswaan }}
+                        @else
+                            N/A
+                        @endif
+                    </td>
+
                     <td class="px-6 py-4 whitespace-nowrap">
                         @php
                             $statusClass = match($dokumen->status_dokumen) {
@@ -238,8 +248,8 @@
                             </div>
                             <div class="mt-4">
                                 <form id="updateDokumenForm" class="space-y-4" enctype="multipart/form-data">
-                                    <input type="file" name="dokumen" accept=".pdf" class="w-full p-2 border rounded-lg" required>
-                                    <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600">
+                                    <input type="file" name="dokumen" accept=".pdf" class="p-2 w-full rounded-lg border" required>
+                                    <button type="submit" class="px-4 py-2 w-full text-white bg-blue-500 rounded-lg hover:bg-blue-600">
                                         Update Dokumen
                                     </button>
                                 </form>

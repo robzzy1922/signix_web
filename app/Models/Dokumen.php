@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Ormawas;
 use App\Models\Dosen;
+use App\Models\Kemahasiswaan;
 
 class Dokumen extends Model
 {
@@ -27,7 +28,10 @@ class Dokumen extends Model
         'tanggal_verifikasi',
         'keterangan',
         'keterangan_revisi',
-        'tanggal_revisi'
+        'tanggal_revisi',
+        'id_ormawa',
+        'id_dosen',
+        'id_kemahasiswaan'
     ];
 
     protected $casts = [
@@ -45,5 +49,10 @@ class Dokumen extends Model
     {
         return $this->belongsTo(Dosen::class, 'id_dosen');
     }
-    
+
+    // Relationship with Kemahasiswaan
+    public function kemahasiswaan()
+    {
+        return $this->belongsTo(Kemahasiswaan::class, 'id_kemahasiswaan');
+    }
 }

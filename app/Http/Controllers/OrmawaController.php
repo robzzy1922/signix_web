@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Dosen;
 use App\Models\Dokumen;
 use App\Models\Ormawas;
+use App\Models\Kemahasiswaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -40,9 +41,9 @@ class OrmawaController extends Controller
                               ->where('status_dokumen', 'sudah direvisi')->count();
 
         return view('user.ormawa.ormawa_dashboard', compact(
-            'dokumens', 
-            'countDiajukan', 
-            'countDisahkan', 
+            'dokumens',
+            'countDiajukan',
+            'countDisahkan',
             'countButuhRevisi',
             'countRevisi'
         ));
@@ -52,34 +53,41 @@ class OrmawaController extends Controller
     {
         $ormawa = Auth::guard('ormawa')->user();
         $dosenList = Dosen::all();
-        return view('user.ormawa.pengajuan_ormawa', compact('dosenList', 'ormawa'));
+        $kemahasiswaanList = Kemahasiswaan::all();
+        return view('user.ormawa.pengajuan_ormawa', compact('dosenList', 'kemahasiswaanList', 'ormawa'));
     }
 
     public function storePengajuan(Request $request)
     {
-        // Tambahkan logging untuk melihat data yang diterima
-        Log::info('Received form data:', $request->all());
-
-        $validated = $request->validate([
-            'nomor_surat' => 'required|string|max:255',
-            'nama_pengaju' => 'required|string|max:255',
-            'nama_ormawa' => 'required|string|max:255',
-            'kepada_tujuan' => 'required|exists:dosen,id',
-            'hal' => 'required|string|max:255',
-            'unggah_dokumen' => 'required|file|mimes:pdf,doc,docx|max:2048',
-            'catatan' => 'nullable|string',
-        ]);
+        // Tambahkan debug log
+        Log::info('Received request data:', $request->all());
 
         try {
-            // Handle file upload dengan nama file yang lebih terstruktur
-            $file = $request->file('unggah_dokumen');
-            $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
-            $filePath = $file->storeAs('dokumen', $fileName, 'public');
+            // Validasi input
+            $validated = $request->validate([
+                'nomor_surat' => 'required|string|max:255',
+                'nama_pengaju' => 'required|string|max:255',
+                'nama_ormawa' => 'required|string|max:255',
+                'tujuan_pengajuan' => 'required|in:dosen,kemahasiswaan',
+                'kepada_tujuan' => 'required_if:tujuan_pengajuan,dosen',
+                'kepada_kemahasiswaan' => 'required_if:tujuan_pengajuan,kemahasiswaan',
+                'hal' => 'required|string|max:255',
+                'unggah_dokumen' => 'required|file|mimes:pdf,doc,docx|max:2048',
+                'catatan' => 'nullable|string',
+            ]);
 
-            // Dapatkan ID Ormawa yang sedang login
-            $ormawaId = Auth::guard('ormawa')->id();
+            // Handle file upload
+            if ($request->hasFile('unggah_dokumen')) {
+                $file = $request->file('unggah_dokumen');
+                $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+                $filePath = $file->storeAs('dokumen', $fileName, 'public');
 
-            // Simpan ke database dengan data yang lebih lengkap
+                Log::info('File uploaded successfully:', ['path' => $filePath]);
+            } else {
+                throw new \Exception('File tidak ditemukan');
+            }
+
+            // Create new document
             $dokumen = new Dokumen();
             $dokumen->nomor_surat = $request->nomor_surat;
             $dokumen->perihal = $request->hal;
@@ -87,27 +95,34 @@ class OrmawaController extends Controller
             $dokumen->keterangan = $request->catatan;
             $dokumen->tanggal_pengajuan = now();
             $dokumen->status_dokumen = 'diajukan';
-            $dokumen->id_ormawa = $ormawaId;
-            $dokumen->id_dosen = $request->kepada_tujuan;
+            $dokumen->id_ormawa = Auth::guard('ormawa')->id();
 
-            // Tambahkan logging untuk debugging
-            Log::info('Attempting to save document', [
-                'nomor_surat' => $dokumen->nomor_surat,
-                'id_ormawa' => $dokumen->id_ormawa,
-                'id_dosen' => $dokumen->id_dosen
-            ]);
+            // Set tujuan based on selection
+            if ($request->tujuan_pengajuan === 'dosen') {
+                $dokumen->id_dosen = $request->kepada_tujuan;
+                $dokumen->id_kemahasiswaan = null;
+                Log::info('Dokumen ditujukan ke dosen:', ['id_dosen' => $request->kepada_tujuan]);
+            } else {
+                $dokumen->id_kemahasiswaan = $request->kepada_kemahasiswaan;
+                $dokumen->id_dosen = null;
+                Log::info('Dokumen ditujukan ke kemahasiswaan:', ['id_kemahasiswaan' => $request->kepada_kemahasiswaan]);
+            }
 
-            $dokumen->save();
+            // Save document
+            $saved = $dokumen->save();
+            Log::info('Document save attempt:', ['success' => $saved, 'document_id' => $dokumen->id]);
 
-            Log::info('Document saved successfully', ['dokumen_id' => $dokumen->id]);
+            if (!$saved) {
+                throw new \Exception('Gagal menyimpan dokumen ke database');
+            }
 
             return redirect()
                 ->route('ormawa.pengajuan')
                 ->with('success', 'Dokumen berhasil diajukan!');
 
         } catch (\Exception $e) {
-            Log::error('Error in storePengajuan: ' . $e->getMessage(), [
-                'request' => $request->all(),
+            Log::error('Error in storePengajuan:', [
+                'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
@@ -253,7 +268,7 @@ class OrmawaController extends Controller
     {
         try {
             $dokumen = Dokumen::findOrFail($id);
-            
+
             // Validate request
             $request->validate([
                 'dokumen' => 'required|file|mimes:pdf|max:2048'
@@ -268,7 +283,7 @@ class OrmawaController extends Controller
             $file = $request->file('dokumen');
             $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
             $filePath = $file->storeAs('dokumen', $fileName, 'public');
-            
+
             // Update dokumen
             $dokumen->update([
                 'file' => $filePath,
@@ -306,7 +321,7 @@ class OrmawaController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat mengupdate dokumen. Silakan coba lagi.'

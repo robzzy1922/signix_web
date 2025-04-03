@@ -3,16 +3,18 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DosenController;
 use App\Http\Controllers\OrmawaController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\LoginAuthController;
+use App\Http\Controllers\KemahasiswaanController;
 use App\Http\Middleware\EnsureRoleIsAuthenticated;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Auth\DashboardController;
-use App\Http\Controllers\Admin\Auth\AdminOrmawaController;
 use App\Http\Controllers\Admin\Auth\AdminDosenController;
 use App\Http\Controllers\Admin\Auth\AdminLoginController;
-use App\Http\Controllers\Admin\Auth\AdminDashboardController;
+use App\Http\Controllers\Admin\Auth\AdminOrmawaController;
 use App\Http\Controllers\Admin\Auth\AdminDokumenController;
-use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\Admin\Auth\AdminDashboardController;
+use App\Http\Controllers\Admin\Auth\AdminKemahasiswaanController;
 
 
 
@@ -51,10 +53,10 @@ Route::middleware(['auth:dosen'])->prefix('dosen')->name('dosen.')->group(functi
     Route::get('/dashboard', [DosenController::class, 'dashboardDosen'])->name('dashboard');
     Route::get('/buat-tanda-tangan', [DosenController::class, 'create'])->name('create');
     Route::post('/logout', [DosenController::class, 'logout'])->name('logout');
-    
+
     // Perbaikan nama route riwayat
     Route::get('/riwayat', [DosenController::class, 'riwayat'])->name('riwayat');
-    
+
     Route::get('/dokumen/{id}', [DosenController::class, 'showDokumen'])->name('dokumen.show');
     Route::get('/dokumen/{id}/content', [DosenController::class, 'getDokumenContent'])->name('dokumen.content');
     Route::get('/profile', [DosenController::class, 'profile'])->name('profile');
@@ -82,6 +84,42 @@ Route::middleware(['auth:dosen'])->prefix('dosen')->name('dosen.')->group(functi
         ->middleware('auth:dosen');
 });
 
+//kemahasiswaan
+Route::middleware(['auth:kemahasiswaan'])->prefix('kemahasiswaan')->name('kemahasiswaan.')->group(function () {
+    Route::get('/dashboard', [KemahasiswaanController::class, 'dashboardKemahasiswaan'])->name('dashboard');
+    Route::get('/buat-tanda-tangan', [KemahasiswaanController::class, 'create'])->name('create');
+    Route::post('/logout', [KemahasiswaanController::class, 'logout'])->name('logout');
+
+    // Perbaikan nama route riwayat
+    Route::get('/riwayat', [KemahasiswaanController::class, 'riwayat'])->name('riwayat');
+
+    Route::get('/dokumen/{id}', [KemahasiswaanController::class, 'showDokumen'])->name('dokumen.show');
+    Route::get('/dokumen/{id}/content', [KemahasiswaanController::class, 'getDokumenContent'])->name('dokumen.content');
+    Route::get('/profile', [KemahasiswaanController::class, 'profile'])->name('profile');
+    Route::get('/profile/edit', [KemahasiswaanController::class, 'editProfile'])->name('profile.edit');
+    Route::put('/profile/update', [KemahasiswaanController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/photo', [KemahasiswaanController::class, 'updatePhoto'])->name('profile.photo.update');
+    Route::delete('/profile/photo', [KemahasiswaanController::class, 'destroyPhoto'])->name('profile.photo.destroy');
+    Route::put('/profile/password', [KemahasiswaanController::class, 'updatePassword'])->name('password.update');
+
+    // Route untuk QR Code
+    Route::get('/dokumen/{id}/generate-qr', [KemahasiswaanController::class, 'generateQrCode'])
+        ->name('dokumen.generateQr');
+    Route::post('/dokumen/{dokumen}/save-qr-position', [KemahasiswaanController::class, 'saveQrPosition'])
+        ->name('dokumen.saveQrPosition');
+    Route::get('/dokumen/{id}/edit-qr', [KemahasiswaanController::class, 'editQrCode'])
+        ->name('dokumen.editQr');
+
+    // Verification route
+    Route::get('/verify/document/{id}', [KemahasiswaanController::class, 'verifyDocument'])
+        ->name('verify.document');
+
+    Route::post('/dokumen/{id}/revisi', [KemahasiswaanController::class, 'submitRevisi'])->name('dokumen.revisi');
+    Route::post('/kemahasiswaan/dokumen/{id}/revisi', [KemahasiswaanController::class, 'submitRevisi'])
+        ->name('kemahasiswaan.dokumen.revisi')
+        ->middleware('auth:kemahasiswaan');
+});
+
 
 //admin
 Route::prefix('admin')->group(function () {
@@ -107,6 +145,16 @@ Route::prefix('admin')->group(function () {
         Route::get('dosen/{dosen}/edit', [AdminDosenController::class, 'edit'])->name('admin.dosen.edit');
         Route::put('dosen/{dosen}', [AdminDosenController::class, 'update'])->name('admin.dosen.update');
         Route::delete('dosen/{dosen}', [AdminDosenController::class, 'destroy'])->name('admin.dosen.destroy');
+
+        //kemahasiswaan
+        Route::get('kemahasiswaan/index', [AdminKemahasiswaanController::class, 'index'])->name('admin.kemahasiswaan.index');
+        Route::get('kemahasiswaan/create', [AdminKemahasiswaanController::class, 'create'])->name('admin.kemahasiswaan.create');
+        Route::post('kemahasiswaan', [AdminKemahasiswaanController::class, 'store'])->name('admin.kemahasiswaan.store');
+        Route::get('kemahasiswaan/{kemahasiswaan}/edit', [AdminKemahasiswaanController::class, 'edit'])->name('admin.kemahasiswaan.edit');
+        Route::put('kemahasiswaan/{kemahasiswaan}', [AdminKemahasiswaanController::class, 'update'])->name('admin.kemahasiswaan.update');
+        Route::delete('kemahasiswaan/{kemahasiswaan}', [AdminKemahasiswaanController::class, 'destroy'])->name('admin.kemahasiswaan.destroy');
+
+
 
         //dokumen
         Route::get('dokumen/index', [AdminDokumenController::class, 'index'])->name('admin.dokumen.index');

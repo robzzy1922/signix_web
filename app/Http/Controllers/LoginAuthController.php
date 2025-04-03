@@ -15,9 +15,15 @@ class LoginAuthController extends Controller
 
     public function login(Request $request)
     {
-
+        $credentials = $request->only('nip', 'password');
         $role = $request->input('role');
-        $credentials = [];
+
+        if ($role === 'kemahasiswaan') {
+            if (Auth::guard('kemahasiswaan')->attempt($credentials)) {
+                return redirect()->route('kemahasiswaan.dashboard');
+            }
+        }
+
         $password = $request->input('password');
 
         switch ($role) {
@@ -41,6 +47,19 @@ class LoginAuthController extends Controller
         }
 
         if (Auth::guard($guard)->attempt($credentials)) {
+            if ($request->expectsJson()) {
+                $user = Auth::guard($guard)->user();
+                $token = bcrypt($user->id);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Login berhasil',
+                    'user' => $user,
+                    'role' => $role,
+                    'token' => $token
+                ]);
+            }
+
             return redirect()->intended($redirect);
         }
 
@@ -50,19 +69,11 @@ class LoginAuthController extends Controller
             return back()->withErrors(['login' => 'NIP atau password salah, tolong masukkan ulang.']);
         }
 
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'error', 'message' => 'Kredensial tidak valid'], 401);
+        }
+
         return back()->withErrors(['login' => 'Kredensial tidak valid']);
-    }
-
-    public function dashboardOrmawa()
-    {
-        // Logika untuk menampilkan dashboard
-        return redirect()->route('ormawa.dashboard'); // Pastikan view 'dashboard' ada
-    }
-
-    public function dashboardDosen()
-    {
-        // Logika untuk menampilkan dashboard
-        return redirect()->route('dosen.dashboard'); // Pastikan view 'dashboard' ada
     }
 
     public function logout(Request $request)
