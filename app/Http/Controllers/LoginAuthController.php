@@ -8,6 +8,12 @@ use App\Models\Ormawa;
 
 class LoginAuthController extends Controller
 {
+
+    private $response = [
+        'message' => 'null',
+        'status' => 'null',
+    ];
+
     public function showLoginForm()
     {
         return view('auth.login');
@@ -15,42 +21,93 @@ class LoginAuthController extends Controller
 
     public function login(Request $request)
     {
+        try {
+            $request->validate([
+                'role' => 'required|in:admin,ormawa,dosen',
+                'password' => 'required|string',
+            ]);
 
-        $role = $request->input('role');
-        $credentials = [];
-        $password = $request->input('password');
+            \Log::info('Login attempt:', [
+                'role' => $request->role,
+                'credentials' => $request->except('password')
+            ]);
 
-        switch ($role) {
-            case 'admin':
-                $credentials = ['email' => $request->input('email'), 'password' => $password];
-                $guard = 'admin';
-                $redirect = '/admin/dashboard';
-                break;
-            case 'ormawa':
-                $credentials = ['nim' => $request->input('nim'), 'password' => $password];
-                $guard = 'ormawa';
-                $redirect = '/ormawa/dashboard';
-                break;
-            case 'dosen':
-                $credentials = ['nip' => $request->input('nip'), 'password' => $password];
-                $guard = 'dosen';
-                $redirect = '/dosen/dashboard';
-                break;
-            default:
-                return back()->withErrors(['role' => 'Role tidak valid']);
+            $role = $request->role;
+            $credentials = [];
+            $password = $request->password;
+
+            switch ($role) {
+                case 'admin':
+                    $request->validate(['email' => 'required|email']);
+                    $credentials = ['email' => $request->email, 'password' => $password];
+                    $guard = 'admin';
+                    break;
+
+                case 'ormawa':
+                    $request->validate(['nim' => 'required|string']);
+                    $credentials = ['nim' => $request->nim, 'password' => $password];
+                    $guard = 'ormawa';
+                    break;
+
+                case 'dosen':
+                    $request->validate(['nip' => 'required|string']);
+                    $credentials = ['nip' => $request->nip, 'password' => $password];
+                    $guard = 'dosen';
+                    break;
+
+                default:
+                    return response()->json(['message' => 'Role tidak valid'], 400);
+            }
+
+            if (Auth::guard($guard)->attempt($credentials)) {
+                $user = Auth::guard($guard)->user();
+                
+                // Untuk API request
+                if ($request->wantsJson()) {
+                    $token = $user->createToken($role . '-token')->plainTextToken;
+                    return response()->json([
+                        'message' => 'Login berhasil',
+                        'token' => $token,
+                        'user' => $user,
+                    ], 200);
+                }
+                
+                // Untuk web request
+                return redirect()->intended($this->getRedirectRoute($role));
+            }
+
+            // Handle failed login attempts
+            $errorMessage = match($role) {
+                'ormawa' => 'NIM atau password salah',
+                'admin' => 'Email atau password salah',
+                'dosen' => 'NIP atau password salah',
+                default => 'Kredensial tidak valid'
+            };
+
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $errorMessage], 401);
+            }
+
+            // For web requests, redirect back with error message
+            return back()
+                ->withInput($request->except('password'))
+                ->withErrors(['login' => $errorMessage]);
+
+        } catch (\Exception $e) {
+            \Log::error('Login error: ' . $e->getMessage());
+            
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Terjadi kesalahan pada server',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+
+            // For web requests, redirect back with error message
+            return back()
+                ->withInput($request->except('password'))
+                ->withErrors(['login' => 'Terjadi kesalahan pada server']);
         }
-
-        if (Auth::guard($guard)->attempt($credentials)) {
-            return redirect()->intended($redirect);
-        }
-
-        if ($role === 'ormawa') {
-            return back()->withErrors(['login' => 'NIM atau password salah, tolong masukkan ulang.']);
-        } elseif ($role === 'dosen') {
-            return back()->withErrors(['login' => 'NIP atau password salah, tolong masukkan ulang.']);
-        }
-
-        return back()->withErrors(['login' => 'Kredensial tidak valid']);
     }
 
     public function dashboardOrmawa()
@@ -70,5 +127,15 @@ class LoginAuthController extends Controller
         Auth::guard()->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+    }
+
+    private function getRedirectRoute($role)
+    {
+        return match($role) {
+            'admin' => '/admin/dashboard',
+            'ormawa' => '/ormawa/dashboard',
+            'dosen' => '/dosen/dashboard',
+            default => '/'
+        };
     }
 }
