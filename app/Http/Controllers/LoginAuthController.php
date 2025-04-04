@@ -113,13 +113,13 @@ class LoginAuthController extends Controller
     public function dashboardOrmawa()
     {
         // Logika untuk menampilkan dashboard
-        return redirect()->route('ormawa.dashboard'); // Pastikan view 'dashboard' ada
+        return redirect()->route('ormawa.dashboard'); 
     }
 
     public function dashboardDosen()
     {
         // Logika untuk menampilkan dashboard
-        return redirect()->route('dosen.dashboard'); // Pastikan view 'dashboard' ada
+        return redirect()->route('dosen.dashboard'); 
     }
 
     public function logout(Request $request)
