@@ -13,6 +13,7 @@
         "barryvdh/laravel-dompdf": "^3.0",
         "intervention/image": "^3.11",
         "laravel/framework": "^11.9",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "laravel/ui": "^4.6",
         "setasign/fpdf": "^1.8",

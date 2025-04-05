@@ -28,9 +28,10 @@ Route::middleware(['auth:ormawa'])->group(function () {
     Route::prefix('ormawa')->name('ormawa.')->group(function () {
         Route::get('/dashboard', [OrmawaController::class, 'dashboard'])->name('dashboard');
         Route::get('/pengajuan', [OrmawaController::class, 'pengajuan'])->name('pengajuan');
-        Route::post('/pengajuan/store', [OrmawaController::class, 'storePengajuan'])->name('pengajuan.store');
+        Route::post('/pengajuan', [OrmawaController::class, 'storePengajuan'])->name('pengajuan.store');
         Route::get('/riwayat', [OrmawaController::class, 'riwayat'])->name('riwayat');
-        Route::get('/dokumen/{id}', [OrmawaController::class, 'getDokumenContent'])->name('dokumen.content');
+        Route::get('/dokumen/{id}', [OrmawaController::class, 'detailDokumen'])->name('detail.dokumen');
+        Route::get('/profil', [OrmawaController::class, 'profil'])->name('profil');
         Route::get('/profile', [OrmawaController::class, 'profile'])->name('profile');
         Route::get('/profile/edit', [OrmawaController::class, 'editProfile'])->name('profile.edit');
         Route::put('/profile/update', [OrmawaController::class, 'updateProfile'])->name('profile.update');
@@ -39,7 +40,6 @@ Route::middleware(['auth:ormawa'])->group(function () {
         Route::post('/profile/photo', [OrmawaController::class, 'updatePhoto'])->name('profile.photo.update');
         Route::delete('/profile/photo', [OrmawaController::class, 'destroyPhoto'])->name('profile.photo.destroy');
         Route::post('/logout', [OrmawaController::class, 'logout'])->name('logout');
-        Route::get('/dokumen/{id}', [OrmawaController::class, 'showDokumen'])->name('dokumen.show');
         Route::post('/ormawa/dokumen/{id}/update', [OrmawaController::class, 'updateDokumen'])
             ->name('ormawa.dokumen.update');
         Route::post('/dokumen/{id}/update', [OrmawaController::class, 'updateDokumen'])

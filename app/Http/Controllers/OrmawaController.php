@@ -54,7 +54,7 @@ class OrmawaController extends Controller
         $ormawa = Auth::guard('ormawa')->user();
         $dosenList = Dosen::all();
         $kemahasiswaanList = Kemahasiswaan::all();
-        return view('user.ormawa.pengajuan_ormawa', compact('dosenList', 'kemahasiswaanList', 'ormawa'));
+        return view('user.ormawa.pengajuan_ormawa', compact('ormawa', 'dosenList', 'kemahasiswaanList'));
     }
 
     public function storePengajuan(Request $request)
@@ -69,8 +69,7 @@ class OrmawaController extends Controller
                 'nama_pengaju' => 'required|string|max:255',
                 'nama_ormawa' => 'required|string|max:255',
                 'tujuan_pengajuan' => 'required|in:dosen,kemahasiswaan',
-                'kepada_tujuan' => 'required_if:tujuan_pengajuan,dosen',
-                'kepada_kemahasiswaan' => 'required_if:tujuan_pengajuan,kemahasiswaan',
+                'kepada_tujuan' => 'required',
                 'hal' => 'required|string|max:255',
                 'unggah_dokumen' => 'required|file|mimes:pdf,doc,docx|max:2048',
                 'catatan' => 'nullable|string',
@@ -96,16 +95,12 @@ class OrmawaController extends Controller
             $dokumen->tanggal_pengajuan = now();
             $dokumen->status_dokumen = 'diajukan';
             $dokumen->id_ormawa = Auth::guard('ormawa')->id();
-
-            // Set tujuan based on selection
+            
+            // Set id_dosen atau id_kemahasiswaan berdasarkan tujuan
             if ($request->tujuan_pengajuan === 'dosen') {
                 $dokumen->id_dosen = $request->kepada_tujuan;
-                $dokumen->id_kemahasiswaan = null;
-                Log::info('Dokumen ditujukan ke dosen:', ['id_dosen' => $request->kepada_tujuan]);
             } else {
-                $dokumen->id_kemahasiswaan = $request->kepada_kemahasiswaan;
-                $dokumen->id_dosen = null;
-                Log::info('Dokumen ditujukan ke kemahasiswaan:', ['id_kemahasiswaan' => $request->kepada_kemahasiswaan]);
+                $dokumen->id_kemahasiswaan = $request->kepada_tujuan;
             }
 
             // Save document
@@ -327,5 +322,15 @@ class OrmawaController extends Controller
                 'message' => 'Terjadi kesalahan saat mengupdate dokumen. Silakan coba lagi.'
             ], 500);
         }
+    }
+
+    public function detailDokumen($id)
+    {
+        $dokumen = Dokumen::with(['dosen', 'ormawa'])
+            ->where('id', $id)
+            ->where('id_ormawa', auth()->guard('ormawa')->user()->id)
+            ->firstOrFail();
+
+        return view('user.ormawa.detail_dokumen', compact('dokumen'));
     }
 }

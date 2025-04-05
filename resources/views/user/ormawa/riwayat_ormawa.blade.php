@@ -61,23 +61,24 @@
                         <td class="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">{{ $dokumen->nomor_surat }}</td>
                         <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">{{ $dokumen->tanggal_pengajuan }}</td>
                         <td class="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">{{ $dokumen->perihal }}</td>
-                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">{{ $dokumen->dosen->nama_dosen }}</td>
+                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">{{ $dokumen->dosen ? $dokumen->dosen->nama_dosen : 'Kemahasiswaan' }}</td>
                         <td class="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">
-                            @php
-                            $statusClass = match($dokumen->status_dokumen) {
-                                'diajukan' => 'bg-yellow-100 text-yellow-800',
-                                'disahkan' => 'bg-green-100 text-green-800',
-                                'butuh revisi' => 'bg-red-100 text-red-800', 
-                                'direvisi' => 'bg-blue-100 text-blue-800',
-                                default => 'bg-gray-100 text-gray-800'
-                            };
-                            @endphp
-                            <span class="inline-flex px-2 text-xs font-semibold leading-5 {{ $statusClass }} rounded-full">
-                                {{ ucfirst($dokumen->status_dokumen) }}
-                            </span>
+                            @if($dokumen->status_dokumen == 'Disetujui')
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    {{ $dokumen->status_dokumen }}
+                                </span>
+                            @elseif($dokumen->status_dokumen == 'Ditolak')
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    {{ $dokumen->status_dokumen }}
+                                </span>
+                            @else
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    {{ $dokumen->status_dokumen }}
+                                </span>
+                            @endif
                         </td>
-                        <td class="px-3 md:px-6 py-2 md:py-4 text-xs md:text-sm font-medium whitespace-nowrap">
-                            <a href="#" class="text-indigo-600 hover:text-indigo-900" onclick="showModal({{ $dokumen->id }}, '{{ asset('storage/' . $dokumen->file) }}')">Detail</a>
+                        <td class="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
+                            <a href="{{ route('ormawa.detail.dokumen', $dokumen->id) }}" class="text-indigo-600 hover:text-indigo-900">Detail</a>
                         </td>
                     </tr>
                     @endforeach
