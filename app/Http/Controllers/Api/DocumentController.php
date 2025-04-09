@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Dokumen;
+use App\Models\Dosen;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
@@ -86,4 +87,53 @@ class DocumentController extends Controller
             ], 500);
         }
     }
-} 
+
+    public function getDosenDocumentStats(Request $request)
+    {
+        try {
+            $user = $request->user(); // pastikan user dosen sudah login
+            $dosenId = $user->id;
+
+            // Ambil dokumen yang ditujukan ke dosen ini
+            $documents = Dokumen::where('id_dosen', $dosenId)->get();
+
+            $stats = [
+                'diajukan' => $documents->count(),
+                'disahkan' => $documents->where('status', 'disahkan')->count(),
+                'butuh revisi' => $documents->where('status', 'need_revision')->count(),
+                'sudah direvisi' => $documents->where('status', 'sudah direvisi')->count(),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $stats,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil statistik dokumen dosen',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    
+    public function getTujuanPengajuan()
+    {
+        try {
+            $dosen = Dosen::select('id', 'nama_dosen as nama')->get();
+            
+            Log::info('Fetching tujuan pengajuan data', ['count' => $dosen->count()]);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $dosen
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting tujuan pengajuan: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil tujuan pengajuan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+}
