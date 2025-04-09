@@ -4,12 +4,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\OrmawaAuthController;
 use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\DosenAuthController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
 Route::post('/ormawa/login', [OrmawaAuthController::class, 'login']);
+
+Route::post('/dosen/login', [DosenAuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/ormawa/logout', [OrmawaAuthController::class, 'logout']);
