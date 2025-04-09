@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Dosen extends Authenticatable
 {
     use Notifiable;
     use HasFactory;
+    use HasApiTokens;
 
     protected $table = 'dosen';
     protected $guard = 'dosen';
