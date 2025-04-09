@@ -17,7 +17,7 @@ class DocumentController extends Controller
         try {
             $request->validate([
                 'nomor_surat' => 'required|string',
-                'tujuan_pengajuan' => 'required|string',
+                'tujuan_pengajuan' => 'required|numeric|exists:dosen,id', // Fixed to use 'dosen' instead of 'dosens'
                 'hal' => 'required|string',
                 'dokumen' => 'required|file|mimes:pdf,doc,docx|max:10240', // max 10MB
                 'catatan' => 'nullable|string',
@@ -37,6 +37,7 @@ class DocumentController extends Controller
             $dokumen->tanggal_pengajuan = now();
             $dokumen->status_dokumen = 'diajukan';
             $dokumen->id_ormawa = $request->user()->id;
+            $dokumen->id_dosen = (int)$request->tujuan_pengajuan; // Konversi ke integer untuk memastikan tipe data benar
 
             $dokumen->save();
 
@@ -98,10 +99,10 @@ class DocumentController extends Controller
             $documents = Dokumen::where('id_dosen', $dosenId)->get();
 
             $stats = [
-                'diajukan' => $documents->count(),
-                'disahkan' => $documents->where('status', 'disahkan')->count(),
-                'butuh revisi' => $documents->where('status', 'need_revision')->count(),
-                'sudah direvisi' => $documents->where('status', 'sudah direvisi')->count(),
+                'diajukan' => $documents->where('status_dokumen', 'diajukan')->count(),
+                'disahkan' => $documents->where('status_dokumen', 'ditandatangani')->count(),
+                'butuh_revisi' => $documents->where('status_dokumen', 'perlu_revisi')->count(),
+                'sudah_direvisi' => $documents->where('status_dokumen', 'sudah_direvisi')->count(),
             ];
 
             return response()->json([

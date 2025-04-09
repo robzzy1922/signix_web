@@ -40,6 +40,7 @@ Route::middleware(['auth:ormawa'])->group(function () {
         Route::post('/profile/photo', [OrmawaController::class, 'updatePhoto'])->name('profile.photo.update');
         Route::delete('/profile/photo', [OrmawaController::class, 'destroyPhoto'])->name('profile.photo.destroy');
         Route::post('/logout', [OrmawaController::class, 'logout'])->name('logout');
+        Route::get('/dokumen/{id}', [OrmawaController::class, 'showDokumen'])->name('dokumen.show');
         Route::post('/ormawa/dokumen/{id}/update', [OrmawaController::class, 'updateDokumen'])
             ->name('ormawa.dokumen.update');
         Route::post('/dokumen/{id}/update', [OrmawaController::class, 'updateDokumen'])
