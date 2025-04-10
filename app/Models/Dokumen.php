@@ -25,6 +25,7 @@ class Dokumen extends Model
         'is_signed',
         'qr_code_path',
         'kode_pengesahan',
+        'tanggal_pengajuan',
         'tanggal_verifikasi',
         'keterangan',
         'keterangan_revisi',
