@@ -17,6 +17,8 @@ Route::post('/dosen/login', [DosenAuthController::class, 'login']);
 
 // Route untuk mengambil data dosen (tanpa autentikasi)
 Route::get('/dosen', [DosenController::class, 'index']);
+Route::get('/dosen/{id}/documents', [DosenController::class, 'getDocumentsForDosen']);
+Route::get('/dokumen/{id}', [DosenController::class, 'getDokumenDetail']);
 
 // Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {
