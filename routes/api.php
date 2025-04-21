@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Ormawa routes
     Route::post('/ormawa/logout', [OrmawaAuthController::class, 'logout']);
     Route::get('/ormawa/documents/stats', [DocumentController::class, 'getStats']);
+    Route::get('/ormawa/documents', [DocumentController::class, 'getAllDocuments']);
     Route::post('/ormawa/documents/submit', [DocumentController::class, 'submit']);
     Route::get('/ormawa/tujuan-pengajuan', [DocumentController::class, 'getTujuanPengajuan']);
     
