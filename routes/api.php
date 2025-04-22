@@ -28,6 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ormawa/documents', [DocumentController::class, 'getAllDocuments']);
     Route::post('/ormawa/documents/submit', [DocumentController::class, 'submit']);
     Route::get('/ormawa/tujuan-pengajuan', [DocumentController::class, 'getTujuanPengajuan']);
+    Route::get('/ormawa/documents/{id}', [DocumentController::class, 'getDocumentDetail']);
+    Route::get('/ormawa/documents/{id}/file', [DocumentController::class, 'getDocumentFile']);
     
     // Dosen routes
     Route::get('/dosen/document-stats', [DocumentController::class, 'getDosenDocumentStats']);

@@ -26,13 +26,28 @@ class DocumentController extends Controller
             // Simpan file dokumen
             $file = $request->file('dokumen');
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('dokumen', $fileName, 'public');
+            
+            // Pastikan folder dokumen ada
+            if (!Storage::exists('public/dokumen')) {
+                Storage::makeDirectory('public/dokumen');
+            }
+            
+            // Simpan file dengan path yang benar
+            $filePath = $file->storeAs('public/dokumen', $fileName);
+            
+            // Log path file
+            Log::info('File uploaded:', [
+                'original_name' => $file->getClientOriginalName(),
+                'stored_path' => $filePath,
+                'storage_path' => Storage::path($filePath),
+                'exists' => Storage::exists($filePath)
+            ]);
 
             // Buat dokumen baru
             $dokumen = new Dokumen();
             $dokumen->nomor_surat = $request->nomor_surat;
             $dokumen->perihal = $request->hal;
-            $dokumen->file = $filePath;
+            $dokumen->file = str_replace('public/', '', $filePath); // Simpan path relatif
             $dokumen->keterangan = $request->catatan;
             $dokumen->tanggal_pengajuan = now();
             $dokumen->status_dokumen = 'diajukan';
@@ -40,6 +55,14 @@ class DocumentController extends Controller
             $dokumen->id_dosen = (int)$request->tujuan_pengajuan;
 
             $dokumen->save();
+
+            // Log dokumen yang disimpan
+            Log::info('Document saved:', [
+                'id' => $dokumen->id,
+                'file_path' => $dokumen->file,
+                'storage_path' => Storage::path('public/' . $dokumen->file),
+                'exists' => Storage::exists('public/' . $dokumen->file)
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -218,6 +241,102 @@ class DocumentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil dokumen: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getDocumentDetail($id)
+    {
+        try {
+            $document = Dokumen::findOrFail($id);
+            
+            // Get the full URL for the document file
+            $fileUrl = Storage::url($document->file);
+            $fullUrl = url($fileUrl);
+            
+            // Log the file path and URL for debugging
+            Log::info('Document file details:', [
+                'file_path' => $document->file,
+                'storage_url' => $fileUrl,
+                'full_url' => $fullUrl,
+                'file_exists' => Storage::exists($document->file)
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $document->id,
+                    'nomor_surat' => $document->nomor_surat,
+                    'perihal' => $document->perihal,
+                    'status' => $document->status_dokumen,
+                    'tanggal_pengajuan' => $document->tanggal_pengajuan,
+                    'file_url' => $fullUrl,
+                    'keterangan' => $document->keterangan,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting document detail: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil detail dokumen: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getDocumentFile($id)
+    {
+        try {
+            $document = Dokumen::findOrFail($id);
+            
+            // Log file path for debugging
+            Log::info('Document file path:', [
+                'id' => $id,
+                'file_path' => $document->file,
+                'storage_path' => Storage::path('public/' . $document->file),
+                'exists' => Storage::exists('public/' . $document->file)
+            ]);
+            
+            // Check if file exists in storage
+            if (!Storage::exists('public/' . $document->file)) {
+                Log::error('File not found:', [
+                    'id' => $id,
+                    'file_path' => $document->file,
+                    'storage_path' => Storage::path('public/' . $document->file)
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak ditemukan: ' . $document->file
+                ], 404);
+            }
+
+            // Get file path and read content
+            $filePath = Storage::path('public/' . $document->file);
+            $fileContent = file_get_contents($filePath);
+            $base64Content = base64_encode($fileContent);
+            $mimeType = mime_content_type($filePath);
+
+            // Log success
+            Log::info('File retrieved successfully:', [
+                'id' => $id,
+                'file_size' => strlen($fileContent),
+                'mime_type' => $mimeType
+            ]);
+
+            // Return base64 encoded file data
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'file' => $base64Content,
+                    'content_type' => $mimeType,
+                    'filename' => basename($document->file)
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error serving document file: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil file dokumen: ' . $e->getMessage()
             ], 500);
         }
     }
