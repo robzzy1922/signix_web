@@ -181,6 +181,10 @@ Route::prefix('admin')->group(function () {
     });
 });
 
+// route untuk laporan
+Route::get('dokumen/report', [AdminDokumenController::class, 'showReportForm'])->name('admin.dokumen.report');
+Route::get('dokumen/generate-report', [AdminDokumenController::class, 'weeklyReport'])->name('admin.dokumen.generate-report');
+
 // Tambahkan route ini di luar group middleware
 Route::get('/verify/document/{id}', [DosenController::class, 'verifyDocument'])
     ->name('verify.document');
