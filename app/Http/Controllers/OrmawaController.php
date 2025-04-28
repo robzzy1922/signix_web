@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Dosen;
 use App\Models\Dokumen;
 use App\Models\Ormawas;
-use App\Models\Kemahasiswaan;
 use Illuminate\Http\Request;
+use App\Models\Kemahasiswaan;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 
 class OrmawaController extends Controller
 {
@@ -95,7 +98,7 @@ class OrmawaController extends Controller
             $dokumen->tanggal_pengajuan = now();
             $dokumen->status_dokumen = 'diajukan';
             $dokumen->id_ormawa = Auth::guard('ormawa')->id();
-            
+
             // Set id_dosen atau id_kemahasiswaan berdasarkan tujuan
             if ($request->tujuan_pengajuan === 'dosen') {
                 $dokumen->id_dosen = $request->kepada_tujuan;
@@ -172,27 +175,236 @@ class OrmawaController extends Controller
     public function editProfile()
     {
         $ormawa = Auth::guard('ormawa')->user();
-        return view('user.ormawa.edit_profile', compact('ormawa'));
+        return view('user.ormawa.profile', compact('ormawa'));
     }
-
     public function updateProfile(Request $request)
     {
+        $ormawa = Auth::guard('ormawa')->user();
+
         $request->validate([
             'namaMahasiswa' => 'required|string|max:255',
             'email' => 'required|email',
             'noHp' => 'required|string|max:15',
+            'currentPassword' => 'nullable|string',
+            'password' => 'nullable|string|min:8',
+            'passwordConfirmation' => 'nullable|same:password',
         ]);
 
-        $ormawa = Auth::guard('ormawa')->user();
-        $ormawa->update([
+        // Check if email is being changed
+        $emailChanged = ($request->email !== $ormawa->email);
+
+        // Update basic info
+        $data = [
             'namaMahasiswa' => $request->namaMahasiswa,
-            'email' => $request->email,
             'noHp' => $request->noHp,
-        ]);
-        $ormawa->save();
+        ];
 
-        return redirect()->route('ormawa.profile')->with('success', 'Profile updated successfully');
+        // If email is changed, set it as unverified and store new email in verification_email
+        if ($emailChanged) {
+            $data['verification_email'] = $request->email;
+            // Keep the old email until verified
+        }
+
+        // Update password if provided
+        if ($request->filled('currentPassword') && $request->filled('password')) {
+            // Verify current password
+            if (!Hash::check($request->currentPassword, $ormawa->password)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['currentPassword' => 'Current password is incorrect']);
+            }
+
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $ormawa->update($data);
+
+        // If email changed, redirect to verification page
+        if ($emailChanged) {
+            return redirect()->route('ormawa.profile')
+                ->with('verify_email', true)
+                ->with('new_email', $request->email);
+        }
+
+        return redirect()->route('ormawa.profile')
+            ->with('success', 'Profile updated successfully');
     }
+
+    // Add method to get verification status for AJAX calls
+    public function getVerificationStatus()
+    {
+        $ormawa = Auth::guard('ormawa')->user();
+
+        return response()->json([
+            'is_verified' => $ormawa->is_email_verified,
+            'email' => $ormawa->email,
+            'verification_in_progress' => !empty($ormawa->verification_email),
+            'verification_email' => $ormawa->verification_email,
+        ]);
+    }
+
+    // Generate OTP and send to email
+    public function sendEmailOTP(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email'
+            ]);
+
+            $ormawa = Auth::guard('ormawa')->user();
+
+            // Check if the email is already verified
+            if ($ormawa->is_email_verified && $ormawa->email === $request->email) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This email is already verified.'
+                ]);
+            }
+
+            // Generate 6-digit OTP
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Store OTP and set expiration time (15 minutes)
+            $ormawa->verification_email = $request->email;
+            $ormawa->email_verification_code = $otp;
+            $ormawa->email_verification_expires_at = Carbon::now()->addMinutes(15);
+            $ormawa->save();
+
+            // Send email with OTP
+            $this->sendOTPEmail($ormawa->verification_email, $otp, $ormawa->namaMahasiswa);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP sent to your email. Please check your inbox.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send OTP: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send OTP. Please try again.'
+            ], 500);
+        }
+    }
+
+    // Verify the OTP
+    public function verifyEmailOTP(Request $request)
+    {
+        try {
+            $request->validate([
+                'otp' => 'required|numeric|digits:6'
+            ]);
+
+            $ormawa = Auth::guard('ormawa')->user();
+
+            // Check if OTP is expired
+            if (Carbon::now()->isAfter($ormawa->email_verification_expires_at)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OTP has expired. Please request a new one.'
+                ]);
+            }
+
+            // Verify OTP
+            if ($request->otp != $ormawa->email_verification_code) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid OTP. Please try again.'
+                ]);
+            }
+
+            // Update email and verification status
+            $ormawa->email = $ormawa->verification_email;
+            $ormawa->is_email_verified = true;
+            $ormawa->email_verified_at = Carbon::now();
+            $ormawa->email_verification_code = null;
+            $ormawa->verification_email = null;
+            $ormawa->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email verified successfully!'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to verify OTP: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to verify OTP. Please try again.'
+            ], 500);
+        }
+    }
+
+    // Resend OTP
+    public function resendOTP()
+    {
+        try {
+            $ormawa = Auth::guard('ormawa')->user();
+
+            if (!$ormawa->verification_email) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No email verification in progress.'
+                ]);
+            }
+
+            // Generate new OTP
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Update OTP and expiration time
+            $ormawa->email_verification_code = $otp;
+            $ormawa->email_verification_expires_at = Carbon::now()->addMinutes(15);
+            $ormawa->save();
+
+            // Send email with new OTP
+            $this->sendOTPEmail($ormawa->verification_email, $otp, $ormawa->namaMahasiswa);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'New OTP sent to your email. Please check your inbox.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to resend OTP: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to resend OTP. Please try again.'
+            ], 500);
+        }
+    }
+
+    // Helper function to send OTP email
+    private function sendOTPEmail($email, $otp, $name)
+    {
+        $data = [
+            'otp' => $otp,
+            'name' => $name
+        ];
+
+        Mail::send('emails.otp-verification', $data, function($message) use($email) {
+            $message->to($email)
+                    ->subject('Email Verification Code - Sistem Dokumen Digital');
+        });
+    }
+
+    // public function updateProfile(Request $request)
+    // {
+    //     $request->validate([
+    //         'namaMahasiswa' => 'required|string|max:255',
+    //         'email' => 'required|email',
+    //         'noHp' => 'required|string|max:15',
+    //     ]);
+
+    //     $ormawa = Auth::guard('ormawa')->user();
+    //     $ormawa->update([
+    //         'namaMahasiswa' => $request->namaMahasiswa,
+    //         'email' => $request->email,
+    //         'noHp' => $request->noHp,
+    //     ]);
+    //     $ormawa->save();
+
+    //     return redirect()->route('ormawa.profile')->with('success', 'Profile updated successfully');
+    // }
 
     public function updatePhoto(Request $request)
     {
@@ -333,4 +545,21 @@ class OrmawaController extends Controller
 
         return view('user.ormawa.detail_dokumen', compact('dokumen'));
     }
+
+    public function showEmailVerification(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email'
+    ]);
+
+    $email = $request->input('email');
+
+    // Simpan email baru di session untuk ditampilkan di modal
+    session(['verify_email' => true, 'new_email' => $email]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Verification modal is ready'
+    ]);
+}
 }

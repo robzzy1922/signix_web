@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\Auth\AdminOrmawaController;
 use App\Http\Controllers\Admin\Auth\AdminDokumenController;
 use App\Http\Controllers\Admin\Auth\AdminDashboardController;
 use App\Http\Controllers\Admin\Auth\AdminKemahasiswaanController;
+use App\Http\Controllers\EmailVerificationController;
 
 
 
@@ -30,23 +31,33 @@ Route::middleware(['auth:ormawa'])->group(function () {
         Route::get('/pengajuan', [OrmawaController::class, 'pengajuan'])->name('pengajuan');
         Route::post('/pengajuan', [OrmawaController::class, 'storePengajuan'])->name('pengajuan.store');
         Route::get('/riwayat', [OrmawaController::class, 'riwayat'])->name('riwayat');
+
+        // Document routes - fix duplicate route
         Route::get('/dokumen/{id}', [OrmawaController::class, 'detailDokumen'])->name('detail.dokumen');
+        Route::get('/dokumen/{id}/show', [OrmawaController::class, 'showDokumen'])->name('dokumen.show');
+        Route::post('/dokumen/{id}/update', [OrmawaController::class, 'updateDokumen'])->name('dokumen.update');
+
+        // Profile routes
         Route::get('/profil', [OrmawaController::class, 'profil'])->name('profil');
         Route::get('/profile', [OrmawaController::class, 'profile'])->name('profile');
         Route::get('/profile/edit', [OrmawaController::class, 'editProfile'])->name('profile.edit');
         Route::put('/profile/update', [OrmawaController::class, 'updateProfile'])->name('profile.update');
-        Route::post('/ormawa/profile/photo', [OrmawaController::class, 'updatePhoto'])->name('ormawa.profile.photo.update');
-        Route::delete('/ormawa/profile/photo', [OrmawaController::class, 'destroyPhoto'])->name('ormawa.profile.photo.destroy');
+
+        // Profile photo routes - fix duplicates
         Route::post('/profile/photo', [OrmawaController::class, 'updatePhoto'])->name('profile.photo.update');
         Route::delete('/profile/photo', [OrmawaController::class, 'destroyPhoto'])->name('profile.photo.destroy');
+
         Route::post('/logout', [OrmawaController::class, 'logout'])->name('logout');
-        Route::get('/dokumen/{id}', [OrmawaController::class, 'showDokumen'])->name('dokumen.show');
-        Route::post('/ormawa/dokumen/{id}/update', [OrmawaController::class, 'updateDokumen'])
-            ->name('ormawa.dokumen.update');
-        Route::post('/dokumen/{id}/update', [OrmawaController::class, 'updateDokumen'])
-            ->name('dokumen.update');
+
+        // Email verification routes
+        Route::post('/email/send-otp', [EmailVerificationController::class, 'sendEmailOTP'])->name('email.send.otp');
+        Route::post('/email/verify-otp', [EmailVerificationController::class, 'verifyEmailOTP'])->name('email.verify.otp');
+        Route::post('/email/resend-otp', [EmailVerificationController::class, 'resendOTP'])->name('email.resend.otp');
+        Route::get('/email/verification-status', [OrmawaController::class, 'getVerificationStatus'])->name('email.verification.status');
+        Route::post('/email/show-verification', [OrmawaController::class, 'showEmailVerification'])->name('email.show.verification');
     });
 });
+
 
 
 //dosen

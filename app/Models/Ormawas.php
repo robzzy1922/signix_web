@@ -20,16 +20,29 @@ class Ormawas extends Model implements Authenticatable
         'email',
         'noHp',
         'password',
-        'profile'
+        'profile',
+        'is_email_verified',
+        'email_verification_code',
+        'email_verification_expires_at',
+        'email_verified_at',
+        'verification_email'
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'email_verification_code',
     ];
 
-    public function organisasi()
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'email_verification_expires_at' => 'datetime',
+        'is_email_verified' => 'boolean',
+    ];
+
+    // Relation with Dokumen
+    public function dokumens()
     {
-        return $this->belongsTo(Organisasi::class);
+        return $this->hasMany(Dokumen::class, 'id_ormawa');
     }
 }

@@ -147,6 +147,28 @@
         @endif
     </div>
 
+    <div class="section">
+        <h2>Kemahasiswaan Paling Aktif</h2>
+        @if($mostActiveKemahasiswaan->count() > 0)
+        <table>
+            <tr>
+                <th>No.</th>
+                <th>Nama Kemahasiswaan</th>
+                <th>Jumlah Dokumen</th>
+            </tr>
+            @foreach($mostActiveKemahasiswaan as $index => $kemahasiswaan)
+            <tr>
+                <td>{{ $index + 1 }}</td>
+                <td>{{ $kemahasiswaan->nama_kemahasiswaan }}</td>
+                <td align="center">{{ $kemahasiswaan->document_count }}</td>
+            </tr>
+            @endforeach
+        </table>
+        @else
+        <p>Tidak ada data statistik Kemahasiswaan pada periode ini.</p>
+        @endif
+    </div>
+
     <div class="page-break"></div>
 
     <div class="section">
@@ -205,7 +227,7 @@
             @foreach($kemahasiswaanStats as $index => $stat)
             <tr>
                 <td>{{ $index + 1 }}</td>
-                <td>{{ $stat->nama_staff }}</td>
+                <td>{{ $stat->nama_kemahasiswaan }}</td>
                 <td align="center">{{ $stat->total }}</td>
             </tr>
             @endforeach
