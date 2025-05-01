@@ -288,52 +288,64 @@ class DocumentController extends Controller
         try {
             $document = Dokumen::findOrFail($id);
             
-            // Log file path for debugging
-            Log::info('Document file path:', [
-                'id' => $id,
-                'file_path' => $document->file,
-                'storage_path' => Storage::path('public/' . $document->file),
-                'exists' => Storage::exists('public/' . $document->file)
-            ]);
+            Log::info('=== MULAI MENGAMBIL FILE PDF ===');
+            Log::info('Document ID: ' . $id);
+            Log::info('File path: ' . $document->file);
+            Log::info('Storage path: ' . Storage::path('public/' . $document->file));
             
-            // Check if file exists in storage
             if (!Storage::exists('public/' . $document->file)) {
-                Log::error('File not found:', [
-                    'id' => $id,
-                    'file_path' => $document->file,
-                    'storage_path' => Storage::path('public/' . $document->file)
-                ]);
-
+                Log::error('File tidak ditemukan di storage');
                 return response()->json([
                     'success' => false,
                     'message' => 'File tidak ditemukan: ' . $document->file
                 ], 404);
             }
 
-            // Get file path and read content
             $filePath = Storage::path('public/' . $document->file);
+            
+            if (!is_file($filePath) || !is_readable($filePath)) {
+                Log::error('File tidak dapat dibaca');
+                Log::error('Is file: ' . (is_file($filePath) ? 'true' : 'false'));
+                Log::error('Is readable: ' . (is_readable($filePath) ? 'true' : 'false'));
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak dapat dibaca'
+                ], 500);
+            }
+
             $fileContent = file_get_contents($filePath);
+            $fileSize = strlen($fileContent);
+            
+            Log::info('File size: ' . $fileSize . ' bytes');
+            Log::info('First 10 bytes: ' . substr(bin2hex($fileContent), 0, 20));
+            
+            if (strpos($fileContent, '%PDF-') !== 0) {
+                Log::error('File bukan PDF yang valid');
+                Log::error('First 10 bytes: ' . substr(bin2hex($fileContent), 0, 20));
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File bukan PDF yang valid'
+                ], 400);
+            }
+
             $base64Content = base64_encode($fileContent);
             $mimeType = mime_content_type($filePath);
 
-            // Log success
-            Log::info('File retrieved successfully:', [
-                'id' => $id,
-                'file_size' => strlen($fileContent),
-                'mime_type' => $mimeType
-            ]);
+            Log::info('MIME type: ' . $mimeType);
+            Log::info('Base64 length: ' . strlen($base64Content));
+            Log::info('First 10 chars of base64: ' . substr($base64Content, 0, 10));
 
-            // Return base64 encoded file data
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'file' => $base64Content,
-                    'content_type' => $mimeType,
-                    'filename' => basename($document->file)
-                ]
+                'data' => $base64Content,
+                'content_type' => $mimeType,
+                'filename' => basename($document->file),
+                'file_size' => $fileSize
             ]);
         } catch (\Exception $e) {
-            Log::error('Error serving document file: ' . $e->getMessage());
+            Log::error('=== ERROR MENGAMBIL FILE PDF ===');
+            Log::error('Error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil file dokumen: ' . $e->getMessage()
