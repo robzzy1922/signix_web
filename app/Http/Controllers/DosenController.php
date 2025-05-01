@@ -19,6 +19,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 use App\Models\TandaQr;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 class DosenController extends Controller
 {
@@ -471,4 +473,161 @@ class DosenController extends Controller
             ], 500);
         }
     }
+
+    public function getVerificationStatus()
+    {
+        $dosen = Auth::guard('dosen')->user();
+
+        return response()->json([
+            'is_verified' => $dosen->is_email_verified,
+            'email' => $dosen->email,
+            'verification_in_progress' => !empty($dosen->verification_email),
+            'verification_email' => $dosen->verification_email,
+        ]);
+    }
+
+    // Generate OTP and send to email
+    public function sendEmailOTP(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email'
+            ]);
+
+            $dosen = Auth::guard('dosen')->user();
+
+            // Check if the email is already verified
+            if ($dosen->is_email_verified && $dosen->email === $request->email) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This email is already verified.'
+                ]);
+            }
+
+            // Generate 6-digit OTP
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Store OTP and set expiration time (15 minutes)
+            $dosen->verification_email = $request->email;
+            $dosen->email_verification_code = $otp;
+            $dosen->email_verification_expires_at = Carbon::now()->addMinutes(15);
+            $dosen->save();
+
+            // Send email with OTP
+            $this->sendOTPEmail($dosen->verification_email, $otp, $dosen->nama_dosen);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP sent to your email. Please check your inbox.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send OTP: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send OTP. Please try again.'
+            ], 500);
+        }
+    }
+
+    // Verify the OTP
+    public function verifyEmailOTP(Request $request)
+    {
+        try {
+            $request->validate([
+                'otp' => 'required|numeric|digits:6'
+            ]);
+
+            $dosen = Auth::guard('dosen')->user();
+
+            // Check if OTP is expired
+            if (Carbon::now()->isAfter($dosen->email_verification_expires_at)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OTP has expired. Please request a new one.'
+                ]);
+            }
+
+            // Verify OTP
+            if ($request->otp != $dosen->email_verification_code) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid OTP. Please try again.'
+                ]);
+            }
+
+            // Update email and verification status
+            $dosen->email = $dosen->verification_email;
+            $dosen->is_email_verified = true;
+            $dosen->email_verified_at = Carbon::now();
+            $dosen->email_verification_code = null;
+            $dosen->verification_email = null;
+            $dosen->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email verified successfully!'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to verify OTP: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to verify OTP. Please try again.'
+            ], 500);
+        }
+    }
+
+    // Resend OTP
+    public function resendOTP()
+    {
+        try {
+            $dosen = Auth::guard('dosen')->user();
+
+            if (!$dosen->verification_email) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No email verification in progress.'
+                ]);
+            }
+
+            // Generate new OTP
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Update OTP and expiration time
+            $dosen->email_verification_code = $otp;
+            $dosen->email_verification_expires_at = Carbon::now()->addMinutes(15);
+            $dosen->save();
+
+            // Send email with new OTP
+            $this->sendOTPEmail($dosen->verification_email, $otp, $dosen->nama_dosen);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'New OTP sent to your email. Please check your inbox.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to resend OTP: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to resend OTP. Please try again.'
+            ], 500);
+        }
+    }
+
+    // Helper function to send OTP email
+    private function sendOTPEmail($email, $otp, $name)
+    {
+        $data = [
+            'otp' => $otp,
+            'name' => $name
+        ];
+
+        Mail::send('emails.otp-verification', $data, function($message) use($email) {
+            $message->to($email)
+                    ->subject('Email Verification Code - Sistem Dokumen Digital');
+        });
+    }
+
 }

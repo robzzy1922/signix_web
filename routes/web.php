@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\Auth\AdminDokumenController;
 use App\Http\Controllers\Admin\Auth\AdminDashboardController;
 use App\Http\Controllers\Admin\Auth\AdminKemahasiswaanController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\EmailVerificationDosenController;
 
 
 
@@ -32,10 +33,10 @@ Route::middleware(['auth:ormawa'])->group(function () {
         Route::post('/pengajuan', [OrmawaController::class, 'storePengajuan'])->name('pengajuan.store');
         Route::get('/riwayat', [OrmawaController::class, 'riwayat'])->name('riwayat');
 
-        // Document routes - fix duplicate route
-        Route::get('/dokumen/{id}', [OrmawaController::class, 'detailDokumen'])->name('detail.dokumen');
-        Route::get('/dokumen/{id}/show', [OrmawaController::class, 'showDokumen'])->name('dokumen.show');
-        Route::post('/dokumen/{id}/update', [OrmawaController::class, 'updateDokumen'])->name('dokumen.update');
+        // Perbaikan route untuk dokumen
+        Route::get('/dokumen/{id}', [OrmawaController::class, 'showDokumen'])->name('dokumen.show');
+        Route::get('/dokumen/{id}/download', [OrmawaController::class, 'downloadDokumen'])->name('dokumen.download');
+        Route::get('/dokumen/{id}/view', [OrmawaController::class, 'viewDokumen'])->name('dokumen.view');
 
         // Profile routes
         Route::get('/profil', [OrmawaController::class, 'profil'])->name('profil');
@@ -65,6 +66,13 @@ Route::middleware(['auth:dosen'])->prefix('dosen')->name('dosen.')->group(functi
     Route::get('/dashboard', [DosenController::class, 'dashboardDosen'])->name('dashboard');
     Route::get('/buat-tanda-tangan', [DosenController::class, 'create'])->name('create');
     Route::post('/logout', [DosenController::class, 'logout'])->name('logout');
+
+    // Email verification routes for dosen
+    Route::post('/email/send-otp', [DosenController::class, 'sendEmailOTP'])->name('email.send.otp');
+    Route::post('/email/verify-otp', [DosenController::class, 'verifyEmailOTP'])->name('email.verify.otp');
+    Route::post('/email/resend-otp', [DosenController::class, 'resendOTP'])->name('email.resend.otp');
+    Route::get('/email/verification-status', [DosenController::class, 'getVerificationStatus'])->name('email.verification.status');
+    Route::get('/email/show-verification', [DosenController::class, 'showEmailVerification'])->name('email.show.verification');
 
     // Perbaikan nama route riwayat
     Route::get('/riwayat', [DosenController::class, 'riwayat'])->name('riwayat');

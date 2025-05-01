@@ -109,9 +109,15 @@
 
                     <div class="space-y-2">
                         <label for="email" class="block text-sm font-semibold text-gray-700">Email</label>
-                        <input type="email" name="email" id="email"
-                               value="{{ old('email', $dosen->email) }}"
-                               class="block px-4 py-3 w-full rounded-lg border border-gray-300 shadow-sm transition duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        <div class="relative">
+                            <input type="email" name="email" id="email"
+                                   value="{{ old('email', $dosen->email) }}"
+                                   class="block px-4 py-3 pr-12 w-full rounded-lg border border-gray-300 shadow-sm transition duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                            <div class="flex absolute inset-y-0 right-0 items-center pr-3">
+                                <span id="emailStatus" class="text-xs font-medium"></span>
+                            </div>
+                        </div>
+                        <p id="emailHelp" class="mt-1 text-xs text-gray-500">Changing your email requires verification.</p>
                     </div>
 
                     <div class="space-y-2">
@@ -225,7 +231,7 @@
             setupVerificationHandlers();
         });
 
-        // Add this new function
+        // Toggle password visibility
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
             const button = input.nextElementSibling;
@@ -242,8 +248,9 @@
                 eyeClosed.classList.add('hidden');
             }
         }
-         // Update email verification status indicator
-         function updateEmailVerificationStatus() {
+
+        // Update email verification status indicator
+        function updateEmailVerificationStatus() {
             fetch('{{ route('dosen.email.verification.status') }}')
                 .then(response => response.json())
                 .then(data => {
@@ -290,24 +297,38 @@
             const emailInput = document.getElementById('email');
             emailInput.addEventListener('change', function() {
                 const newEmail = this.value;
-                if (newEmail && newEmail !== '{{ $ormawa->email }}') {
+                if (newEmail && newEmail !== '{{ $dosen->email }}') {
                     const formData = new FormData();
                     formData.append('email', newEmail);
 
                     fetch('{{ route('dosen.email.show.verification') }}', {
                         method: 'POST',
                         headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
                         },
                         body: formData
                     })
-                    .then(response => {
-                        if (response.ok) {
-                            window.location.reload();
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show the verification modal
+                            verificationEmail.textContent = newEmail;
+                            modal.classList.remove('hidden');
+
+                            // Reset the verification steps
+                            step1.classList.remove('hidden');
+                            step2.classList.add('hidden');
+
+                            // Clear any existing OTP input
+                            otpInput.value = '';
+                        } else {
+                            showAlert(data.message || 'Failed to initiate email verification', 'error');
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
+                        showAlert('Failed to initiate email verification. Please try again.', 'error');
                     });
                 }
             });
@@ -345,7 +366,8 @@
                 fetch('{{ route('dosen.email.send.otp') }}', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
                     },
                     body: formData
                 })
@@ -381,7 +403,8 @@
                 fetch('{{ route('dosen.email.verify.otp') }}', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
                     },
                     body: formData
                 })
@@ -389,7 +412,7 @@
                 .then(data => {
                     if (data.success) {
                         showAlert(data.message);
-                        verificationModal.classList.add('hidden');
+                        modal.classList.add('hidden');
                         clearInterval(countdownInterval);
                         setTimeout(() => {
                             window.location.reload();
@@ -408,18 +431,15 @@
             resendOtpBtn.addEventListener('click', function() {
                 console.log('Attempting to resend OTP');
 
-                fetch('{{ route('ormawa.email.resend.otp') }}', {
+                fetch('{{ route('dosen.email.resend.otp') }}', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
                     },
                 })
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
-                    console.log('Response data:', data);
                     if (data.success) {
                         // Reset countdown
                         clearInterval(countdownInterval);
