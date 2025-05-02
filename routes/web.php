@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\Auth\AdminDashboardController;
 use App\Http\Controllers\Admin\Auth\AdminKemahasiswaanController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\EmailVerificationDosenController;
+use App\Http\Controllers\EmailVerificationKemahasiswaanController;
 
 
 
@@ -72,7 +73,7 @@ Route::middleware(['auth:dosen'])->prefix('dosen')->name('dosen.')->group(functi
     Route::post('/email/verify-otp', [DosenController::class, 'verifyEmailOTP'])->name('email.verify.otp');
     Route::post('/email/resend-otp', [DosenController::class, 'resendOTP'])->name('email.resend.otp');
     Route::get('/email/verification-status', [DosenController::class, 'getVerificationStatus'])->name('email.verification.status');
-    Route::get('/email/show-verification', [DosenController::class, 'showEmailVerification'])->name('email.show.verification');
+    Route::post('/email/show-verification', [DosenController::class, 'showEmailVerification'])->name('email.show.verification');
 
     // Perbaikan nama route riwayat
     Route::get('/riwayat', [DosenController::class, 'riwayat'])->name('riwayat');
@@ -109,6 +110,13 @@ Route::middleware(['auth:kemahasiswaan'])->prefix('kemahasiswaan')->name('kemaha
     Route::get('/dashboard', [KemahasiswaanController::class, 'dashboardKemahasiswaan'])->name('dashboard');
     Route::get('/buat-tanda-tangan', [KemahasiswaanController::class, 'create'])->name('create');
     Route::post('/logout', [KemahasiswaanController::class, 'logout'])->name('logout');
+
+    // Email verification routes for kemahasiswaan
+    Route::post('/email/send-otp', [KemahasiswaanController::class, 'sendEmailOTP'])->name('email.send.otp');
+    Route::post('/email/verify-otp', [KemahasiswaanController::class, 'verifyEmailOTP'])->name('email.verify.otp');
+    Route::post('/email/resend-otp', [KemahasiswaanController::class, 'resendOTP'])->name('email.resend.otp');
+    Route::get('/email/verification-status', [KemahasiswaanController::class, 'getVerificationStatus'])->name('email.verification.status');
+    Route::post('/email/show-verification', [KemahasiswaanController::class, 'showEmailVerification'])->name('email.show.verification');
 
     // Perbaikan nama route riwayat
     Route::get('/riwayat', [KemahasiswaanController::class, 'riwayat'])->name('riwayat');

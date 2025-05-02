@@ -304,31 +304,17 @@
                     fetch('{{ route('dosen.email.show.verification') }}', {
                         method: 'POST',
                         headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
                         body: formData
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Show the verification modal
-                            verificationEmail.textContent = newEmail;
-                            modal.classList.remove('hidden');
-
-                            // Reset the verification steps
-                            step1.classList.remove('hidden');
-                            step2.classList.add('hidden');
-
-                            // Clear any existing OTP input
-                            otpInput.value = '';
-                        } else {
-                            showAlert(data.message || 'Failed to initiate email verification', 'error');
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        showAlert('Failed to initiate email verification. Please try again.', 'error');
                     });
                 }
             });
@@ -363,16 +349,21 @@
                 const formData = new FormData();
                 formData.append('email', email);
 
+                console.log('Sending OTP to:', email);
+
                 fetch('{{ route('dosen.email.send.otp') }}', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: formData
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Response data:', data);
                     if (data.success) {
                         step1.classList.add('hidden');
                         step2.classList.remove('hidden');
@@ -383,7 +374,7 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('Error sending OTP:', error);
                     showAlert('Failed to send OTP. Please try again.', 'error');
                 });
             });
@@ -403,8 +394,7 @@
                 fetch('{{ route('dosen.email.verify.otp') }}', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: formData
                 })
@@ -434,12 +424,15 @@
                 fetch('{{ route('dosen.email.resend.otp') }}', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Response data:', data);
                     if (data.success) {
                         // Reset countdown
                         clearInterval(countdownInterval);

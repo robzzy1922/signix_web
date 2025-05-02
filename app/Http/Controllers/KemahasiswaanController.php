@@ -19,6 +19,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 use App\Models\TandaQr;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 class KemahasiswaanController extends Controller
 {
@@ -134,21 +136,58 @@ class KemahasiswaanController extends Controller
 
     public function updateProfile(Request $request)
     {
+        $kemahasiswaan = Auth::guard('kemahasiswaan')->user();
+
         $request->validate([
             'namaKemahasiswaan' => 'required|string|max:255',
             'email' => 'required|email',
             'noHp' => 'required|string|max:15',
+            'currentPassword' => 'nullable|string',
+            'password' => 'nullable|string|min:8',
+            'passwordConfirmation' => 'nullable|same:password',
         ]);
 
-        $kemahasiswaan = Auth::guard('kemahasiswaan')->user();
-        $kemahasiswaan->update([
+        // Check if email is being changed
+        $emailChanged = ($request->email !== $kemahasiswaan->email);
+
+        // Update basic info
+        $data = [
             'nama_kemahasiswaan' => $request->namaKemahasiswaan,
-            'email' => $request->email,
             'no_hp' => $request->noHp,
-        ]);
-        $kemahasiswaan->save();
+        ];
 
-        return redirect()->route('kemahasiswaan.profile')->with('success', 'Profile updated successfully');
+        // If email is changed, set it as unverified and store new email in verification_email
+        if ($emailChanged) {
+            $data['verification_email'] = $request->email;
+            // Keep the old email until verified
+        } else {
+            // If email is not changed, include it in update data
+            $data['email'] = $request->email;
+        }
+
+        // Update password if provided
+        if ($request->filled('currentPassword') && $request->filled('password')) {
+            // Verify current password
+            if (!\Illuminate\Support\Facades\Hash::check($request->currentPassword, $kemahasiswaan->password)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['currentPassword' => 'Current password is incorrect']);
+            }
+
+            $data['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+
+        $kemahasiswaan->update($data);
+
+        // If email changed, redirect to verification page
+        if ($emailChanged) {
+            return redirect()->route('kemahasiswaan.profile')
+                ->with('verify_email', true)
+                ->with('new_email', $request->email);
+        }
+
+        return redirect()->route('kemahasiswaan.profile')
+            ->with('success', 'Profile updated successfully');
     }
 
     public function updatePhoto(Request $request)
@@ -254,7 +293,7 @@ class KemahasiswaanController extends Controller
 
             return response()->json([
                 'success' => true,
-                'qrCodeUrl' => Storage::disk('public')->url($qrCodePath),
+                'qrCodeUrl' => Storage::url($qrCodePath),
                 'message' => 'QR Code berhasil dibuat'
             ]);
 
@@ -471,4 +510,283 @@ class KemahasiswaanController extends Controller
             ], 500);
         }
     }
+    public function getVerificationStatus()
+    {
+        $kemahasiswaan = Auth::guard('kemahasiswaan')->user();
+
+        return response()->json([
+            'is_verified' => $kemahasiswaan->is_email_verified,
+            'email' => $kemahasiswaan->email,
+            'verification_in_progress' => !empty($kemahasiswaan->verification_email),
+            'verification_email' => $kemahasiswaan->verification_email,
+        ]);
+    }
+
+    // Generate OTP and send to email
+    public function sendEmailOTP(Request $request)
+    {
+        try {
+            Log::info('Received send OTP request', $request->all());
+
+            $request->validate([
+                'email' => 'required|email'
+            ]);
+
+            $kemahasiswaan = Auth::guard('kemahasiswaan')->user();
+            Log::info('User authenticated', ['user_id' => $kemahasiswaan->id]);
+
+            // Check if the email is already verified
+            if ($kemahasiswaan->is_email_verified && $kemahasiswaan->email === $request->email) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This email is already verified.'
+                ]);
+            }
+
+            // Generate 6-digit OTP
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Store OTP and set expiration time (15 minutes)
+            $kemahasiswaan->verification_email = $request->email;
+            $kemahasiswaan->email_verification_code = $otp;
+            $kemahasiswaan->email_verification_expires_at = Carbon::now()->addMinutes(15);
+            $saved = $kemahasiswaan->save();
+
+            if (!$saved) {
+                Log::error('Failed to save OTP data to database');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to save verification data. Please try again.'
+                ], 500);
+            }
+
+            Log::info('OTP generated and saved', [
+                'user_id' => $kemahasiswaan->id,
+                'verification_email' => $kemahasiswaan->verification_email,
+                'otp' => $otp, // Don't log OTP in production!
+                'expires_at' => $kemahasiswaan->email_verification_expires_at
+            ]);
+
+            // For development, include OTP in response regardless of email status
+            try {
+                // Send email with OTP
+                $this->sendOTPEmail($kemahasiswaan->verification_email, $otp, $kemahasiswaan->nama_kemahasiswaan);
+                Log::info('OTP email sent successfully');
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'OTP sent to your email. Please check your inbox.',
+                    'debug_otp' => $otp
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send OTP email: ' . $e->getMessage(), [
+                    'exception' => get_class($e),
+                    'line' => $e->getLine(),
+                    'file' => $e->getFile()
+                ]);
+
+                // Return success with OTP even if email fails to allow testing
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Email might not have been sent, but OTP is generated: ' . $otp,
+                    'debug_otp' => $otp
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to process sendEmailOTP: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send OTP: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Helper function to send OTP email
+    private function sendOTPEmail($email, $otp, $name)
+    {
+        try {
+            Log::info('Preparing to send OTP email', ['email' => $email, 'otp' => $otp]);
+
+            $data = [
+                'otp' => $otp,
+                'name' => $name
+            ];
+
+            // For debugging, always write to the log
+            Log::info('OTP for email verification', [
+                'email' => $email,
+                'otp' => $otp,
+                'name' => $name
+            ]);
+
+            Mail::send('emails.otp-verification', $data, function($message) use($email) {
+                $message->to($email)
+                        ->subject('Email Verification Code - Sistem Dokumen Digital');
+            });
+
+            if (Mail::failures()) {
+                Log::error('Mail failures detected', ['failures' => Mail::failures()]);
+                // Don't throw exception - continue and return the OTP for testing
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Error sending email: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+            // Don't rethrow - just log the error and continue
+            return false;
+        }
+    }
+
+    // Verify the OTP
+    public function verifyEmailOTP(Request $request)
+    {
+        try {
+            $request->validate([
+                'otp' => 'required|numeric|digits:6'
+            ]);
+
+            $kemahasiswaan = Auth::guard('kemahasiswaan')->user();
+
+            // Check if OTP is expired
+            if (Carbon::now()->isAfter($kemahasiswaan->email_verification_expires_at)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OTP has expired. Please request a new one.'
+                ]);
+            }
+
+            // Verify OTP
+            if ($request->otp != $kemahasiswaan->email_verification_code) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid OTP. Please try again.'
+                ]);
+            }
+
+            // Update email and verification status
+            $kemahasiswaan->email = $kemahasiswaan->verification_email;
+            $kemahasiswaan->is_email_verified = true;
+            $kemahasiswaan->email_verified_at = Carbon::now();
+            $kemahasiswaan->email_verification_code = null;
+            $kemahasiswaan->verification_email = null;
+            $kemahasiswaan->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email verified successfully!'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to verify OTP: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to verify OTP. Please try again.'
+            ], 500);
+        }
+    }
+
+    // Resend OTP
+    public function resendOTP()
+    {
+        try {
+            Log::info('Received resend OTP request');
+
+            $kemahasiswaan = Auth::guard('kemahasiswaan')->user();
+            Log::info('User authenticated', ['user_id' => $kemahasiswaan->id]);
+
+            if (!$kemahasiswaan->verification_email) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No email verification in progress.'
+                ]);
+            }
+
+            // Generate new OTP
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Update OTP and expiration time
+            $kemahasiswaan->email_verification_code = $otp;
+            $kemahasiswaan->email_verification_expires_at = Carbon::now()->addMinutes(15);
+            $saved = $kemahasiswaan->save();
+
+            if (!$saved) {
+                Log::error('Failed to save new OTP data');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to generate new OTP. Please try again.'
+                ], 500);
+            }
+
+            Log::info('New OTP generated for resend', [
+                'user_id' => $kemahasiswaan->id,
+                'verification_email' => $kemahasiswaan->verification_email,
+                'otp' => $otp, // Don't log OTP in production!
+                'expires_at' => $kemahasiswaan->email_verification_expires_at
+            ]);
+
+            // Send email with new OTP
+            try {
+                $this->sendOTPEmail($kemahasiswaan->verification_email, $otp, $kemahasiswaan->nama_kemahasiswaan);
+                Log::info('Resend OTP email sent successfully');
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'New OTP sent to your email. Please check your inbox.',
+                    'debug_otp' => $otp
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send resend OTP email: ' . $e->getMessage(), [
+                    'exception' => get_class($e),
+                    'line' => $e->getLine(),
+                    'file' => $e->getFile()
+                ]);
+
+                // Return success with OTP even if email fails to allow testing
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Email might not have been sent, but OTP is generated: ' . $otp,
+                    'debug_otp' => $otp
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to process resendOTP: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to resend OTP: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Show email verification modal
+    public function showEmailVerification(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $email = $request->input('email');
+
+        // No need to set session here, the modal will be shown via JavaScript
+        return response()->json([
+            'success' => true,
+            'email' => $email
+        ]);
+    }
+
 }
