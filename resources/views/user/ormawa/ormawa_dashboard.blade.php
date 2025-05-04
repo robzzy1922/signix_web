@@ -1,6 +1,7 @@
 @extends('layouts.ormawa')
 @section('title', 'Dashboard Ormawa')
 @section('content')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <div class="container flex-grow px-4 mx-auto mt-8 max-w-5xl">
     <!-- Alert Success -->
     @if(session('success'))
@@ -394,7 +395,7 @@
                                 <button type="submit"
                                     class="inline-flex justify-center items-center px-4 py-2 w-full text-sm font-medium text-white bg-blue-600 rounded-md border border-transparent shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                     </svg>
                                     Kirim Revisi
                                 </button>
@@ -421,6 +422,16 @@
                                 </svg>
                                 Lihat di Tab Baru
                             </a>
+                            ${data.status_dokumen.toLowerCase() === 'disahkan' ? `
+                            <!-- Tombol Bagikan ke WhatsApp (hanya muncul jika status 'disahkan') -->
+                            <a href="javascript:void(0)" onclick="shareToWhatsApp()"
+                               class="inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md border border-transparent shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                <svg class="mr-2 w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M17.498 14.382c-.301-.15-1.767-.867-2.04-.966-.273-.101-.473-.15-.673.15-.197.295-.771.964-.944 1.162-.175.195-.349.21-.646.075-.3-.15-1.263-.465-2.403-1.485-.888-.795-1.484-1.77-1.66-2.07-.174-.3-.019-.465.13-.615.136-.135.301-.345.451-.523.146-.181.194-.301.297-.496.1-.21.049-.375-.025-.524-.075-.15-.672-1.62-.922-2.206-.24-.584-.487-.51-.672-.51-.172-.015-.371-.015-.571-.015-.2 0-.523.074-.797.359-.273.3-1.045 1.02-1.045 2.475s1.07 2.865 1.219 3.075c.149.195 2.105 3.195 5.1 4.485.714.3 1.27.48 1.704.629.714.227 1.365.195 1.88.121.574-.091 1.767-.721 2.016-1.426.255-.705.255-1.29.18-1.425-.074-.135-.27-.21-.57-.345m-5.446 7.443h-.016c-1.77 0-3.524-.48-5.055-1.38l-.36-.214-3.75.975 1.005-3.645-.239-.375c-.99-1.576-1.516-3.391-1.516-5.26 0-5.445 4.455-9.885 9.942-9.885 2.654 0 5.145 1.035 7.021 2.91 1.875 1.859 2.909 4.35 2.909 6.99-.004 5.444-4.46 9.885-9.935 9.885M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.334.101 11.893c0 2.096.549 4.14 1.595 5.945L0 24l6.335-1.652c1.746.943 3.71 1.444 5.71 1.447h.006c6.585 0 11.946-5.336 11.949-11.896 0-3.176-1.24-6.165-3.495-8.411"/>
+                                </svg>
+                                Bagikan via WhatsApp
+                            </a>
+                            ` : ''}
                         </div>
                     </div>
                     <div class="h-[600px] border rounded-lg overflow-hidden">
@@ -535,6 +546,65 @@
             'revisi': 'bg-orange-100 text-orange-800'
         };
         return statusClasses[status.toLowerCase()] || 'bg-gray-100 text-gray-800';
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('documentModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+
+    // Function to share document via WhatsApp
+    function shareToWhatsApp() {
+        if (!currentDocumentId) return;
+
+        // Get the current document details from the modal
+        const perihalElement = document.getElementById('modalContent').querySelector('.mt-1:nth-of-type(3)');
+        const nomorElement = document.getElementById('modalContent').querySelector('.mt-1:nth-of-type(1)');
+        const tanggalElement = document.getElementById('modalContent').querySelector('.mt-1:nth-of-type(2)');
+
+        // Extract text content from elements
+        const documentTitle = perihalElement ? perihalElement.textContent.trim() : 'Dokumen';
+        const documentNumber = nomorElement ? nomorElement.textContent.trim() : '';
+        const documentDate = tanggalElement ? tanggalElement.textContent.trim() : '';
+
+        // Generate the document link
+        const documentLink = window.location.origin + `/ormawa/dokumen/${currentDocumentId}/view`;
+
+        // Create a more detailed message text
+        const messageText = `*INFORMASI DOKUMEN RESMI*\n\n` +
+            `Dokumen dengan detail berikut telah disahkan:\n\n` +
+            `📄 *Perihal:* ${documentTitle}\n` +
+            `📝 *Nomor Surat:* ${documentNumber}\n` +
+            `📅 *Tanggal Pengajuan:* ${documentDate}\n\n` +
+            `Status dokumen: *DISAHKAN*\n\n` +
+            `Silahkan akses dokumen melalui tautan berikut:\n${documentLink}\n\n` +
+            `Pesan ini dikirim melalui Sistem Manajemen Dokumen SigniX.`;
+
+        // Show dialog with message customization
+        Swal.fire({
+            title: 'Bagikan ke WhatsApp',
+            html: `
+                <div class="text-left">
+                    <p class="mb-3">Dokumen akan dibagikan langsung via WhatsApp tanpa perlu diunduh terlebih dahulu.</p>
+                    <p class="mb-2">Teks pesan yang akan dibagikan:</p>
+                    <textarea id="whatsappMessage" class="p-2 w-full rounded border" rows="10" style="font-size: 14px;">${messageText}</textarea>
+                </div>
+            `,
+            confirmButtonText: 'Bagikan ke WhatsApp',
+            confirmButtonColor: '#25D366',
+            showCancelButton: true,
+            cancelButtonText: 'Batal',
+            icon: 'info'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Get the message and open WhatsApp
+                const message = document.getElementById('whatsappMessage').value;
+                const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+            }
+        });
     }
 </script>
 @endsection
