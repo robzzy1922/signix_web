@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 
 class OrmawaController extends Controller
 {
@@ -446,13 +447,20 @@ class OrmawaController extends Controller
     public function showDokumen($id)
     {
         try {
-            $dokumen = Dokumen::with(['dosen', 'ormawa'])
+            // Log request for debugging
+            Log::info('Show dokumen request', [
+                'id' => $id,
+                'user_id' => auth()->guard('ormawa')->id()
+            ]);
+
+            $dokumen = Dokumen::with(['dosen', 'ormawa', 'kemahasiswaan'])
                 ->where('id', $id)
                 ->where('id_ormawa', auth()->guard('ormawa')->id())
                 ->firstOrFail();
 
             // Periksa apakah file ada
             if (!$dokumen->file) {
+                Log::warning('Document file path is missing', ['dokumen_id' => $id]);
                 return response()->json([
                     'success' => false,
                     'message' => 'File dokumen tidak ditemukan'
@@ -461,13 +469,25 @@ class OrmawaController extends Controller
 
             $filePath = 'dokumen/' . basename($dokumen->file);
 
+            // Check if file exists in storage
+            if (!Storage::disk('public')->exists($filePath)) {
+                Log::warning('Document file not found in storage', [
+                    'dokumen_id' => $id,
+                    'file_path' => $filePath
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File dokumen tidak ditemukan di server'
+                ], 404);
+            }
+
             // Generate URL yang valid untuk file
             $fileUrl = asset('storage/' . $filePath);
 
             // Format tanggal ke format yang lebih readable
             $tanggalPengajuan = \Carbon\Carbon::parse($dokumen->tanggal_pengajuan)->format('d F Y');
 
-            return response()->json([
+            $response = [
                 'success' => true,
                 'data' => [
                     'id' => $dokumen->id,
@@ -485,18 +505,36 @@ class OrmawaController extends Controller
                         'jenis' => 'Kemahasiswaan'
                     ] : null)
                 ]
-            ], 200, ['Content-Type' => 'application/json']);
+            ];
+
+            // Log success
+            Log::info('Document successfully retrieved', [
+                'dokumen_id' => $id,
+                'status' => $dokumen->status_dokumen
+            ]);
+
+            return response()->json($response, 200, ['Content-Type' => 'application/json']);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::warning('Document not found', [
+                'id' => $id,
+                'user_id' => auth()->guard('ormawa')->id()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Dokumen tidak ditemukan'
             ], 404);
         } catch (\Exception $e) {
-            Log::error('Error in showDokumen: ' . $e->getMessage());
+            Log::error('Error in showDokumen: ' . $e->getMessage(), [
+                'id' => $id,
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat memuat dokumen'
+                'message' => 'Terjadi kesalahan saat memuat dokumen: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -504,6 +542,13 @@ class OrmawaController extends Controller
     public function updateDokumen(Request $request, $id)
     {
         try {
+            // Log the request for debugging
+            Log::info('Update dokumen request received', [
+                'id' => $id,
+                'user_id' => auth()->guard('ormawa')->id(),
+                'has_file' => $request->hasFile('dokumen')
+            ]);
+
             $dokumen = Dokumen::findOrFail($id);
 
             // Validate request
@@ -511,33 +556,73 @@ class OrmawaController extends Controller
                 'dokumen' => 'required|file|mimes:pdf|max:2048'
             ]);
 
-            // Delete old file if exists
-            if ($dokumen->file && Storage::disk('public')->exists($dokumen->file)) {
-                Storage::disk('public')->delete($dokumen->file);
+            // Make sure the document belongs to the current user and needs revision
+            if ($dokumen->id_ormawa != auth()->guard('ormawa')->id()) {
+                Log::warning('Unauthorized access attempt', [
+                    'dokumen_id' => $id,
+                    'requesting_user' => auth()->guard('ormawa')->id(),
+                    'document_owner' => $dokumen->id_ormawa
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses untuk merevisi dokumen ini'
+                ], 403);
             }
 
-            // Store new file dengan nama yang lebih terstruktur
-            $file = $request->file('dokumen');
-            $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
-            $filePath = $file->storeAs('dokumen', $fileName, 'public');
+            // Check if the document needs revision
+            if ($dokumen->status_dokumen != 'butuh revisi') {
+                Log::warning('Attempted revision of document not needing revision', [
+                    'dokumen_id' => $id,
+                    'current_status' => $dokumen->status_dokumen
+                ]);
 
-            // Update dokumen
-            $dokumen->update([
-                'file' => $filePath,
-                'status_dokumen' => 'sudah direvisi',
-                'tanggal_revisi' => now() // tambahkan tanggal revisi jika diperlukan
-            ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dokumen ini tidak memerlukan revisi'
+                ], 400);
+            }
 
-            // Log success
-            Log::info('Dokumen berhasil diupdate', [
-                'dokumen_id' => $dokumen->id,
-                'new_file' => $filePath
-            ]);
+            // Use a transaction to ensure database consistency
+            DB::beginTransaction();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Dokumen berhasil diupdate'
-            ]);
+            try {
+                // Delete old file if exists
+                if ($dokumen->file && Storage::disk('public')->exists($dokumen->file)) {
+                    Storage::disk('public')->delete($dokumen->file);
+                }
+
+                // Store new file dengan nama yang lebih terstruktur
+                $file = $request->file('dokumen');
+                $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+                $filePath = $file->storeAs('dokumen', $fileName, 'public');
+
+                // Update dokumen
+                $dokumen->update([
+                    'file' => $filePath,
+                    'status_dokumen' => 'sudah direvisi',
+                    'tanggal_revisi' => now(),
+                    'keterangan_pengirim' => $request->input('keterangan') // Optional revision notes from the sender
+                ]);
+
+                DB::commit();
+
+                // Log success
+                Log::info('Dokumen berhasil direvisi', [
+                    'dokumen_id' => $dokumen->id,
+                    'new_file' => $filePath
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Dokumen berhasil direvisi'
+                ]);
+
+            } catch (\Exception $e) {
+                // Rollback transaction on error
+                DB::rollBack();
+                throw $e;
+            }
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('Dokumen tidak ditemukan', ['id' => $id]);
@@ -554,14 +639,14 @@ class OrmawaController extends Controller
             ], 422);
 
         } catch (\Exception $e) {
-            Log::error('Error saat update dokumen', [
+            Log::error('Error saat revisi dokumen', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat mengupdate dokumen. Silakan coba lagi.'
+                'message' => 'Terjadi kesalahan saat merevisi dokumen: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -4,9 +4,9 @@
 <div class="container flex-grow px-4 mx-auto mt-8 max-w-5xl">
     <!-- Alert Success -->
     @if(session('success'))
-    <div id="alert-success" class="relative p-4 mb-6 text-green-700 bg-green-100 border border-green-400 rounded-lg">
+    <div id="alert-success" class="relative p-4 mb-6 text-green-700 bg-green-100 rounded-lg border border-green-400">
         <div class="flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <span class="font-medium">Berhasil!</span>
@@ -255,19 +255,19 @@
 </div>
 
 <!-- Modal -->
-<div id="detailModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+<div id="detailModal" class="hidden overflow-y-auto fixed inset-0 z-50">
+    <div class="flex justify-center items-center px-4 pt-4 pb-20 min-h-screen text-center sm:block sm:p-0">
         <div class="fixed inset-0 transition-opacity" aria-hidden="true">
             <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
         </div>
 
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="inline-block overflow-hidden text-left align-bottom bg-white rounded-lg shadow-xl transition-all transform sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+            <div class="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
                 <div class="flex justify-between items-center pb-4 mb-4 border-b">
                     <h3 class="text-2xl font-semibold text-gray-900">Detail Dokumen</h3>
                     <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
                         <span class="sr-only">Close</span>
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
@@ -280,7 +280,6 @@
         </div>
     </div>
 </div>
-
 <script>
     let currentDocumentId = null;
     let currentFileUrl = null;
@@ -291,7 +290,7 @@
         // Show loading state
         document.getElementById('modalContent').innerHTML = `
             <div class="flex justify-center items-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <div class="w-8 h-8 rounded-full border-b-2 border-blue-500 animate-spin"></div>
                 <span class="ml-2">Memuat dokumen...</span>
             </div>
         `;
@@ -305,8 +304,20 @@
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
         .then(response => {
+            // Log the raw response for debugging
+            console.log('Response status:', response.status);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            return response.json();
+        })
+        .then(response => {
+            // Log the parsed response for debugging
+            console.log('Response data:', response);
+
             if (!response.success) {
                 throw new Error(response.message || 'Terjadi kesalahan saat memuat dokumen');
             }
@@ -314,12 +325,15 @@
             const data = response.data;
             currentFileUrl = data.file_url;
 
+            // Check if document needs revision
+            const needsRevision = data.status_dokumen.toLowerCase() === 'butuh revisi';
+
             // Update modal content with document details and preview
             document.getElementById('modalContent').innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div class="space-y-4">
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-lg mb-4">Informasi Dokumen</h4>
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <h4 class="mb-4 text-lg font-semibold">Informasi Dokumen</h4>
                             <dl class="space-y-2">
                                 <div class="flex justify-between">
                                     <dt class="font-medium text-gray-600">Nomor Surat:</dt>
@@ -355,11 +369,38 @@
                                 ` : ''}
                             </dl>
                         </div>
+
+                        ${needsRevision ? `
+                        <!-- Form Revisi Dokumen (hanya muncul jika status "butuh revisi") -->
+                        <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <h4 class="mb-4 text-lg font-semibold">Revisi Dokumen</h4>
+                            <form id="revisionForm" class="space-y-3">
+                                <div>
+                                    <label for="dokumen" class="block text-sm font-medium text-gray-700">Unggah Dokumen Revisi (PDF)</label>
+                                    <input type="file" id="dokumen" name="dokumen" accept=".pdf"
+                                        class="block px-3 py-2 mt-1 w-full bg-white rounded-md border border-gray-300 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                                </div>
+                                <div>
+                                    <label for="keterangan" class="block text-sm font-medium text-gray-700">Keterangan Revisi (Opsional)</label>
+                                    <textarea id="keterangan" name="keterangan" rows="3"
+                                        class="block px-3 py-2 mt-1 w-full bg-white rounded-md border border-gray-300 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                                </div>
+                                <button type="submit"
+                                    class="inline-flex justify-center items-center px-4 py-2 w-full text-sm font-medium text-white bg-blue-600 rounded-md border border-transparent shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+                                    </svg>
+                                    Kirim Revisi
+                                </button>
+                            </form>
+                        </div>
+                        ` : ''}
+
                         <div class="flex flex-col space-y-2">
                             <!-- Tombol Download -->
                             <a href="/ormawa/dokumen/${currentDocumentId}/download"
-                               class="inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md border border-transparent shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                 </svg>
                                 Download Dokumen
@@ -367,8 +408,8 @@
                             <!-- Tombol Lihat di Tab Baru -->
                             <a href="/ormawa/dokumen/${currentDocumentId}/view"
                                target="_blank"
-                               class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
@@ -381,13 +422,93 @@
                     </div>
                 </div>
             `;
+
+            // If the document needs revision, handle form submission
+            if (needsRevision) {
+                document.getElementById('revisionForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    submitRevision(currentDocumentId);
+                });
+            }
         })
         .catch(error => {
+            console.error('Error loading document:', error);
             document.getElementById('modalContent').innerHTML = `
-                <div class="text-center text-red-600 py-8">
-                    ${error.message || 'Terjadi kesalahan saat memuat dokumen'}
+                <div class="py-8 text-center text-red-600">
+                    ${error.message || 'Terjadi kesalahan saat memuat dokumen'}<br>
+                    <span class="block mt-2 text-sm">Detail: ${error.toString()}</span>
                 </div>
             `;
+        });
+    }
+
+    function submitRevision(documentId) {
+        const formData = new FormData();
+        const fileInput = document.getElementById('dokumen');
+        const keterangan = document.getElementById('keterangan').value;
+
+        if (fileInput.files.length === 0) {
+            alert('Silakan pilih file dokumen revisi');
+            return;
+        }
+
+        formData.append('dokumen', fileInput.files[0]);
+        formData.append('keterangan', keterangan);
+        formData.append('_token', '{{ csrf_token() }}');
+
+        // Show loading state
+        const submitButton = document.querySelector('#revisionForm button[type="submit"]');
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = `
+            <div class="inline-flex items-center">
+                <svg class="mr-2 -ml-1 w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Mengirim...
+            </div>
+        `;
+
+        fetch(`/ormawa/dokumen/${documentId}/update`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            // Log the raw response for debugging
+            console.log('Update response status:', response.status);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            return response.json();
+        })
+        .then(response => {
+            // Log the parsed response
+            console.log('Update response data:', response);
+
+            if (!response.success) {
+                throw new Error(response.message || 'Terjadi kesalahan saat mengirim revisi');
+            }
+
+            // Close modal and refresh page to show updated status
+            closeModal();
+
+            // Show success message and reload page
+            alert('Revisi dokumen berhasil dikirim');
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error updating document:', error);
+            alert(`${error.message || 'Terjadi kesalahan saat mengirim revisi'}\nDetail: ${error.toString()}`);
+
+            // Reset button
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
         });
     }
 
