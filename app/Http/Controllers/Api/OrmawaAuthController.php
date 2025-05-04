@@ -85,4 +85,53 @@ class OrmawaAuthController extends Controller
             ], 500);
         }
     }
+
+    // Update profile (nama, email, noHp)
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'namaMahasiswa' => 'required|string|max:255',
+            'email' => 'required|email|unique:ormawas,email,' . $user->id,
+            'noHp' => 'nullable|string|max:20',
+        ]);
+
+        $user->namaMahasiswa = $request->namaMahasiswa;
+        $user->email = $request->email;
+        $user->noHp = $request->noHp;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil berhasil diupdate',
+            'data' => $user,
+        ]);
+    }
+
+    // Update password
+    public function updatePassword(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:6|confirmed',
+        ]);
+
+        if (!\Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password lama salah',
+            ], 422);
+        }
+
+        $user->password = bcrypt($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil diubah',
+        ]);
+    }
 }

@@ -352,4 +352,37 @@ class DocumentController extends Controller
             ], 500);
         }
     }
+
+    public function uploadRevisi(Request $request, $id)
+    {
+        $request->validate([
+            'dokumen' => 'required|file|mimes:pdf,doc,docx|max:10240', // max 10MB
+        ]);
+
+        $dokumen = \App\Models\Dokumen::findOrFail($id);
+
+        // Hapus file lama jika ada
+        if ($dokumen->file && \Storage::disk('public')->exists($dokumen->file)) {
+            \Storage::disk('public')->delete($dokumen->file);
+        }
+
+        // Simpan file baru
+        if ($request->hasFile('dokumen')) {
+            $file = $request->file('dokumen');
+            $filename = uniqid().'_'.$file->getClientOriginalName();
+            $path = $file->storeAs('dokumen_revisi', $filename, 'public');
+            $dokumen->file = $path;
+        }
+
+        // Update status
+        $dokumen->status_dokumen = 'sudah direvisi';
+        $dokumen->tanggal_revisi = now();
+        $dokumen->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Dokumen berhasil direvisi',
+            'data' => $dokumen,
+        ]);
+    }
 }

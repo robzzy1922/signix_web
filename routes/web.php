@@ -36,6 +36,7 @@ Route::middleware(['auth:ormawa'])->group(function () {
         Route::get('/dokumen/{id}', [OrmawaController::class, 'detailDokumen'])->name('detail.dokumen');
         Route::get('/dokumen/{id}/show', [OrmawaController::class, 'showDokumen'])->name('dokumen.show');
         Route::post('/dokumen/{id}/update', [OrmawaController::class, 'updateDokumen'])->name('dokumen.update');
+        Route::get('/dokumen/{id}', [OrmawaController::class, 'showDokumen'])->name('dokumen.show');
 
         // Profile routes
         Route::get('/profil', [OrmawaController::class, 'profil'])->name('profil');
