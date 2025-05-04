@@ -496,6 +496,7 @@ class OrmawaController extends Controller
                     'perihal' => $dokumen->perihal,
                     'status_dokumen' => ucfirst($dokumen->status_dokumen),
                     'keterangan_revisi' => $dokumen->keterangan_revisi,
+                    'keterangan_pengirim' => $dokumen->keterangan_pengirim,
                     'file_url' => $fileUrl,
                     'tujuan' => $dokumen->dosen ? [
                         'nama' => $dokumen->dosen->nama_dosen,

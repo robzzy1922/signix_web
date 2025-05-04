@@ -105,6 +105,8 @@ class DosenController extends Controller
             'perihal' => $dokumen->perihal,
             'status_dokumen' => ucfirst($dokumen->status_dokumen),
             'keterangan' => $dokumen->keterangan,
+            'keterangan_revisi' => $dokumen->keterangan_revisi,
+            'keterangan_pengirim' => $dokumen->keterangan_pengirim,
             'file' => $dokumen->file,
             'pengaju' => $dokumen->ormawa ? [
                 'nama' => $dokumen->ormawa->namaMahasiswa,

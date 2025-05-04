@@ -361,6 +361,12 @@
                                     <dd class="text-red-600">${data.keterangan_revisi}</dd>
                                 </div>
                                 ` : ''}
+                                ${data.keterangan_pengirim && data.status_dokumen.toLowerCase() === 'sudah direvisi' ? `
+                                <div class="flex justify-between">
+                                    <dt class="font-medium text-gray-600">Keterangan Dari Ormawa:</dt>
+                                    <dd class="text-blue-600">${data.keterangan_pengirim}</dd>
+                                </div>
+                                ` : ''}
                                 ${data.tujuan ? `
                                 <div class="flex justify-between">
                                     <dt class="font-medium text-gray-600">Tujuan:</dt>
