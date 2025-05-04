@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Admin\Auth;
 
-use App\Http\Controllers\Controller;
+use App\Models\Dosen;
 use App\Models\Dokumen;
 use App\Models\Ormawas;
-use App\Models\Dosen;
+use App\Models\Kemahasiswaan;
+use App\Http\Controllers\Controller;
 
 class AdminDashboardController extends Controller
 {
@@ -34,11 +35,20 @@ class AdminDashboardController extends Controller
                     'created_at' => $item->created_at
                 ];
             }))
+            ->merge(Kemahasiswaan::latest()->take(3)->get()->map(function ($item) {
+                return [
+                    'name' => $item->nama_kemahasiswaan,
+                    'email' => $item->email,
+                    'role' => 'Kemahasiswaan',
+                    'created_at' => $item->created_at
+                ];
+            }))
             ->sortByDesc('created_at')
             ->take(5);
 
+
         // Mengambil aktivitas dokumen terbaru
-        $recentActivities = Dokumen::with(['ormawa', 'dosen'])
+        $recentActivities = Dokumen::with(['ormawa', 'dosen', 'kemahasiswaan'])
             ->latest()
             ->take(5)
             ->get();

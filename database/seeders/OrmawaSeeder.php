@@ -10,20 +10,24 @@ class OrmawaSeeder extends Seeder
 {
     public function run()
     {
-        $data = [
-            [
-                'namaMahasiswa' => 'Robi Permana',
-                'namaOrmawa' => 'FORMADIKSI',
-                'nim' => '2305050',
-                'email' => 'robi.permana@example.com',
-                'noHp' => '081234567890',
-                'password' => Hash::make('12345'),
-                'profile' => null,
-            ],
-        ];
+        Ormawas::create([
+            'namaMahasiswa' => 'Robi Permana',
+            'namaOrmawa' => 'HIMA',
+            'nim' => '2305050',
+            'email' => 'Robipermana@gmail.com',
+            'noHp' => '081234567890',
+            'password' => Hash::make('password123'),
+            'profile' => null
+        ]);
 
-        foreach ($data as $ormawa) {
-            Ormawas::firstOrCreate(['nim' => $ormawa['nim']], $ormawa);
-        }
+        Ormawas::create([
+            'namaMahasiswa' => 'Gamma Estu Mahardika',
+            'namaOrmawa' => 'BEM',
+            'nim' => '2305036',
+            'email' => 'Gammaestu@gmail.com',
+            'noHp' => '081234567891',
+            'password' => Hash::make('password123'),
+            'profile' => null
+        ]);
     }
 }

@@ -19,6 +19,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 use App\Models\TandaQr;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 class DosenController extends Controller
 {
@@ -103,6 +105,8 @@ class DosenController extends Controller
             'perihal' => $dokumen->perihal,
             'status_dokumen' => ucfirst($dokumen->status_dokumen),
             'keterangan' => $dokumen->keterangan,
+            'keterangan_revisi' => $dokumen->keterangan_revisi,
+            'keterangan_pengirim' => $dokumen->keterangan_pengirim,
             'file' => $dokumen->file,
             'pengaju' => $dokumen->ormawa ? [
                 'nama' => $dokumen->ormawa->namaMahasiswa,
@@ -129,26 +133,60 @@ class DosenController extends Controller
     public function editProfile()
     {
         $dosen = Auth::guard('dosen')->user();
-        return view('user.dosen.edit_profile', compact('dosen'));
+        return view('user.dosen.profile', compact('dosen'));
     }
 
     public function updateProfile(Request $request)
     {
+        $dosen = Auth::guard('dosen')->user();
+
         $request->validate([
             'namaDosen' => 'required|string|max:255',
             'email' => 'required|email',
             'noHp' => 'required|string|max:15',
+            'currentPassword' => 'nullable|string',
+            'password' => 'nullable|string|min:8',
+            'passwordConfirmation' => 'nullable|same:password',
         ]);
 
-        $dosen = Auth::guard('dosen')->user();
-        $dosen->update([
+        // Check if email is being changed
+        $emailChanged = ($request->email !== $dosen->email);
+
+        // Update basic info
+        $data = [
             'nama_dosen' => $request->namaDosen,
-            'email' => $request->email,
             'no_hp' => $request->noHp,
-        ]);
-        $dosen->save();
+        ];
 
-        return redirect()->route('dosen.profile')->with('success', 'Profile updated successfully');
+        // If email is changed, set it as unverified and store new email in verification_email
+        if ($emailChanged) {
+            $data['verification_email'] = $request->email;
+            // Keep the old email until verified
+        }
+
+        // Update password if provided
+        if ($request->filled('currentPassword') && $request->filled('password')) {
+            // Verify current password
+            if (!\Illuminate\Support\Facades\Hash::check($request->currentPassword, $dosen->password)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['currentPassword' => 'Current password is incorrect']);
+            }
+
+            $data['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+
+        $dosen->update($data);
+
+        // If email changed, redirect to verification page
+        if ($emailChanged) {
+            return redirect()->route('dosen.profile')
+                ->with('verify_email', true)
+                ->with('new_email', $request->email);
+        }
+
+        return redirect()->route('dosen.profile')
+            ->with('success', 'Profile updated successfully');
     }
 
     public function updatePhoto(Request $request)
@@ -254,7 +292,7 @@ class DosenController extends Controller
 
             return response()->json([
                 'success' => true,
-                'qrCodeUrl' => Storage::disk('public')->url($qrCodePath),
+                'qrCodeUrl' => Storage::url($qrCodePath),
                 'message' => 'QR Code berhasil dibuat'
             ]);
 
@@ -471,4 +509,323 @@ class DosenController extends Controller
             ], 500);
         }
     }
+
+    public function getVerificationStatus()
+    {
+        $dosen = Auth::guard('dosen')->user();
+
+        return response()->json([
+            'is_verified' => $dosen->is_email_verified,
+            'email' => $dosen->email,
+            'verification_in_progress' => !empty($dosen->verification_email),
+            'verification_email' => $dosen->verification_email,
+        ]);
+    }
+
+    // Generate OTP and send to email
+    public function sendEmailOTP(Request $request)
+    {
+        try {
+            Log::info('Received send OTP request', $request->all());
+
+            $request->validate([
+                'email' => 'required|email'
+            ]);
+
+            $dosen = Auth::guard('dosen')->user();
+            Log::info('User authenticated', ['user_id' => $dosen->id]);
+
+            // Check if the email is already verified
+            if ($dosen->is_email_verified && $dosen->email === $request->email) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This email is already verified.'
+                ]);
+            }
+
+            // Generate 6-digit OTP
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Store OTP and set expiration time (15 minutes)
+            $dosen->verification_email = $request->email;
+            $dosen->email_verification_code = $otp;
+            $dosen->email_verification_expires_at = Carbon::now()->addMinutes(15);
+            $saved = $dosen->save();
+
+            if (!$saved) {
+                Log::error('Failed to save OTP data to database');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to save verification data. Please try again.'
+                ], 500);
+            }
+
+            Log::info('OTP generated and saved', [
+                'user_id' => $dosen->id,
+                'verification_email' => $dosen->verification_email,
+                'otp' => $otp, // Don't log OTP in production!
+                'expires_at' => $dosen->email_verification_expires_at
+            ]);
+
+            // Send email with OTP
+            try {
+                $this->sendOTPEmail($dosen->verification_email, $otp, $dosen->nama_dosen);
+                Log::info('OTP email sent successfully');
+
+                // For development, include OTP in response
+                if (config('app.debug')) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'OTP sent to your email. Please check your inbox.',
+                        'debug_otp' => $otp
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'OTP sent to your email. Please check your inbox.'
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send OTP email: ' . $e->getMessage(), [
+                    'exception' => get_class($e),
+                    'line' => $e->getLine(),
+                    'file' => $e->getFile()
+                ]);
+
+                // For development, return success with OTP even if email fails
+                if (config('app.debug')) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Email sending failed but OTP generated. For debugging: ' . $otp,
+                        'debug_otp' => $otp
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send email. Please try again.'
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send OTP: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if (config('app.debug')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send OTP: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send OTP. Please try again.'
+            ], 500);
+        }
+    }
+
+    // Verify the OTP
+    public function verifyEmailOTP(Request $request)
+    {
+        try {
+            $request->validate([
+                'otp' => 'required|numeric|digits:6'
+            ]);
+
+            $dosen = Auth::guard('dosen')->user();
+
+            // Check if OTP is expired
+            if (Carbon::now()->isAfter($dosen->email_verification_expires_at)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OTP has expired. Please request a new one.'
+                ]);
+            }
+
+            // Verify OTP
+            if ($request->otp != $dosen->email_verification_code) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid OTP. Please try again.'
+                ]);
+            }
+
+            // Update email and verification status
+            $dosen->email = $dosen->verification_email;
+            $dosen->is_email_verified = true;
+            $dosen->email_verified_at = Carbon::now();
+            $dosen->email_verification_code = null;
+            $dosen->verification_email = null;
+            $dosen->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email verified successfully!'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to verify OTP: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to verify OTP. Please try again.'
+            ], 500);
+        }
+    }
+
+    // Resend OTP
+    public function resendOTP()
+    {
+        try {
+            Log::info('Received resend OTP request');
+
+            $dosen = Auth::guard('dosen')->user();
+            Log::info('User authenticated', ['user_id' => $dosen->id]);
+
+            if (!$dosen->verification_email) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No email verification in progress.'
+                ]);
+            }
+
+            // Generate new OTP
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Update OTP and expiration time
+            $dosen->email_verification_code = $otp;
+            $dosen->email_verification_expires_at = Carbon::now()->addMinutes(15);
+            $saved = $dosen->save();
+
+            if (!$saved) {
+                Log::error('Failed to save new OTP data');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to generate new OTP. Please try again.'
+                ], 500);
+            }
+
+            Log::info('New OTP generated for resend', [
+                'user_id' => $dosen->id,
+                'verification_email' => $dosen->verification_email,
+                'otp' => $otp, // Don't log OTP in production!
+                'expires_at' => $dosen->email_verification_expires_at
+            ]);
+
+            // Send email with new OTP
+            try {
+                $this->sendOTPEmail($dosen->verification_email, $otp, $dosen->nama_dosen);
+                Log::info('Resend OTP email sent successfully');
+
+                // For development, include OTP in response
+                if (config('app.debug')) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'New OTP sent to your email. Please check your inbox.',
+                        'debug_otp' => $otp
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'New OTP sent to your email. Please check your inbox.'
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send resend OTP email: ' . $e->getMessage(), [
+                    'exception' => get_class($e),
+                    'line' => $e->getLine(),
+                    'file' => $e->getFile()
+                ]);
+
+                // For development, return success with OTP even if email fails
+                if (config('app.debug')) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Email sending failed but OTP generated. For debugging: ' . $otp,
+                        'debug_otp' => $otp
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send email. Please try again.'
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to resend OTP: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if (config('app.debug')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to resend OTP: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to resend OTP. Please try again.'
+            ], 500);
+        }
+    }
+
+    // Show email verification modal
+    public function showEmailVerification(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $email = $request->input('email');
+
+        // Simpan email baru di session untuk ditampilkan di modal
+        session(['verify_email' => true, 'new_email' => $email]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification modal is ready'
+        ]);
+    }
+
+    // Helper function to send OTP email
+    private function sendOTPEmail($email, $otp, $name)
+    {
+        try {
+            Log::info('Preparing to send OTP email', ['email' => $email]);
+
+            $data = [
+                'otp' => $otp,
+                'name' => $name
+            ];
+
+            Mail::send('emails.otp-verification', $data, function($message) use($email) {
+                $message->to($email)
+                        ->subject('Email Verification Code - Sistem Dokumen Digital');
+            });
+
+            // Check if there were any failures
+            if (Mail::failures()) {
+                Log::error('Failed to send email to: ' . $email, ['failures' => Mail::failures()]);
+                throw new \Exception('Failed to send email: ' . implode(', ', Mail::failures()));
+            }
+
+            Log::info('Email sent successfully to: ' . $email);
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Error sending email: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+            throw $e;
+        }
+    }
+
 }

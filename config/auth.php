@@ -90,7 +90,7 @@ return [
         ],
         'ormawa' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Ormawas::class
+            'model' => App\Models\Ormawas::class,
         ],
         'admin' => [
             'driver' => 'eloquent',
@@ -120,7 +120,13 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+        'ormawa' => [
+            'provider' => 'ormawa',
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

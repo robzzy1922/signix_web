@@ -9,21 +9,21 @@
 </head>
 
 <body class="bg-gray-100">
-    <div class="flex justify-center items-center p-4 min-h-screen">
-        <div class="flex overflow-hidden flex-col w-full max-w-4xl bg-white rounded-lg shadow-lg md:flex-row">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="flex flex-col w-full max-w-4xl overflow-hidden bg-white rounded-lg shadow-lg md:flex-row">
             <div class="hidden w-full bg-blue-50 md:w-1/2 md:flex md:items-center md:justify-center">
                 <img src="{{ asset('images/gambar_login.png') }}" alt="Building"
                     class="object-cover object-center w-full h-full">
             </div>
 
-            <div class="relative p-6 w-full md:w-1/2 md:p-10">
+            <div class="relative w-full p-6 md:w-1/2 md:p-10">
                 <div class="absolute inset-0 md:hidden">
                     <img src="{{ asset('images/gambar_login.png') }}" alt="Building"
                         class="object-cover object-center w-full h-full opacity-5">
                 </div>
 
                 <div class="relative z-10">
-                    <div class="mx-auto mb-8 w-32 md:w-40 md:mx-0">
+                    <div class="w-32 mx-auto mb-8 md:w-40 md:mx-0">
                         <img src="{{ asset('images/logo_signix.png') }}" alt="Logo"
                             class="object-contain w-full h-auto">
                     </div>
@@ -35,7 +35,7 @@
                         <div class="mb-4">
                             <label for="role" class="block mb-2 text-sm text-gray-600 md:text-base">Masuk
                                 Sebagai</label>
-                            <div class="flex items-center bg-white rounded-md border border-gray-300">
+                            <div class="flex items-center bg-white border border-gray-300 rounded-md">
                                 <span class="pl-3 text-gray-500">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20"
                                         fill="currentColor">
@@ -45,7 +45,7 @@
                                     </svg>
                                 </span>
                                 <select id="role" name="role"
-                                    class="px-3 py-2 w-full text-sm text-gray-700 bg-transparent rounded-md md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    class="w-full px-3 py-2 text-sm text-gray-700 bg-transparent rounded-md md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
                                     onchange="toggleInputField()">
                                     <option value="">-</option>
                                     <option value="ormawa">Ormawa</option>
@@ -61,34 +61,34 @@
 
                         <div id="emailField" class="hidden mb-4">
                             <label for="email" class="block mb-2 text-sm text-gray-600 md:text-base">Email</label>
-                            <div class="flex items-center bg-white rounded-md border border-gray-300">
+                            <div class="flex items-center bg-white border border-gray-300 rounded-md">
                                 <input type="email" name="email" id="email"
-                                    class="px-3 py-2 w-full text-sm text-gray-700 bg-transparent rounded-md md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                    class="w-full px-3 py-2 text-sm text-gray-700 bg-transparent rounded-md md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400">
                             </div>
                         </div>
 
                         <div id="nimField" class="mb-4"
                             style="{{ old('role') === 'ormawa' ? 'display: block;' : 'display: none;' }}">
                             <label for="nim" class="block mb-2 text-sm text-gray-600 md:text-base">NIM</label>
-                            <div class="flex items-center bg-white rounded-md border border-gray-300">
+                            <div class="flex items-center bg-white border border-gray-300 rounded-md">
                                 <input type="text" name="nim" id="nim" value="{{ old('nim') }}"
-                                    class="px-3 py-2 w-full text-sm text-gray-700 bg-transparent rounded-md md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                    class="w-full px-3 py-2 text-sm text-gray-700 bg-transparent rounded-md md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400">
                             </div>
                         </div>
 
                         <div id="nipField" class="mb-4"
                             style="{{ old('role') === 'dosen' || old('role') === 'kemahasiswaan' ? 'display: block;' : 'display: none;' }}">
                             <label for="nip" class="block mb-2 text-sm text-gray-600 md:text-base">NIP</label>
-                            <div class="flex items-center bg-white rounded-md border border-gray-300">
+                            <div class="flex items-center bg-white border border-gray-300 rounded-md">
                                 <input type="text" name="nip" id="nip" value="{{ old('nip') }}"
-                                    class="px-3 py-2 w-full text-sm text-gray-700 bg-transparent rounded-md md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                    class="w-full px-3 py-2 text-sm text-gray-700 bg-transparent rounded-md md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400">
                             </div>
                         </div>
 
                         <div class="mb-6" id="passwordField"
                             style="{{ old('role') ? 'display: block;' : 'display: none;' }}">
                             <label for="password" class="block mb-2 text-sm text-gray-600 md:text-base">Password</label>
-                            <div class="flex items-center bg-white rounded-md border border-gray-300">
+                            <div class="flex items-center bg-white border border-gray-300 rounded-md">
                                 <span class="pl-3 text-gray-500">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20"
                                         fill="currentColor">
@@ -98,7 +98,7 @@
                                     </svg>
                                 </span>
                                 <input id="password" name="password" type="password" placeholder="Masukkan Kata sandi"
-                                    class="px-3 py-2 w-full text-sm text-gray-700 bg-transparent rounded-md md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                    class="w-full px-3 py-2 text-sm text-gray-700 bg-transparent rounded-md md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400">
                                 <button type="button" onclick="togglePasswordVisibility()"
                                     class="pr-3 text-gray-500 focus:outline-none">
                                     <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
@@ -121,7 +121,7 @@
                         </div>
 
                         <button type="submit" id="submitButton"
-                            class="hidden py-2 w-full text-sm font-semibold text-white bg-blue-600 rounded-md transition hover:bg-blue-700 md:text-base">Masuk</button>
+                            class="hidden w-full py-2 text-sm font-semibold text-white transition bg-blue-600 rounded-md hover:bg-blue-700 md:text-base">Masuk</button>
                     </form>
 
                     <p class="mt-4 text-xs text-center text-gray-500">
@@ -135,7 +135,7 @@
     </div>
 
     <div id="forgotPasswordSection"
-        class="flex fixed inset-0 justify-center items-center p-4 bg-gray-800 bg-opacity-75">
+        class="flex hidden inset-0 justify-center items-center p-4 bg-gray-800 bg-opacity-75">
         <div class="p-6 mx-4 w-full max-w-sm bg-white rounded-lg shadow-lg md:p-8">
             <div class="flex justify-center mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-500" fill="none" viewBox="0 0 24 24"
@@ -148,13 +148,13 @@
             <p class="mb-4 text-sm text-center text-gray-600 md:text-base">Masukkan email, telepon, atau nama pengguna
                 Anda dan kami akan mengirimkan tautan untuk masuk kembali ke akun Anda.</p>
             <input type="text" placeholder="Email, Telepon, atau Nama Pengguna"
-                class="px-3 py-2 mb-4 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 md:text-base">
+                class="w-full px-3 py-2 mb-4 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 md:text-base">
             <button
-                class="py-2 w-full text-sm font-semibold text-white bg-blue-600 rounded-md transition hover:bg-blue-700 md:text-base">Kirim
+                class="w-full py-2 text-sm font-semibold text-white transition bg-blue-600 rounded-md hover:bg-blue-700 md:text-base">Kirim
                 tautan masuk</button>
             <p class="mt-4 text-sm text-center text-gray-600">Tidak bisa mengatur ulang kata sandi Anda?</p>
             <button onclick="toggleForgotPassword()"
-                class="py-2 mt-4 w-full text-sm font-semibold text-gray-700 bg-gray-200 rounded-md transition hover:bg-gray-300 md:text-base">Kembali
+                class="w-full py-2 mt-4 text-sm font-semibold text-gray-700 transition bg-gray-200 rounded-md hover:bg-gray-300 md:text-base">Kembali
                 ke login</button>
         </div>
     </div>

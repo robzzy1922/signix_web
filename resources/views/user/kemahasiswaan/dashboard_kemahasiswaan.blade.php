@@ -1,6 +1,7 @@
 @extends('layouts.kemahasiswaan')
 @section('title', 'Dashboard Kemahasiswaan')
 @section('content')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <div class="container px-4 py-8 mx-auto">
         <div class="grid grid-cols-1 gap-4 mb-8 md:grid-cols-2 lg:grid-cols-4">
             <!-- Surat yang diajukan -->
@@ -329,11 +330,23 @@
                             <p class="text-sm font-medium text-gray-500">Keterangan</p>
                             <p class="mt-1">${data.keterangan || '-'}</p>
                         </div>
+                        ${data.keterangan_revisi ? `
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Keterangan Revisi</p>
+                            <p class="mt-1 text-red-600">${data.keterangan_revisi}</p>
+                        </div>
+                        ` : ''}
+                        ${data.keterangan_pengirim && data.status_dokumen.toLowerCase() === 'sudah direvisi' ? `
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Keterangan Dari Ormawa</p>
+                            <p class="mt-1 text-blue-600">${data.keterangan_pengirim}</p>
+                        </div>
+                        ` : ''}
                     </div>
                 `;
-            });
 
-        document.getElementById('documentModal').classList.remove('hidden');
+                document.getElementById('documentModal').classList.remove('hidden');
+            });
     }
 
     function closeModal() {

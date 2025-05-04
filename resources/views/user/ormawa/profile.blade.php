@@ -12,6 +12,45 @@
             </div>
         </div>
 
+        <!-- Verification Modal -->
+        <div id="verificationModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transform transition-opacity duration-300 {{ session('verify_email') ? '' : 'hidden' }}">
+            <div class="p-6 mx-4 w-full max-w-md bg-white rounded-lg shadow-xl">
+                <div class="text-center">
+                    <h3 class="mb-2 text-xl font-bold text-gray-900">Verify Your Email</h3>
+                    <div class="mb-6 text-gray-600">
+                        We need to verify your new email address <span id="verificationEmail" class="font-semibold">{{ session('new_email') }}</span>
+                    </div>
+                </div>
+
+                <div id="verificationStep1" class="">
+                    <p class="mb-4 text-sm text-gray-600">Please verify your email by clicking the button below to receive a verification code.</p>
+                    <button id="sendOtpBtn" class="py-3 w-full font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        Send Verification Code
+                    </button>
+                </div>
+
+                <div id="verificationStep2" class="hidden">
+                    <div class="mb-4">
+                        <label for="otpInput" class="block mb-1 text-sm font-medium text-gray-700">Enter 6-Digit Code</label>
+                        <input type="text" id="otpInput" maxlength="6" class="px-3 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter verification code">
+                        <p class="mt-2 text-sm text-gray-600">Code expires in <span id="countdownTimer">15:00</span></p>
+                    </div>
+                    <button id="verifyOtpBtn" class="py-3 mb-3 w-full font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        Verify Code
+                    </button>
+                    <button id="resendOtpBtn" class="py-2 w-full font-medium text-blue-500 bg-white rounded-lg border border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        Resend Code
+                    </button>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <button id="closeModalBtn" class="text-sm text-gray-500 hover:text-gray-700">
+                        Skip for now (you'll need to verify later)
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="mx-auto max-w-3xl bg-white rounded-xl border border-gray-100 shadow-lg">
             <!-- Profile Header -->
             <div class="p-6 bg-gradient-to-bl from-blue-400 to-blue-500 rounded-t-xl border-b">
@@ -23,7 +62,7 @@
                 <div class="flex justify-center items-center space-x-6">
                     <div class="flex relative flex-col items-center">
                         @if($ormawa->profile)
-                        <img src="{{ asset('profiles/' . Auth::guard('ormawa')->user()->profile) }}"
+                        <img src="{{ asset('storage/' . $ormawa->profile) }}"
                         alt="Profile Picture"
                         class="object-cover w-20 h-20 rounded-full">
                         @else
@@ -70,9 +109,15 @@
 
                     <div class="space-y-2">
                         <label for="email" class="block text-sm font-semibold text-gray-700">Email</label>
-                        <input type="email" name="email" id="email"
-                               value="{{ old('email', $ormawa->email) }}"
-                               class="block px-4 py-3 w-full rounded-lg border border-gray-300 shadow-sm transition duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        <div class="relative">
+                            <input type="email" name="email" id="email"
+                                   value="{{ old('email', $ormawa->email) }}"
+                                   class="block px-4 py-3 pr-12 w-full rounded-lg border border-gray-300 shadow-sm transition duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                            <div class="flex absolute inset-y-0 right-0 items-center pr-3">
+                                <span id="emailStatus" class="text-xs font-medium"></span>
+                            </div>
+                        </div>
+                        <p id="emailHelp" class="mt-1 text-xs text-gray-500">Changing your email requires verification.</p>
                     </div>
 
                     <div class="space-y-2">
@@ -178,9 +223,15 @@
                     }, 300);
                 }, 5000);
             }
+
+            // Check email verification status
+            updateEmailVerificationStatus();
+
+            // Setup verification modal handlers
+            setupVerificationHandlers();
         });
 
-        // Add this new function
+        // Toggle password visibility
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
             const button = input.nextElementSibling;
@@ -195,6 +246,228 @@
                 input.type = 'password';
                 eyeOpen.classList.remove('hidden');
                 eyeClosed.classList.add('hidden');
+            }
+        }
+
+        // Update email verification status indicator
+        function updateEmailVerificationStatus() {
+            fetch('{{ route('ormawa.email.verification.status') }}')
+                .then(response => response.json())
+                .then(data => {
+                    const statusEl = document.getElementById('emailStatus');
+
+                    if (data.is_verified) {
+                        statusEl.textContent = 'Verified';
+                        statusEl.classList.add('text-green-600');
+                        statusEl.innerHTML = `<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>`;
+                    } else {
+                        statusEl.textContent = 'Unverified';
+                        statusEl.classList.add('text-orange-500');
+                        statusEl.innerHTML = `<svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>`;
+                    }
+                })
+                .catch(error => console.error('Error fetching verification status:', error));
+        }
+
+        function setupVerificationHandlers() {
+            const modal = document.getElementById('verificationModal');
+            const closeBtn = document.getElementById('closeModalBtn');
+            const sendOtpBtn = document.getElementById('sendOtpBtn');
+            const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+            const resendOtpBtn = document.getElementById('resendOtpBtn');
+            const step1 = document.getElementById('verificationStep1');
+            const step2 = document.getElementById('verificationStep2');
+            const otpInput = document.getElementById('otpInput');
+            const countdownTimer = document.getElementById('countdownTimer');
+            const verificationEmail = document.getElementById('verificationEmail');
+
+            let countdownInterval;
+
+            // Close modal
+            closeBtn.addEventListener('click', function() {
+                modal.classList.add('hidden');
+                clearInterval(countdownInterval);
+            });
+
+            // Show modal when email input changes
+            const emailInput = document.getElementById('email');
+            emailInput.addEventListener('change', function() {
+                const newEmail = this.value;
+                if (newEmail && newEmail !== '{{ $ormawa->email }}') {
+                    const formData = new FormData();
+                    formData.append('email', newEmail);
+
+                    fetch('{{ route('ormawa.email.show.verification') }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: formData
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }
+            });
+
+            // Function to show alert
+            function showAlert(message, type = 'success') {
+                const alert = document.getElementById('alert');
+                const alertMessage = alert.querySelector('p');
+
+                alert.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'border-green-500', 'border-red-500');
+                alertMessage.classList.remove('text-green-700', 'text-red-700');
+
+                if (type === 'success') {
+                    alert.classList.add('bg-green-100', 'border-green-500');
+                    alertMessage.classList.add('text-green-700');
+                } else {
+                    alert.classList.add('bg-red-100', 'border-red-500');
+                    alertMessage.classList.add('text-red-700');
+                }
+
+                alertMessage.textContent = message;
+                alert.classList.remove('hidden');
+
+                setTimeout(() => {
+                    alert.classList.add('hidden');
+                }, 5000);
+            }
+
+            // Send OTP
+            sendOtpBtn.addEventListener('click', function() {
+                const email = verificationEmail.textContent.trim();
+                const formData = new FormData();
+                formData.append('email', email);
+
+                fetch('{{ route('ormawa.email.send.otp') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        step1.classList.add('hidden');
+                        step2.classList.remove('hidden');
+                        startCountdown();
+                        showAlert(data.message);
+                    } else {
+                        showAlert(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Failed to send OTP. Please try again.', 'error');
+                });
+            });
+
+            // Verify OTP
+            verifyOtpBtn.addEventListener('click', function() {
+                const otp = otpInput.value.trim();
+
+                if (!otp || otp.length !== 6) {
+                    showAlert('Please enter a valid 6-digit code', 'error');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('otp', otp);
+
+                fetch('{{ route('ormawa.email.verify.otp') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message);
+                        verificationModal.classList.add('hidden');
+                        clearInterval(countdownInterval);
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        showAlert(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Failed to verify OTP. Please try again.', 'error');
+                });
+            });
+
+            // Resend OTP
+            resendOtpBtn.addEventListener('click', function() {
+                console.log('Attempting to resend OTP');
+
+                fetch('{{ route('ormawa.email.resend.otp') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Response data:', data);
+                    if (data.success) {
+                        // Reset countdown
+                        clearInterval(countdownInterval);
+                        startCountdown();
+
+                        // Show success notification
+                        showAlert(data.message, 'success');
+                    } else {
+                        showAlert(data.message || 'Failed to resend OTP', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error resending OTP:', error);
+                    showAlert('Failed to resend OTP. Please try again.', 'error');
+                });
+            });
+
+            // Start countdown timer (15 minutes)
+            function startCountdown() {
+                let minutes = 15;
+                let seconds = 0;
+
+                // Clear any existing countdown
+                clearInterval(countdownInterval);
+
+                countdownInterval = setInterval(() => {
+                    if (seconds === 0) {
+                        if (minutes === 0) {
+                            clearInterval(countdownInterval);
+                            countdownTimer.textContent = "Expired";
+                            countdownTimer.classList.add('text-red-500');
+                            return;
+                        }
+                        minutes--;
+                        seconds = 59;
+                    } else {
+                        seconds--;
+                    }
+
+                    countdownTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
             }
         }
     </script>
