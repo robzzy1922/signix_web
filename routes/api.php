@@ -30,6 +30,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ormawa/tujuan-pengajuan', [DocumentController::class, 'getTujuanPengajuan']);
     Route::get('/ormawa/documents/{id}', [DocumentController::class, 'getDocumentDetail']);
     Route::get('/ormawa/documents/{id}/file', [DocumentController::class, 'getDocumentFile']);
+    Route::post('/ormawa/documents/{id}/revisi', [DocumentController::class, 'uploadRevisi']);
+    Route::put('/ormawa/profile', [OrmawaAuthController::class, 'updateProfile']);
+    Route::put('/ormawa/profile/password', [OrmawaAuthController::class, 'updatePassword']);
     
     // Dosen routes
     Route::get('/dosen/document-stats', [DocumentController::class, 'getDosenDocumentStats']);
