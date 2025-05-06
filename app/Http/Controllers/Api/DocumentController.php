@@ -204,7 +204,7 @@ class DocumentController extends Controller
             Log::info('Getting all documents for ormawa:', ['ormawa_id' => $ormawaId]);
 
             $documents = Dokumen::where('id_ormawa', $ormawaId)
-                ->with(['dosen:id,nama_dosen']) // Include dosen data
+                ->with(['dosen:id,nama_dosen', 'ormawa:id,namaMahasiswa']) // Include dosen and ormawa data
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -216,6 +216,7 @@ class DocumentController extends Controller
                         'nomor_surat' => $doc->nomor_surat,
                         'status' => $doc->status_dokumen,
                         'hal' => $doc->perihal,
+                        'namaMahasiswa' => $doc->ormawa->namaMahasiswa ?? 'Unknown',
                         'tujuan' => $doc->dosen->nama_dosen ?? 'Unknown',
                     ];
                 })
@@ -231,6 +232,7 @@ class DocumentController extends Controller
                         'status' => $doc->status_dokumen,
                         'tanggal_pengajuan' => $doc->tanggal_pengajuan,
                         'keterangan' => $doc->keterangan,
+                        'namaMahasiswa' => $doc->ormawa->namaMahasiswa ?? 'Unknown',
                         'tujuan_pengajuan' => $doc->dosen->nama_dosen ?? 'Unknown',
                         'file' => $doc->file,
                     ];
@@ -362,8 +364,8 @@ class DocumentController extends Controller
         $dokumen = \App\Models\Dokumen::findOrFail($id);
 
         // Hapus file lama jika ada
-        if ($dokumen->file && \Storage::disk('public')->exists($dokumen->file)) {
-            \Storage::disk('public')->delete($dokumen->file);
+        if ($dokumen->file && Storage::disk('public')->exists($dokumen->file)) {
+            Storage::disk('public')->delete($dokumen->file);
         }
 
         // Simpan file baru
