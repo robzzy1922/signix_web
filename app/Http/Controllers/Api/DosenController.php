@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Dosen;
 use App\Models\Dokumen;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DosenController extends Controller
 {
@@ -66,5 +68,69 @@ class DosenController extends Controller
             'success' => true,
             'data' => $dokumen
         ]);
+    }
+
+    /**
+     * Mengirim keterangan revisi untuk dokumen
+     * 
+     * @param Request $request
+     * @param int $id ID dokumen
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function submitRevisi(Request $request, $id)
+    {
+        try {
+            // Validasi input
+            $request->validate([
+                'keterangan' => 'required|string|max:1000'
+            ]);
+
+            // Cari dokumen
+            $dokumen = Dokumen::find($id);
+            
+            if (!$dokumen) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dokumen tidak ditemukan'
+                ], 404);
+            }
+
+            // Mulai transaksi
+            DB::beginTransaction();
+            
+            try {
+                // Update status dokumen
+                $dokumen->status_dokumen = 'butuh revisi';
+                $dokumen->keterangan_revisi = $request->keterangan;
+                $dokumen->tanggal_revisi = now();
+                $dokumen->save();
+                
+                DB::commit();
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Dokumen berhasil ditandai untuk revisi',
+                    'data' => [
+                        'id' => $dokumen->id,
+                        'status' => $dokumen->status_dokumen,
+                        'keterangan_revisi' => $dokumen->keterangan_revisi,
+                        'tanggal_revisi' => $dokumen->tanggal_revisi
+                    ]
+                ]);
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw $e;
+            }
+        } catch (\Exception $e) {
+            Log::error('Error in submitRevisi API: ' . $e->getMessage(), [
+                'document_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal melakukan revisi dokumen: ' . $e->getMessage()
+            ], 500);
+        }
     }
 } 

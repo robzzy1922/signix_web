@@ -36,4 +36,14 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Dosen routes
     Route::get('/dosen/document-stats', [DocumentController::class, 'getDosenDocumentStats']);
+    Route::post('/documents/{id}/qr-code', [DocumentController::class, 'addQrCode']);
+});
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Document routes untuk dosen
+    Route::prefix('dosen/documents')->group(function () {
+        Route::get('/{id}/file', [DocumentController::class, 'getFile']);
+        Route::post('/{id}/qr-code', [DocumentController::class, 'addQrCode']);
+        Route::post('/{id}/submitRevisi', [DosenController::class, 'submitRevisi']);
+    });
 });

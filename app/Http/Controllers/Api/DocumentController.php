@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Dokumen;
 use App\Models\Dosen;
+use App\Models\TandaQr;
 use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use setasign\Fpdi\Fpdi;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
@@ -147,8 +150,8 @@ class DocumentController extends Controller
             $stats = [
                 'diajukan' => $documents->where('status_dokumen', 'diajukan')->count(),
                 'disahkan' => $documents->whereIn('status_dokumen', ['ditandatangani', 'disahkan'])->count(),
-                'butuh_revisi' => $documents->whereIn('status_dokumen', ['perlu_revisi', 'revisi', 'butuh_revisi'])->count(),
-                'sudah_direvisi' => $documents->where('status_dokumen', 'sudah_direvisi')->count(),
+                'butuh revisi' => $documents->whereIn('status_dokumen', ['perlu revisi', 'revisi', 'butuh revisi'])->count(),
+                'sudah direvisi' => $documents->where('status_dokumen', 'sudah direvisi')->count(),
             ];
 
             // Debug: tampilkan detail perhitungan
@@ -386,5 +389,119 @@ class DocumentController extends Controller
             'message' => 'Dokumen berhasil direvisi',
             'data' => $dokumen,
         ]);
+    }
+
+    public function getFile($id)
+    {
+        try {
+            $document = Dokumen::findOrFail($id);
+            Log::info('Mengambil file untuk dokumen ID: ' . $id);
+            
+            // Periksa path file yang benar
+            $filePath = 'public/' . $document->file; // Sesuaikan dengan field yang benar
+            
+            if (!Storage::exists($filePath)) {
+                Log::error('File tidak ditemukan: ' . $filePath);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak ditemukan'
+                ], 404);
+            }
+
+            $fileContent = Storage::get($filePath);
+            $base64Content = base64_encode($fileContent);
+
+            Log::info('File berhasil diambil dan dikonversi ke base64');
+            
+            return response()->json([
+                'success' => true,
+                'data' => $base64Content,
+                'filename' => basename($document->file)
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error dalam getFile: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function addQrCode(Request $request, $id)
+    {
+        try {
+            Log::info('Memulai proses penambahan QR Code', [
+                'document_id' => $id,
+                'request_data' => $request->all()
+            ]);
+
+            $document = Dokumen::findOrFail($id);
+            
+            // Validasi request
+            $validated = $request->validate([
+                'x' => 'required|numeric',
+                'y' => 'required|numeric',
+                'page' => 'required|numeric'
+            ]);
+
+            // Generate QR Code
+            $qrData = [
+                'document_id' => $id,
+                'timestamp' => now()->timestamp,
+                'validator_id' => auth()->id()
+            ];
+            
+            $qrString = json_encode($qrData);
+            $qrCode = QrCode::format('png')
+                ->size(300)
+                ->errorCorrection('H')
+                ->generate($qrString);
+                
+            // Simpan QR Code
+            $qrPath = 'qrcodes/doc_' . $id . '_' . time() . '.png';
+            Storage::put('public/' . $qrPath, $qrCode);
+            
+            Log::info('QR Code berhasil dibuat', ['path' => $qrPath]);
+
+            // Simpan data QR ke database
+            $tandaQr = TandaQr::create([
+                'data_qr' => $qrString,
+                'tanggal_pembuatan' => now(),
+                'id_ormawa' => $document->id_ormawa,
+                'id_dosen' => auth()->id(),
+                'id_dokumen' => $id,
+                'posisi_x' => $validated['x'],
+                'posisi_y' => $validated['y'],
+                'halaman' => $validated['page']
+            ]);
+
+            Log::info('Data TandaQr berhasil disimpan', ['tanda_qr_id' => $tandaQr->id]);
+
+            // Update status dokumen
+            $document->update([
+                'status_dokumen' => 'disahkan',
+                'qr_code_path' => $qrPath,
+                'tanggal_pengesahan' => now()
+            ]);
+
+            Log::info('Dokumen berhasil diupdate', ['document_id' => $document->id]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'QR Code berhasil ditambahkan',
+                'data' => [
+                    'qr_path' => asset('storage/' . $qrPath)
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error dalam addQrCode: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambahkan QR Code: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
