@@ -46,6 +46,8 @@ class KemahasiswaanController extends Controller
               ->orWhere('status_dokumen', 'like', "%{$search}%");
         });
     })
+    ->orderBy('tanggal_pengajuan', 'desc')
+    ->orderBy('created_at', 'desc')
     ->get();
 
 
@@ -84,7 +86,9 @@ class KemahasiswaanController extends Controller
             });
         }
 
-        $documents = $query->orderBy('created_at', 'desc')->paginate(10);
+        $documents = $query->orderBy('tanggal_pengajuan', 'desc')
+                         ->orderBy('created_at', 'desc')
+                         ->paginate(10);
 
         return view('user.kemahasiswaan.riwayat_kemahasiswaan', compact('documents'));
     }

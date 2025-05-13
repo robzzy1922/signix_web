@@ -19,12 +19,17 @@ class TandaQr extends Model
         'id_ormawa',
         'id_dosen',
         'id_dokumen',
+        'id_kemahasiswaan',
     ];
 
     // Relationship with Dosen model
     public function dosen()
     {
         return $this->belongsTo(Dosen::class, 'id_dosen');
+    }
+    public function kemahasiswaan()
+    {
+        return $this->belongsTo(Dosen::class, 'id_kemahasiswaan');
     }
 
     // Relationship with Dokumen model

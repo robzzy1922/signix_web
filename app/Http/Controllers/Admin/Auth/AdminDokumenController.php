@@ -10,7 +10,8 @@ use Illuminate\Http\Request;
 use App\Models\Kemahasiswaan;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Barryvdh\DomPDF\Facade\Pdf; // Pastikan namespace PDF benar
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Helpers\ChartGenerator;
 
 class AdminDokumenController extends Controller
 {
@@ -53,6 +54,19 @@ class AdminDokumenController extends Controller
         $dokumens = Dokumen::whereBetween('created_at', [$startDate, $endDate])
                         ->orderBy('created_at', 'desc')
                         ->get();
+
+        // Pisahkan dokumen berdasarkan sumbernya
+        $dokumenOrmawa = $dokumens->filter(function($doc) {
+            return !empty($doc->id_ormawa);
+        });
+
+        $dokumenDosen = $dokumens->filter(function($doc) {
+            return !empty($doc->id_dosen);
+        });
+
+        $dokumenKemahasiswaan = $dokumens->filter(function($doc) {
+            return !empty($doc->id_kemahasiswaan);
+        });
 
         // Menghitung statistik dokumen
         $totalDocuments = $dokumens->count();
@@ -114,10 +128,128 @@ class AdminDokumenController extends Controller
                         ->limit(5)
                         ->get();
 
+        // Prepare monthly statistics data for charts
+        $monthlyStats = DB::table('dokumens')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+                DB::raw('COUNT(CASE WHEN status_dokumen = "diajukan" THEN 1 END) as total_diajukan'),
+                DB::raw('COUNT(CASE WHEN status_dokumen = "disahkan" THEN 1 END) as total_disahkan'),
+                DB::raw('COUNT(CASE WHEN status_dokumen = "direvisi" OR status_dokumen = "butuh_revisi" THEN 1 END) as total_revisi')
+            )
+            ->groupBy('month')
+            ->orderBy('month', 'asc')
+            ->get();
+
+        // Get user activity data from database
+        $ormawaActivity = DB::table('dokumens')
+            ->join('ormawas', 'dokumens.id_ormawa', '=', 'ormawas.id')
+            ->whereBetween('dokumens.created_at', [$startDate, $endDate])
+            ->count();
+
+        $dosenActivity = DB::table('dokumens')
+            ->join('dosen', 'dokumens.id_dosen', '=', 'dosen.id')
+            ->whereBetween('dokumens.created_at', [$startDate, $endDate])
+            ->count();
+
+        $kemahasiswaanActivity = DB::table('dokumens')
+            ->join('kemahasiswaan', 'dokumens.id_kemahasiswaan', '=', 'kemahasiswaan.id')
+            ->whereBetween('dokumens.created_at', [$startDate, $endDate])
+            ->count();
+
+        // Get detailed monthly activity for each user type
+        $ormawaMonthly = DB::table('dokumens')
+            ->join('ormawas', 'dokumens.id_ormawa', '=', 'ormawas.id')
+            ->whereBetween('dokumens.created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('DATE_FORMAT(dokumens.created_at, "%Y-%m") as month'),
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy('month')
+            ->orderBy('month', 'asc')
+            ->get();
+
+        $dosenMonthly = DB::table('dokumens')
+            ->join('dosen', 'dokumens.id_dosen', '=', 'dosen.id')
+            ->whereBetween('dokumens.created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('DATE_FORMAT(dokumens.created_at, "%Y-%m") as month'),
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy('month')
+            ->orderBy('month', 'asc')
+            ->get();
+
+        $kemahasiswaanMonthly = DB::table('dokumens')
+            ->join('kemahasiswaan', 'dokumens.id_kemahasiswaan', '=', 'kemahasiswaan.id')
+            ->whereBetween('dokumens.created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('DATE_FORMAT(dokumens.created_at, "%Y-%m") as month'),
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy('month')
+            ->orderBy('month', 'asc')
+            ->get();
+
+        // Prepare user activity data for chart
+        $userActivityData = [
+            'labels' => ['Ormawa', 'Dosen', 'Kemahasiswaan'],
+            'datasets' => [
+                [
+                    'data' => [$ormawaActivity, $dosenActivity, $kemahasiswaanActivity]
+                ]
+            ]
+        ];
+
+        // Format monthly stats for charts
+        $monthlyChartData = [
+            'labels' => $monthlyStats->pluck('month')->map(function($month) {
+                return Carbon::createFromFormat('Y-m', $month)->format('F Y');
+            }),
+            'datasets' => [
+                [
+                    'label' => 'Dokumen Diajukan',
+                    'data' => $monthlyStats->pluck('total_diajukan'),
+                ],
+                [
+                    'label' => 'Dokumen Disahkan',
+                    'data' => $monthlyStats->pluck('total_disahkan'),
+                ],
+                [
+                    'label' => 'Dokumen Revisi',
+                    'data' => $monthlyStats->pluck('total_revisi'),
+                ]
+            ]
+        ];
+
+        // Prepare monthly activity data for each user type
+        $userMonthlyActivityData = [
+            'labels' => $monthlyStats->pluck('month')->map(function($month) {
+                return Carbon::createFromFormat('Y-m', $month)->format('F Y');
+            }),
+            'datasets' => [
+                [
+                    'label' => 'Aktivitas Ormawa',
+                    'data' => $ormawaMonthly->pluck('total'),
+                ],
+                [
+                    'label' => 'Aktivitas Dosen',
+                    'data' => $dosenMonthly->pluck('total'),
+                ],
+                [
+                    'label' => 'Aktivitas Kemahasiswaan',
+                    'data' => $kemahasiswaanMonthly->pluck('total'),
+                ]
+            ]
+        ];
+
         // Jika request adalah untuk preview, tampilkan halaman preview
         if ($request->has('preview')) {
             return view('admin.dokumen.report_preview', compact(
                 'dokumens',
+                'dokumenOrmawa',
+                'dokumenDosen',
+                'dokumenKemahasiswaan',
                 'startDate',
                 'endDate',
                 'totalDocuments',
@@ -132,14 +264,20 @@ class AdminDokumenController extends Controller
                 'kemahasiswaanCount',
                 'mostActiveOrmawas',
                 'mostActiveDosens',
-                'mostActiveKemahasiswaan'
+                'mostActiveKemahasiswaan',
+                'monthlyChartData',
+                'userActivityData',
+                'userMonthlyActivityData'
             ));
         }
 
         try {
-            // Generate PDF
-            $pdf = PDF::loadView('admin.dokumen.report_pdf', compact(
+            // Gunakan PDF facade dengan benar
+            $pdf = Pdf::loadView('admin.dokumen.report_pdf', compact(
                 'dokumens',
+                'dokumenOrmawa',
+                'dokumenDosen',
+                'dokumenKemahasiswaan',
                 'startDate',
                 'endDate',
                 'totalDocuments',
@@ -154,11 +292,32 @@ class AdminDokumenController extends Controller
                 'kemahasiswaanCount',
                 'mostActiveOrmawas',
                 'mostActiveDosens',
-                'mostActiveKemahasiswaan'
+                'mostActiveKemahasiswaan',
+                'monthlyChartData',
+                'userActivityData',
+                'userMonthlyActivityData'
             ));
 
-            // Return PDF untuk download
-            return $pdf->download('laporan-mingguan-' . $startDate->format('d-m-Y') . '-sampai-' . $endDate->format('d-m-Y') . '.pdf');
+            // Set options untuk PDF
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isPhpEnabled' => true,
+                'isRemoteEnabled' => true,
+                'margin-top' => 10,
+                'margin-right' => 10,
+                'margin-bottom' => 10,
+                'margin-left' => 10,
+                'dpi' => 150,
+                'enable-javascript' => false,
+                'no-stop-slow-scripts' => false,
+                'enable-smart-shrinking' => true
+            ]);
+
+            // Set paper size dan orientasi
+            $pdf->setPaper('A4', 'portrait');
+
+            // Download PDF
+            return $pdf->download('laporan-dokumen-' . $startDate->format('d-m-Y') . '-sampai-' . $endDate->format('d-m-Y') . '.pdf');
         } catch (\Exception $e) {
             // Debug error
             return back()->with('error', 'Terjadi kesalahan saat membuat PDF: ' . $e->getMessage());

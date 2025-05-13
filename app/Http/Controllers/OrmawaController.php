@@ -33,7 +33,9 @@ class OrmawaController extends Controller
             $query->where('status_dokumen', $request->status);
         }
 
-        $dokumens = $query->latest()->get();
+        $dokumens = $query->orderBy('tanggal_pengajuan', 'desc')
+                         ->orderBy('created_at', 'desc')
+                         ->get();
 
         $countDiajukan = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id())
                                 ->where('status_dokumen', 'diajukan')->count();
@@ -144,7 +146,9 @@ class OrmawaController extends Controller
             $query->where('status_dokumen', $request->status);
         }
 
-        $dokumens = $query->latest()->get();
+        $dokumens = $query->orderBy('tanggal_pengajuan', 'desc')
+                         ->orderBy('created_at', 'desc')
+                         ->get();
 
         return view('user.ormawa.riwayat_ormawa', compact('dokumens'));
     }
