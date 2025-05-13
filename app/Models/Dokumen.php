@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Log;
 use App\Models\Ormawas;
 use App\Models\Dosen;
 use App\Models\Kemahasiswaan;
@@ -38,6 +39,33 @@ class Dokumen extends Model
     protected $casts = [
         'tanggal_verifikasi' => 'datetime',
     ];
+
+    public function getFilePathAttribute()
+    {
+        // Hapus prefix 'dokumen/' jika sudah ada di path
+        $filePath = str_replace('dokumen/dokumen/', 'dokumen/', $this->file);
+        return storage_path('app/public/' . $filePath);
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::retrieved(function ($dokumen) {
+            Log::info('Document retrieved', [
+                'id' => $dokumen->id,
+                'file' => $dokumen->file,
+                'full_path' => $dokumen->getFilePathAttribute()
+            ]);
+        });
+
+        static::saving(function ($dokumen) {
+            // Pastikan path file konsisten saat menyimpan
+            if ($dokumen->file) {
+                $dokumen->file = str_replace('dokumen/dokumen/', 'dokumen/', $dokumen->file);
+            }
+        });
+    }
 
     // Relationship with Ormawa
     public function ormawa()

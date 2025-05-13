@@ -26,31 +26,16 @@ class DocumentController extends Controller
                 'catatan' => 'nullable|string',
             ]);
 
-            // Simpan file dokumen
             $file = $request->file('dokumen');
             $fileName = time() . '_' . $file->getClientOriginalName();
             
-            // Pastikan folder dokumen ada
-            if (!Storage::exists('public/dokumen')) {
-                Storage::makeDirectory('public/dokumen');
-            }
+            // Simpan di folder dokumen
+            $filePath = $file->storeAs('dokumen', $fileName, 'public');
             
-            // Simpan file dengan path yang benar
-            $filePath = $file->storeAs('public/dokumen', $fileName);
-            
-            // Log path file
-            Log::info('File uploaded:', [
-                'original_name' => $file->getClientOriginalName(),
-                'stored_path' => $filePath,
-                'storage_path' => Storage::path($filePath),
-                'exists' => Storage::exists($filePath)
-            ]);
-
-            // Buat dokumen baru
             $dokumen = new Dokumen();
             $dokumen->nomor_surat = $request->nomor_surat;
             $dokumen->perihal = $request->hal;
-            $dokumen->file = str_replace('public/', '', $filePath); // Simpan path relatif
+            $dokumen->file = $filePath; // Path sudah benar tanpa public/
             $dokumen->keterangan = $request->catatan;
             $dokumen->tanggal_pengajuan = now();
             $dokumen->status_dokumen = 'diajukan';
@@ -58,14 +43,6 @@ class DocumentController extends Controller
             $dokumen->id_dosen = (int)$request->tujuan_pengajuan;
 
             $dokumen->save();
-
-            // Log dokumen yang disimpan
-            Log::info('Document saved:', [
-                'id' => $dokumen->id,
-                'file_path' => $dokumen->file,
-                'storage_path' => Storage::path('public/' . $dokumen->file),
-                'exists' => Storage::exists('public/' . $dokumen->file)
-            ]);
 
             return response()->json([
                 'success' => true,
@@ -394,32 +371,48 @@ class DocumentController extends Controller
     public function getFile($id)
     {
         try {
+            Log::info('Fetching document with ID: ' . $id);
+            
             $document = Dokumen::findOrFail($id);
-            Log::info('Mengambil file untuk dokumen ID: ' . $id);
+            $filePath = storage_path('app/public/dokumen/' . $document->file);
             
-            // Periksa path file yang benar
-            $filePath = 'public/' . $document->file; // Sesuaikan dengan field yang benar
+            Log::info('File path: ' . $filePath);
             
-            if (!Storage::exists($filePath)) {
-                Log::error('File tidak ditemukan: ' . $filePath);
+            if (!file_exists($filePath)) {
+                Log::error('File not found at: ' . $filePath);
                 return response()->json([
                     'success' => false,
                     'message' => 'File tidak ditemukan'
                 ], 404);
             }
 
-            $fileContent = Storage::get($filePath);
-            $base64Content = base64_encode($fileContent);
+            // Read file content and encode to base64
+            $fileContent = file_get_contents($filePath);
+            if ($fileContent === false) {
+                throw new \Exception('Gagal membaca file');
+            }
 
-            Log::info('File berhasil diambil dan dikonversi ke base64');
-            
+            // Get file size and mime type
+            $fileSize = filesize($filePath);
+            $mimeType = mime_content_type($filePath);
+
+            Log::info('File details', [
+                'size' => $fileSize,
+                'mime' => $mimeType
+            ]);
+
+            // Chunk the response to handle large files
             return response()->json([
                 'success' => true,
-                'data' => $base64Content,
+                'data' => base64_encode($fileContent),
+                'mime_type' => $mimeType,
                 'filename' => basename($document->file)
-            ]);
+            ])->setEncodingOptions(JSON_UNESCAPED_SLASHES);
+
         } catch (\Exception $e) {
-            Log::error('Error dalam getFile: ' . $e->getMessage());
+            Log::error('Error in getFile: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
@@ -501,6 +494,32 @@ class DocumentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menambahkan QR Code: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function viewDocument($id)
+    {
+        try {
+            $document = Dokumen::findOrFail($id);
+            $filePath = storage_path('app/public/' . $document->file);
+
+            if (!file_exists($filePath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak ditemukan'
+                ], 404);
+            }
+
+            // Kirim file PDF asli
+            return response()->file($filePath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . basename($document->file) . '"'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
             ], 500);
         }
     }

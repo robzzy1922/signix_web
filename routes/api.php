@@ -46,4 +46,25 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/{id}/qr-code', [DocumentController::class, 'addQrCode']);
         Route::post('/{id}/submitRevisi', [DosenController::class, 'submitRevisi']);
     });
+    
+    // Document routes untuk dosen dan ormawa
+    Route::prefix('documents')->group(function () {
+        Route::get('/{id}/file', [DocumentController::class, 'getFile']);
+    });
+    
+    // Specific dosen routes
+    Route::prefix('dosen/documents')->group(function () {
+        Route::get('/{id}/file', [DocumentController::class, 'getFile']);
+    });
+    
+    // Specific ormawa routes
+    Route::prefix('ormawa/documents')->group(function () {
+        Route::get('/{id}/file', [DocumentController::class, 'getFile']);
+    });
+    
+    // Additional dosen routes
+    Route::prefix('dosen')->group(function () {
+        Route::get('documents/{id}/view', [DocumentController::class, 'viewDocument']);
+        Route::get('documents/{id}/file', [DocumentController::class, 'viewDocument']); // Alias untuk kompabilitas
+    });
 });
