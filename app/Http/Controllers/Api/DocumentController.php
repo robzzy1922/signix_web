@@ -139,7 +139,7 @@ class DocumentController extends Controller
                     'diajukan' => $documents->where('status_dokumen', 'diajukan')->count(),
                     'ditandatangani/disahkan' => $documents->whereIn('status_dokumen', ['ditandatangani', 'disahkan'])->count(),
                     'perlu_revisi (all)' => $documents->whereIn('status_dokumen', ['perlu_revisi', 'revisi', 'butuh_revisi'])->count(),
-                    'sudah_direvisi' => $documents->where('status_dokumen', 'sudah_direvisi')->count(),
+                    'sudah direvisi' => $documents->where('status_dokumen', 'sudah direvisi')->count(),
                 ]
             ]);
 
@@ -522,5 +522,22 @@ class DocumentController extends Controller
                 'message' => 'Error: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function downloadFile($id)
+    {
+        $document = Dokumen::findOrFail($id);
+        $filePath = storage_path('app/public/' . $document->file);
+
+        if (!file_exists($filePath)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->download($filePath, basename($document->file), [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 }

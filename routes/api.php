@@ -33,6 +33,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/ormawa/documents/{id}/revisi', [DocumentController::class, 'uploadRevisi']);
     Route::put('/ormawa/profile', [OrmawaAuthController::class, 'updateProfile']);
     Route::put('/ormawa/profile/password', [OrmawaAuthController::class, 'updatePassword']);
+    Route::get('/ormawa/documents/{id}/download', [DocumentController::class, 'downloadFile']);
+    Route::get('/ormawa/documents/{id}/view', [DocumentController::class, 'viewDocument']);
     
     // Dosen routes
     Route::get('/dosen/document-stats', [DocumentController::class, 'getDosenDocumentStats']);
@@ -45,6 +47,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/{id}/file', [DocumentController::class, 'getFile']);
         Route::post('/{id}/qr-code', [DocumentController::class, 'addQrCode']);
         Route::post('/{id}/submitRevisi', [DosenController::class, 'submitRevisi']);
+        Route::get('/{id}/download', [DocumentController::class, 'downloadFile']);
     });
     
     // Document routes untuk dosen dan ormawa
