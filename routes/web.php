@@ -59,6 +59,10 @@ Route::middleware(['auth:ormawa'])->group(function () {
         Route::post('/email/resend-otp', [EmailVerificationController::class, 'resendOTP'])->name('email.resend.otp');
         Route::get('/email/verification-status', [OrmawaController::class, 'getVerificationStatus'])->name('email.verification.status');
         Route::post('/email/show-verification', [OrmawaController::class, 'showEmailVerification'])->name('email.show.verification');
+
+        // Ormawa routes for state pattern - perbarui ke resubmitDokumen
+        Route::post('/dokumen/{id}/resubmit', [OrmawaController::class, 'resubmitDokumen'])
+            ->name('dokumen.resubmit');
     });
 });
 
@@ -101,7 +105,10 @@ Route::middleware(['auth:dosen'])->prefix('dosen')->name('dosen.')->group(functi
     Route::get('/verify/document/{id}', [DosenController::class, 'verifyDocument'])
         ->name('verify.document');
 
-    Route::post('/dokumen/{id}/revisi', [DosenController::class, 'submitRevisi'])->name('dokumen.revisi');
+    // Dosen state pattern route - submit revisi
+    Route::post('/dokumen/{id}/revisi', [DosenController::class, 'submitRevisi'])
+        ->name('dokumen.revisi');
+
     Route::post('/dosen/dokumen/{id}/revisi', [DosenController::class, 'submitRevisi'])
         ->name('dosen.dokumen.revisi')
         ->middleware('auth:dosen');

@@ -21,9 +21,17 @@ use App\Models\TandaQr;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
+use App\Services\DocumentStateService;
 
 class DosenController extends Controller
 {
+    protected $documentStateService;
+
+    public function __construct(DocumentStateService $documentStateService)
+    {
+        $this->documentStateService = $documentStateService;
+    }
+
     public function dashboardDosen(Request $request)
     {
         $status = $request->input('status');
@@ -477,41 +485,21 @@ class DosenController extends Controller
 
     public function submitRevisi(Request $request, $id)
     {
-        try {
-            $dokumen = Dokumen::findOrFail($id);
+        $dokumen = Dokumen::findOrFail($id);
 
-            $validated = $request->validate([
-                'keterangan' => 'required|string|max:1000'
-            ]);
+        $request->validate([
+            'keterangan_revisi' => 'required|string|max:500',
+        ]);
 
-            DB::beginTransaction();
-            try {
-                $dokumen->status_dokumen = 'butuh revisi';
-                $dokumen->keterangan_revisi = $validated['keterangan'];
-                $dokumen->tanggal_revisi = now();
-                $dokumen->save();
+        // Process revision using state pattern
+        $this->documentStateService->processAction(
+            $dokumen,
+            'revise',
+            ['keterangan_revisi' => $request->keterangan_revisi]
+        );
 
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Dokumen berhasil direvisi'
-                ]);
-            } catch (\Exception $e) {
-                DB::rollback();
-                throw $e;
-            }
-        } catch (\Exception $e) {
-            Log::error('Error in submitRevisi', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal melakukan revisi dokumen: ' . $e->getMessage()
-            ], 500);
-        }
+        return redirect()->route('dosen.dokumen.show', $id)
+            ->with('success', 'Dokumen telah diminta untuk direvisi.');
     }
 
     public function getVerificationStatus()

@@ -14,9 +14,17 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
+use App\Services\DocumentStateService;
 
 class OrmawaController extends Controller
 {
+    protected $documentStateService;
+
+    public function __construct(DocumentStateService $documentStateService)
+    {
+        $this->documentStateService = $documentStateService;
+    }
+
     public function dashboard(Request $request)
     {
         $query = Dokumen::where('id_ormawa', auth()->guard('ormawa')->id());
@@ -747,5 +755,30 @@ class OrmawaController extends Controller
                 'message' => 'Terjadi kesalahan saat menampilkan dokumen'
             ], 500);
         }
+    }
+
+    public function resubmitDokumen(Request $request, $id)
+    {
+        $dokumen = Dokumen::findOrFail($id);
+
+        $request->validate([
+            'document' => 'required|mimes:pdf|max:10240',
+            'keterangan_pengirim' => 'nullable|string|max:500',
+        ]);
+
+        // Upload the new document version
+        $filePath = $request->file('document')->store('documents');
+        $dokumen->file = $filePath;
+        $dokumen->save();
+
+        // Process resubmission using state pattern
+        $this->documentStateService->processAction(
+            $dokumen,
+            'resubmit',
+            ['keterangan_pengirim' => $request->keterangan_pengirim ?? 'Dokumen telah direvisi']
+        );
+
+        return redirect()->route('ormawa.dokumen.show', $id)
+            ->with('success', 'Dokumen telah berhasil diajukan kembali.');
     }
 }
