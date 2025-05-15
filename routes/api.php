@@ -48,6 +48,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/{id}/qr-code', [DocumentController::class, 'addQrCode']);
         Route::post('/{id}/submitRevisi', [DosenController::class, 'submitRevisi']);
         Route::get('/{id}/download', [DocumentController::class, 'downloadFile']);
+        Route::post('/{id}/approve', [DocumentController::class, 'addQrCode']); // Update route untuk approve
+        Route::get('/{id}/preview', [DocumentController::class, 'viewDocument']); // Route untuk preview
     });
     
     // Document routes untuk dosen dan ormawa

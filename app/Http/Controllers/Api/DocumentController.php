@@ -420,80 +420,87 @@ class DocumentController extends Controller
         }
     }
 
+    protected function addQrCodeToPdf($document, $qrPosition)
+    {
+        try {
+            // Get the original PDF path
+            $pdfPath = storage_path('app/public/' . $document->file_path);
+            
+            // Create QR Code
+            $qrContent = route('verify.document', ['id' => $document->id]);
+            $qrImage = QrCode::format('png')
+                            ->size(100)
+                            ->generate($qrContent);
+            
+            // Save QR temporarily
+            $qrTempPath = storage_path('app/temp/qr_' . $document->id . '.png');
+            Storage::makeDirectory('temp');
+            file_put_contents($qrTempPath, $qrImage);
+
+            // Create new PDF with QR
+            $pdf = new Fpdi();
+            
+            // Get total pages
+            $pageCount = $pdf->setSourceFile($pdfPath);
+            
+            // Copy all pages
+            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                $templateId = $pdf->importPage($pageNo);
+                $size = $pdf->getTemplateSize($templateId);
+                
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($templateId);
+                
+                // Add QR to specified page
+                if ($pageNo == $qrPosition['page']) {
+                    $pdf->Image($qrTempPath, $qrPosition['x'], $qrPosition['y'], 30);
+                }
+            }
+            
+            // Save the new PDF
+            $newPdfPath = storage_path('app/public/signed/' . $document->file_name);
+            Storage::makeDirectory('public/signed');
+            $pdf->Output($newPdfPath, 'F');
+            
+            // Update document
+            $document->signed_file_path = 'signed/' . $document->file_name;
+            $document->status = 'disahkan';
+            $document->save();
+            
+            // Clean up
+            unlink($qrTempPath);
+            
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('Error in addQrCodeToPdf: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
     public function addQrCode(Request $request, $id)
     {
         try {
-            Log::info('Memulai proses penambahan QR Code', [
-                'document_id' => $id,
-                'request_data' => $request->all()
-            ]);
-
             $document = Dokumen::findOrFail($id);
             
-            // Validasi request
             $validated = $request->validate([
-                'x' => 'required|numeric',
-                'y' => 'required|numeric',
-                'page' => 'required|numeric'
+                'qr_position' => 'required|array',
+                'qr_position.x' => 'required|numeric',
+                'qr_position.y' => 'required|numeric',
+                'qr_position.page' => 'required|integer|min:1',
             ]);
 
-            // Generate QR Code
-            $qrData = [
-                'document_id' => $id,
-                'timestamp' => now()->timestamp,
-                'validator_id' => auth()->id()
-            ];
-            
-            $qrString = json_encode($qrData);
-            $qrCode = QrCode::format('png')
-                ->size(300)
-                ->errorCorrection('H')
-                ->generate($qrString);
-                
-            // Simpan QR Code
-            $qrPath = 'qrcodes/doc_' . $id . '_' . time() . '.png';
-            Storage::put('public/' . $qrPath, $qrCode);
-            
-            Log::info('QR Code berhasil dibuat', ['path' => $qrPath]);
-
-            // Simpan data QR ke database
-            $tandaQr = TandaQr::create([
-                'data_qr' => $qrString,
-                'tanggal_pembuatan' => now(),
-                'id_ormawa' => $document->id_ormawa,
-                'id_dosen' => auth()->id(),
-                'id_dokumen' => $id,
-                'posisi_x' => $validated['x'],
-                'posisi_y' => $validated['y'],
-                'halaman' => $validated['page']
-            ]);
-
-            Log::info('Data TandaQr berhasil disimpan', ['tanda_qr_id' => $tandaQr->id]);
-
-            // Update status dokumen
-            $document->update([
-                'status_dokumen' => 'disahkan',
-                'qr_code_path' => $qrPath,
-                'tanggal_pengesahan' => now()
-            ]);
-
-            Log::info('Dokumen berhasil diupdate', ['document_id' => $document->id]);
+            $this->addQrCodeToPdf($document, $validated['qr_position']);
 
             return response()->json([
                 'success' => true,
-                'message' => 'QR Code berhasil ditambahkan',
-                'data' => [
-                    'qr_path' => asset('storage/' . $qrPath)
-                ]
+                'message' => 'Dokumen berhasil ditandatangani',
+                'data' => $document
             ]);
-
         } catch (\Exception $e) {
-            Log::error('Error dalam addQrCode: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+            \Log::error('Error in addQrCode: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menambahkan QR Code: ' . $e->getMessage()
+                'message' => 'Gagal menandatangani dokumen: ' . $e->getMessage()
             ], 500);
         }
     }
