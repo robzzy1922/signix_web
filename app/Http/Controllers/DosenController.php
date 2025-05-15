@@ -30,24 +30,26 @@ class DosenController extends Controller
         $search = $request->input('search');
         $dosen_id = auth()->guard('dosen')->user()->id;
 
-        $dokumens = Dokumen::with('dosen') // Eager loading relasi dosen
-    ->where('id_dosen', $dosen_id)
-    ->when($status, function ($query) use ($status) {
-        return $query->where('status_dokumen', $status);
-    })
-    ->when($search, function ($query) use ($search) {
-        return $query->where(function ($q) use ($search) {
-            $q->where('nomor_surat', 'like', "%{$search}%")
-              ->orWhere('tanggal_pengajuan', 'like', "%{$search}%")
-              ->orWhere('perihal', 'like', "%{$search}%")
-              ->orWhereHas('dosen', function ($q) use ($search) {
-                  $q->where('nama_dosen', 'like', "%{$search}%");
-              })
-              ->orWhere('status_dokumen', 'like', "%{$search}%");
-        });
-    })
-    ->get();
+        $query = Dokumen::with('dosen')
+            ->where('id_dosen', $dosen_id);
 
+        if ($status) {
+            $query->where('status_dokumen', $status);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nomor_surat', 'like', "%{$search}%")
+                  ->orWhere('tanggal_pengajuan', 'like', "%{$search}%")
+                  ->orWhere('perihal', 'like', "%{$search}%")
+                  ->orWhereHas('dosen', function ($q) use ($search) {
+                      $q->where('nama_dosen', 'like', "%{$search}%");
+                  })
+                  ->orWhere('status_dokumen', 'like', "%{$search}%");
+            });
+        }
+
+        $dokumens = $query->latest()->get();
 
         $countDiajukan = Dokumen::where('id_dosen', $dosen_id)
             ->where('status_dokumen', 'diajukan')->count();
@@ -401,7 +403,7 @@ class DosenController extends Controller
     public function verifyDocument($id)
     {
         try {
-            $dokumen = Dokumen::with(['dosen', 'ormawa'])->findOrFail($id);
+            $dokumen = Dokumen::with(['dosen', 'ormawa', 'kemahasiswaan'])->findOrFail($id);
 
             if (!$dokumen->is_signed || !$dokumen->kode_pengesahan) {
                 return view('verify.document', [

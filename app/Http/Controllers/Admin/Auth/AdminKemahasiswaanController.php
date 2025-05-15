@@ -51,7 +51,7 @@ class AdminKemahasiswaanController extends Controller
 
     public function index()
     {
-        $kemahasiswaans = Kemahasiswaan::paginate(self::ITEMS_PER_PAGE);
+        $kemahasiswaans = Kemahasiswaan::latest()->paginate(self::ITEMS_PER_PAGE);
         return view('admin.kemahasiswaan.index', compact('kemahasiswaans'));
     }
 
