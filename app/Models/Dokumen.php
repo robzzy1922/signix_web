@@ -30,6 +30,7 @@ class Dokumen extends Model
         'tanggal_verifikasi',
         'keterangan',
         'keterangan_revisi',
+        'keterangan_pengirim',
         'tanggal_revisi',
         'id_ormawa',
         'id_dosen',

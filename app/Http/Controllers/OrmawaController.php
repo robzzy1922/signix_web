@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 
 class OrmawaController extends Controller
 {
@@ -62,9 +63,6 @@ class OrmawaController extends Controller
 
     public function storePengajuan(Request $request)
     {
-        // Tambahkan debug log
-        Log::info('Received request data:', $request->all());
-
         try {
             // Validasi input
             $validated = $request->validate([
@@ -72,19 +70,16 @@ class OrmawaController extends Controller
                 'nama_pengaju' => 'required|string|max:255',
                 'nama_ormawa' => 'required|string|max:255',
                 'tujuan_pengajuan' => 'required|in:dosen,kemahasiswaan',
-                'kepada_tujuan' => 'required',
                 'hal' => 'required|string|max:255',
-                'unggah_dokumen' => 'required|file|mimes:pdf,doc,docx|max:2048',
+                'unggah_dokumen' => 'required|file|mimes:pdf|max:2048',
                 'catatan' => 'nullable|string',
             ]);
 
             // Handle file upload
             if ($request->hasFile('unggah_dokumen')) {
                 $file = $request->file('unggah_dokumen');
-                $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+                $fileName = time() . '_' . $request->nomor_surat . '_' . str_replace(' ', '_', $file->getClientOriginalName());
                 $filePath = $file->storeAs('dokumen', $fileName, 'public');
-
-                Log::info('File uploaded successfully:', ['path' => $filePath]);
             } else {
                 throw new \Exception('File tidak ditemukan');
             }
@@ -102,20 +97,21 @@ class OrmawaController extends Controller
             // Set id_dosen atau id_kemahasiswaan berdasarkan tujuan
             if ($request->tujuan_pengajuan === 'dosen') {
                 $dokumen->id_dosen = $request->kepada_tujuan;
+                $dokumen->id_kemahasiswaan = null;
             } else {
-                $dokumen->id_kemahasiswaan = $request->kepada_tujuan;
+                $dokumen->id_kemahasiswaan = $request->kepada_kemahasiswaan;
+                $dokumen->id_dosen = null;
             }
 
             // Save document
-            $saved = $dokumen->save();
-            Log::info('Document save attempt:', ['success' => $saved, 'document_id' => $dokumen->id]);
-
-            if (!$saved) {
+            if (!$dokumen->save()) {
+                // Hapus file jika gagal menyimpan ke database
+                Storage::disk('public')->delete($filePath);
                 throw new \Exception('Gagal menyimpan dokumen ke database');
             }
 
             return redirect()
-                ->route('ormawa.pengajuan')
+                ->route('ormawa.dashboard')
                 ->with('success', 'Dokumen berhasil diajukan!');
 
         } catch (\Exception $e) {
@@ -451,29 +447,109 @@ class OrmawaController extends Controller
     public function showDokumen($id)
     {
         try {
-            $dokumen = Dokumen::with(['dosen', 'ormawa'])
+            // Log request for debugging
+            Log::info('Show dokumen request', [
+                'id' => $id,
+                'user_id' => auth()->guard('ormawa')->id()
+            ]);
+
+            $dokumen = Dokumen::with(['dosen', 'ormawa', 'kemahasiswaan'])
                 ->where('id', $id)
                 ->where('id_ormawa', auth()->guard('ormawa')->id())
                 ->firstOrFail();
 
-            return response()->json([
-                'id' => $dokumen->id,
-                'nomor_surat' => $dokumen->nomor_surat,
-                'tanggal_pengajuan' => $dokumen->tanggal_pengajuan,
-                'perihal' => $dokumen->perihal,
-                'status_dokumen' => $dokumen->status_dokumen,
-                'keterangan_revisi' => $dokumen->keterangan_revisi,
-                'file_url' => asset('storage/' . $dokumen->file)
+            // Periksa apakah file ada
+            if (!$dokumen->file) {
+                Log::warning('Document file path is missing', ['dokumen_id' => $id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File dokumen tidak ditemukan'
+                ], 404);
+            }
+
+            $filePath = 'dokumen/' . basename($dokumen->file);
+
+            // Check if file exists in storage
+            if (!Storage::disk('public')->exists($filePath)) {
+                Log::warning('Document file not found in storage', [
+                    'dokumen_id' => $id,
+                    'file_path' => $filePath
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File dokumen tidak ditemukan di server'
+                ], 404);
+            }
+
+            // Generate URL yang valid untuk file
+            $fileUrl = asset('storage/' . $filePath);
+
+            // Format tanggal ke format yang lebih readable
+            $tanggalPengajuan = \Carbon\Carbon::parse($dokumen->tanggal_pengajuan)->format('d F Y');
+
+            $response = [
+                'success' => true,
+                'data' => [
+                    'id' => $dokumen->id,
+                    'nomor_surat' => $dokumen->nomor_surat,
+                    'tanggal_pengajuan' => $tanggalPengajuan,
+                    'perihal' => $dokumen->perihal,
+                    'status_dokumen' => ucfirst($dokumen->status_dokumen),
+                    'keterangan_revisi' => $dokumen->keterangan_revisi,
+                    'keterangan_pengirim' => $dokumen->keterangan_pengirim,
+                    'file_url' => $fileUrl,
+                    'tujuan' => $dokumen->dosen ? [
+                        'nama' => $dokumen->dosen->nama_dosen,
+                        'jenis' => 'Dosen'
+                    ] : ($dokumen->kemahasiswaan ? [
+                        'nama' => $dokumen->kemahasiswaan->nama_kemahasiswaan,
+                        'jenis' => 'Kemahasiswaan'
+                    ] : null)
+                ]
+            ];
+
+            // Log success
+            Log::info('Document successfully retrieved', [
+                'dokumen_id' => $id,
+                'status' => $dokumen->status_dokumen
             ]);
+
+            return response()->json($response, 200, ['Content-Type' => 'application/json']);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::warning('Document not found', [
+                'id' => $id,
+                'user_id' => auth()->guard('ormawa')->id()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Dokumen tidak ditemukan'
+            ], 404);
         } catch (\Exception $e) {
-            Log::error('Error in showDokumen: ' . $e->getMessage());
-            return response()->json(['error' => 'Dokumen tidak ditemukan'], 404);
+            Log::error('Error in showDokumen: ' . $e->getMessage(), [
+                'id' => $id,
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memuat dokumen: ' . $e->getMessage()
+            ], 500);
         }
     }
 
     public function updateDokumen(Request $request, $id)
     {
         try {
+            // Log the request for debugging
+            Log::info('Update dokumen request received', [
+                'id' => $id,
+                'user_id' => auth()->guard('ormawa')->id(),
+                'has_file' => $request->hasFile('dokumen')
+            ]);
+
             $dokumen = Dokumen::findOrFail($id);
 
             // Validate request
@@ -481,33 +557,73 @@ class OrmawaController extends Controller
                 'dokumen' => 'required|file|mimes:pdf|max:2048'
             ]);
 
-            // Delete old file if exists
-            if ($dokumen->file && Storage::disk('public')->exists($dokumen->file)) {
-                Storage::disk('public')->delete($dokumen->file);
+            // Make sure the document belongs to the current user and needs revision
+            if ($dokumen->id_ormawa != auth()->guard('ormawa')->id()) {
+                Log::warning('Unauthorized access attempt', [
+                    'dokumen_id' => $id,
+                    'requesting_user' => auth()->guard('ormawa')->id(),
+                    'document_owner' => $dokumen->id_ormawa
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses untuk merevisi dokumen ini'
+                ], 403);
             }
 
-            // Store new file dengan nama yang lebih terstruktur
-            $file = $request->file('dokumen');
-            $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
-            $filePath = $file->storeAs('dokumen', $fileName, 'public');
+            // Check if the document needs revision
+            if ($dokumen->status_dokumen != 'butuh revisi') {
+                Log::warning('Attempted revision of document not needing revision', [
+                    'dokumen_id' => $id,
+                    'current_status' => $dokumen->status_dokumen
+                ]);
 
-            // Update dokumen
-            $dokumen->update([
-                'file' => $filePath,
-                'status_dokumen' => 'sudah direvisi',
-                'tanggal_revisi' => now() // tambahkan tanggal revisi jika diperlukan
-            ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dokumen ini tidak memerlukan revisi'
+                ], 400);
+            }
 
-            // Log success
-            Log::info('Dokumen berhasil diupdate', [
-                'dokumen_id' => $dokumen->id,
-                'new_file' => $filePath
-            ]);
+            // Use a transaction to ensure database consistency
+            DB::beginTransaction();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Dokumen berhasil diupdate'
-            ]);
+            try {
+                // Delete old file if exists
+                if ($dokumen->file && Storage::disk('public')->exists($dokumen->file)) {
+                    Storage::disk('public')->delete($dokumen->file);
+                }
+
+                // Store new file dengan nama yang lebih terstruktur
+                $file = $request->file('dokumen');
+                $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+                $filePath = $file->storeAs('dokumen', $fileName, 'public');
+
+                // Update dokumen
+                $dokumen->update([
+                    'file' => $filePath,
+                    'status_dokumen' => 'sudah direvisi',
+                    'tanggal_revisi' => now(),
+                    'keterangan_pengirim' => $request->input('keterangan') // Optional revision notes from the sender
+                ]);
+
+                DB::commit();
+
+                // Log success
+                Log::info('Dokumen berhasil direvisi', [
+                    'dokumen_id' => $dokumen->id,
+                    'new_file' => $filePath
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Dokumen berhasil direvisi'
+                ]);
+
+            } catch (\Exception $e) {
+                // Rollback transaction on error
+                DB::rollBack();
+                throw $e;
+            }
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('Dokumen tidak ditemukan', ['id' => $id]);
@@ -524,14 +640,14 @@ class OrmawaController extends Controller
             ], 422);
 
         } catch (\Exception $e) {
-            Log::error('Error saat update dokumen', [
+            Log::error('Error saat revisi dokumen', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat mengupdate dokumen. Silakan coba lagi.'
+                'message' => 'Terjadi kesalahan saat merevisi dokumen: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -547,19 +663,85 @@ class OrmawaController extends Controller
     }
 
     public function showEmailVerification(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email'
-    ]);
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
 
-    $email = $request->input('email');
+        $email = $request->input('email');
 
-    // Simpan email baru di session untuk ditampilkan di modal
-    session(['verify_email' => true, 'new_email' => $email]);
+        // Simpan email baru di session untuk ditampilkan di modal
+        session(['verify_email' => true, 'new_email' => $email]);
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Verification modal is ready'
-    ]);
-}
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification modal is ready'
+        ]);
+    }
+
+    public function downloadDokumen($id)
+    {
+        try {
+            $dokumen = Dokumen::where('id', $id)
+                ->where('id_ormawa', auth()->guard('ormawa')->id())
+                ->firstOrFail();
+
+            $filePath = storage_path('app/public/' . $dokumen->file);
+
+            if (!file_exists($filePath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak ditemukan'
+                ], 404);
+            }
+
+            // Set headers untuk memaksa download
+            $headers = [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . basename($dokumen->file) . '"',
+            ];
+
+            return response()->download($filePath, basename($dokumen->file), $headers);
+
+        } catch (\Exception $e) {
+            Log::error('Error in downloadDokumen: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengunduh dokumen'
+            ], 500);
+        }
+    }
+
+    public function viewDokumen($id)
+    {
+        try {
+            $dokumen = Dokumen::where('id', $id)
+                ->where('id_ormawa', auth()->guard('ormawa')->id())
+                ->firstOrFail();
+
+            $filePath = storage_path('app/public/' . $dokumen->file);
+
+            if (!file_exists($filePath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak ditemukan'
+                ], 404);
+            }
+
+            // Set headers untuk menampilkan PDF di browser
+            $headers = [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . basename($dokumen->file) . '"',
+            ];
+
+            return response()->file($filePath, $headers);
+
+        } catch (\Exception $e) {
+            Log::error('Error in viewDokumen: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menampilkan dokumen'
+            ], 500);
+        }
+    }
 }

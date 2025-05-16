@@ -50,7 +50,7 @@ class AdminDosenController extends Controller
 
     public function index()
     {
-        $dosens = Dosen::paginate(self::ITEMS_PER_PAGE);
+        $dosens = Dosen::latest('created_at')->paginate(self::ITEMS_PER_PAGE);
         return view('admin.dosen.index', compact('dosens'));
     }
 
