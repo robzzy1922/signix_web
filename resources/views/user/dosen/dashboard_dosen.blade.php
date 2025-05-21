@@ -1,299 +1,302 @@
 @extends('layouts.dosen')
 @section('title', 'Dashboard Dosen')
 @section('content')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <div class="container px-4 py-8 mx-auto">
-        <div class="grid grid-cols-1 gap-4 mb-8 md:grid-cols-2 lg:grid-cols-4">
-            <!-- Surat yang diajukan -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'diajukan']) }}" class="block transition-all transform hover:scale-105">
-                <div class="p-6 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl shadow-lg">
-                    <div class="flex flex-col space-y-3">
-                        <div class="flex justify-between items-center">
-                            <div class="flex flex-col items-start">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <div class="p-3 mb-3 bg-yellow-300 bg-opacity-30 rounded-full">
-                                    <i class="text-3xl text-white fas fa-file-alt"></i>
-                                </div>
-                                <h2 class="text-lg font-semibold text-white">Dokumen Diajukan Ormawa</h2>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<div class="container px-4 py-8 mx-auto">
+    <div class="grid grid-cols-1 gap-4 mb-8 md:grid-cols-2 lg:grid-cols-4">
+        <!-- Surat yang diajukan -->
+        <a href="{{ route('dosen.riwayat', ['status' => 'diajukan']) }}"
+            class="block transition-all transform hover:scale-105">
+            <div class="p-6 shadow-lg bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl">
+                <div class="flex flex-col space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex flex-col items-start">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <div class="p-3 mb-3 bg-yellow-300 rounded-full bg-opacity-30">
+                                <i class="text-3xl text-white fas fa-file-alt"></i>
                             </div>
-                            <span class="text-5xl font-bold text-white">{{ $countDiajukan }}</span>
+                            <h2 class="text-lg font-semibold text-white">Dokumen Diajukan Ormawa</h2>
                         </div>
-                        <div class="absolute right-2 bottom-2 opacity-10">
-                            <i class="text-6xl text-white fas fa-folder-open"></i>
-                        </div>
+                        <span class="text-5xl font-bold text-white">{{ $countDiajukan }}</span>
+                    </div>
+                    <div class="absolute right-2 bottom-2 opacity-10">
+                        <i class="text-6xl text-white fas fa-folder-open"></i>
                     </div>
                 </div>
-            </a>
-            <!-- Surat sudah tertanda -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'disahkan']) }}" class="block transition-all transform hover:scale-105">
-                <div class="p-6 bg-gradient-to-br from-green-400 to-green-500 rounded-xl shadow-lg">
-                    <div class="flex flex-col space-y-3">
-                        <div class="flex justify-between items-center">
-                            <div class="flex flex-col items-start">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <div class="p-3 mb-3 bg-green-300 bg-opacity-30 rounded-full">
-                                    <i class="text-3xl text-white fas fa-file-signature"></i>
-                                </div>
-                                <h2 class="text-lg font-semibold text-white">Dokumen Tertanda</h2>
-                            </div>
-                            <span class="text-5xl font-bold text-white">{{ $countDisahkan }}</span>
-                        </div>
-                        <div class="absolute right-2 bottom-2 opacity-10">
-                            <i class="text-6xl text-white fas fa-check-double"></i>
-                        </div>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Surat perlu direvisi -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'butuh_revisi']) }}" class="block transition-all transform hover:scale-105">
-                <div class="p-6 bg-gradient-to-br from-red-400 to-red-500 rounded-xl shadow-lg">
-                    <div class="flex flex-col space-y-3">
-                        <div class="flex justify-between items-center">
-                            <div class="flex flex-col items-start">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                                <div class="p-3 mb-3 bg-red-300 bg-opacity-30 rounded-full">
-                                    <i class="text-3xl text-white fas fa-file-medical-alt"></i>
-                                </div>
-                                <h2 class="text-lg font-semibold text-white">Perlu Direvisi Ormawa</h2>
-                            </div>
-                            <span class="text-5xl font-bold text-white">{{ $countButuhRevisi }}</span>
-                        </div>
-                        <div class="absolute right-2 bottom-2 opacity-10">
-                            <i class="text-6xl text-white fas fa-exclamation-circle"></i>
-                        </div>
-                    </div>
-                </div>
-            </a>
-
-
-            <!-- Surat sudah direvisi -->
-            <a href="{{ route('dosen.riwayat', ['status' => 'direvisi']) }}" class="block transition-all transform hover:scale-105">
-                <div class="p-6 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-lg">
-                    <div class="flex flex-col space-y-3">
-                        <div class="flex justify-between items-center">
-                            <div class="flex flex-col items-start">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                                <div class="p-3 mb-3 bg-blue-300 bg-opacity-30 rounded-full">
-                                    <i class="text-3xl text-white fas fa-file-code"></i>
-                                </div>
-                                <h2 class="text-lg font-semibold text-white">Sudah Direvisi Ormawa</h2>
-                            </div>
-                            <span class="text-5xl font-bold text-white">{{ $countRevisi }}</span>
-                        </div>
-                        <div class="absolute right-2 bottom-2 opacity-10">
-                            <i class="text-6xl text-white fas fa-sync-alt"></i>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <!-- Search and Filter Section -->
-        <div class="flex flex-col justify-between items-center mb-8 space-y-4 md:flex-row md:space-y-0">
-            <div class="w-full md:w-64">
-                <form method="GET" action="{{ route('dosen.dashboard') }}" class="flex">
-                    <div class="relative flex-grow">
-                        <input type="text" name="search" value="{{ request('search') }}"
-                               placeholder="Cari Surat"
-                               class="py-2 pr-4 pl-10 w-full rounded-l-lg border">
-                        <i class="absolute top-3 left-3 text-gray-400 fas fa-search"></i>
-                    </div>
-                    <button type="submit" class="px-4 py-2 text-white bg-blue-500 rounded-r-lg hover:bg-blue-600">
-                        Cari
-                    </button>
-                </form>
             </div>
-            <div>
-                <form method="GET" action="{{ route('dosen.dashboard') }}">
-                    <select name="status" class="px-4 py-2 rounded-lg border" onchange="this.form.submit()">
-                        <option value="">Semua Status</option>
-                        <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
-                        <option value="disahkan" {{ request('status') == 'disahkan' ? 'selected' : '' }}>Tertanda</option>
-                        <option value="butuh revisi" {{ request('status') == 'butuh revisi' ? 'selected' : '' }}>Perlu direvisi</option>
-                        <option value="sudah direvisi" {{ request('status') == 'sudah direvisi' ? 'selected' : '' }}>Sudah direvisi</option>
-                    </select>
-                </form>
+        </a>
+        <!-- Surat sudah tertanda -->
+        <a href="{{ route('dosen.riwayat', ['status' => 'disahkan']) }}"
+            class="block transition-all transform hover:scale-105">
+            <div class="shadow-lg p-9 bg-gradient-to-br from-green-400 to-green-500 rounded-xl">
+                <div class="flex flex-col space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex flex-col items-start">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div class="p-3 mb-3 bg-green-300 rounded-full bg-opacity-30">
+                                <i class="text-3xl text-white fas fa-file-signature"></i>
+                            </div>
+                            <h2 class="text-lg font-semibold text-white">Dokumen Tertanda</h2>
+                        </div>
+                        <span class="text-5xl font-bold text-white">{{ $countDisahkan }}</span>
+                    </div>
+                    <div class="absolute right-2 bottom-2 opacity-10">
+                        <i class="text-6xl text-white fas fa-check-double"></i>
+                    </div>
+                </div>
             </div>
-        </div>
+        </a>
 
-        <!-- Table Section -->
-        <div class="overflow-x-auto p-4 w-full bg-white rounded-lg shadow">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">No. Surat</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Tanggal Pengajuan</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Nama Pengaju</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Hal</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Dari</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @if ($dokumens->isEmpty())
-                        <tr>
-                            <td colspan="6" class="py-8 text-center">
-                                <div class="flex flex-col justify-center items-center">
-                                    <i class="text-4xl text-gray-400 fas fa-inbox"></i>
-                                    <p class="mt-2 text-gray-600">Tidak ada data yang tersedia.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endif
-                    @foreach($dokumens as $dokumen)
-                        <tr data-id="{{ $dokumen->id }}">
-                            <td class="px-6 py-4 whitespace-nowrap" data-nomor>{{ $dokumen->nomor_surat }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap" data-tanggal>{{ $dokumen->tanggal_pengajuan }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap" data-namaPengirim>{{ $dokumen->ormawa->namaMahasiswa }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap" data-perihal>{{ $dokumen->perihal }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap" data-ormawa>{{ $dokumen->ormawa->namaOrmawa }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap" data-status>
-                                @php
-                                    $statusClass = match($dokumen->status_dokumen) {
-                                        'diajukan' => 'bg-yellow-100 text-yellow-800',
-                                        'disahkan' => 'bg-green-100 text-green-800',
-                                        'butuh revisi' => 'bg-red-100 text-red-800',
-                                        'sudah direvisi' => 'bg-blue-100 text-blue-800',
-                                        default => 'bg-gray-100 text-gray-800'
-                                    };
-                                @endphp
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">
-                                    {{ ucfirst($dokumen->status_dokumen) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <a href="#" class="text-indigo-600 hover:text-indigo-900"
-                                   onclick="showModal({{ $dokumen->id }}, '{{ asset('storage/' . $dokumen->file) }}')">
-                                    Lihat Detail
-                                </a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <!-- Surat perlu direvisi -->
+        <a href="{{ route('dosen.riwayat', ['status' => 'butuh_revisi']) }}"
+            class="block transition-all transform hover:scale-105">
+            <div class="shadow-lg p-9 bg-gradient-to-br from-red-400 to-red-500 rounded-xl">
+                <div class="flex flex-col space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex flex-col items-start">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <div class="p-3 mb-3 bg-red-300 rounded-full bg-opacity-30">
+                                <i class="text-3xl text-white fas fa-file-medical-alt"></i>
+                            </div>
+                            <h2 class="text-lg font-semibold text-white">Perlu Direvisi Ormawa</h2>
+                        </div>
+                        <span class="text-5xl font-bold text-white">{{ $countButuhRevisi }}</span>
+                    </div>
+                    <div class="absolute right-2 bottom-2 opacity-10">
+                        <i class="text-6xl text-white fas fa-exclamation-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+
+
+        <!-- Surat sudah direvisi -->
+        <a href="{{ route('dosen.riwayat', ['status' => 'direvisi']) }}"
+            class="block transition-all transform hover:scale-105">
+            <div class="p-8 shadow-lg bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl">
+                <div class="flex flex-col space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex flex-col items-start">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            <div class="p-3 mb-3 bg-blue-300 rounded-full bg-opacity-30">
+                                <i class="text-3xl text-white fas fa-file-code"></i>
+                            </div>
+                            <h2 class="text-lg font-semibold text-white">Sudah Direvisi Ormawa</h2>
+                        </div>
+                        <span class="text-5xl font-bold text-white">{{ $countRevisi }}</span>
+                    </div>
+                    <div class="absolute right-2 bottom-2 opacity-10">
+                        <i class="text-6xl text-white fas fa-sync-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="flex flex-col items-center justify-between mb-8 space-y-4 md:flex-row md:space-y-0">
+        <div class="w-full md:w-64">
+            <form method="GET" action="{{ route('dosen.dashboard') }}" class="flex">
+                <div class="relative flex-grow">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Surat"
+                        class="w-full py-2 pl-10 pr-4 border rounded-l-lg">
+                    <i class="absolute text-gray-400 top-3 left-3 fas fa-search"></i>
+                </div>
+                <button type="submit" class="px-4 py-2 text-white bg-blue-500 rounded-r-lg hover:bg-blue-600">
+                    Cari
+                </button>
+            </form>
+        </div>
+        <div>
+            <form method="GET" action="{{ route('dosen.dashboard') }}">
+                <select name="status" class="px-4 py-2 border rounded-lg" onchange="this.form.submit()">
+                    <option value="">Semua Status</option>
+                    <option value="diajukan" {{ request('status')=='diajukan' ? 'selected' : '' }}>Diajukan</option>
+                    <option value="disahkan" {{ request('status')=='disahkan' ? 'selected' : '' }}>Tertanda</option>
+                    <option value="butuh revisi" {{ request('status')=='butuh revisi' ? 'selected' : '' }}>Perlu
+                        direvisi</option>
+                    <option value="sudah direvisi" {{ request('status')=='sudah direvisi' ? 'selected' : '' }}>Sudah
+                        direvisi</option>
+                </select>
+            </form>
         </div>
     </div>
 
-    <!-- Modal -->
-    <div id="documentModal" class="hidden overflow-y-auto fixed inset-0 z-50">
-        <div class="flex justify-center items-center px-4 min-h-screen">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+    <!-- Table Section -->
+    <div class="w-full p-4 overflow-x-auto bg-white rounded-lg shadow">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">No. Surat</th>
+                    <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Tanggal Pengajuan</th>
+                    <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Nama Pengaju</th>
+                    <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Hal</th>
+                    <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Dari</th>
+                    <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if ($dokumens->isEmpty())
+                <tr>
+                    <td colspan="6" class="py-8 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                            <i class="text-4xl text-gray-400 fas fa-inbox"></i>
+                            <p class="mt-2 text-gray-600">Tidak ada data yang tersedia.</p>
+                        </div>
+                    </td>
+                </tr>
+                @endif
+                @foreach($dokumens as $dokumen)
+                <tr data-id="{{ $dokumen->id }}">
+                    <td class="px-6 py-4 whitespace-nowrap" data-nomor>{{ $dokumen->nomor_surat }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-tanggal>{{ $dokumen->tanggal_pengajuan }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-namaPengirim>{{ $dokumen->ormawa->namaMahasiswa }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-perihal>{{ $dokumen->perihal }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-ormawa>{{ $dokumen->ormawa->namaOrmawa }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-status>
+                        @php
+                        $statusClass = match($dokumen->status_dokumen) {
+                        'diajukan' => 'bg-yellow-100 text-yellow-800',
+                        'disahkan' => 'bg-green-100 text-green-800',
+                        'butuh revisi' => 'bg-red-100 text-red-800',
+                        'sudah direvisi' => 'bg-blue-100 text-blue-800',
+                        default => 'bg-gray-100 text-gray-800'
+                        };
+                        @endphp
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">
+                            {{ ucfirst($dokumen->status_dokumen) }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                        <a href="#" class="text-indigo-600 hover:text-indigo-900"
+                            onclick="showModal({{ $dokumen->id }}, '{{ asset('storage/' . $dokumen->file) }}')">
+                            Lihat Detail
+                        </a>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
 
-            <div class="relative w-full max-w-lg bg-white rounded-lg shadow-xl">
-                <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">Detail Dokumen</h3>
-                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
-                        <span class="sr-only">Close</span>
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
+<!-- Modal -->
+<div id="documentModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"></div>
 
-                <div class="px-6 py-4" id="modalContent">
-                    <!-- Content will be loaded here -->
-                </div>
+        <div class="relative w-full max-w-lg bg-white rounded-lg shadow-xl">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Detail Dokumen</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
+                    <span class="sr-only">Close</span>
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
 
-                <!-- QR Code Editor Modal Content -->
-                <div id="qrCodeEditor" class="hidden">
-                    <div class="relative w-full h-[600px] bg-gray-100">
-                        <!-- PDF Preview -->
-                        <iframe id="pdfFrame" class="w-full h-full"></iframe>
+            <div class="px-6 py-4" id="modalContent">
+                <!-- Content will be loaded here -->
+            </div>
 
-                        <!-- Draggable & Resizable QR Code Container -->
-                        <div id="qrCode" class="hidden absolute bg-white rounded-lg shadow-lg cursor-move"
-                             style="width: 100px; height: 100px; top: 50px; left: 50px;">
-                            <img id="qrImage" src="" alt="QR Code" class="object-contain w-full h-full"/>
-                            <!-- Resize handle -->
-                            <div class="absolute right-0 bottom-0 w-4 h-4 bg-blue-500 rounded-full opacity-50 cursor-se-resize"></div>
+            <!-- QR Code Editor Modal Content -->
+            <div id="qrCodeEditor" class="hidden">
+                <div class="relative w-full h-[600px] bg-gray-100">
+                    <!-- PDF Preview -->
+                    <iframe id="pdfFrame" class="w-full h-full"></iframe>
+
+                    <!-- Draggable & Resizable QR Code Container -->
+                    <div id="qrCode" class="absolute hidden bg-white rounded-lg shadow-lg cursor-move"
+                        style="width: 100px; height: 100px; top: 50px; left: 50px;">
+                        <img id="qrImage" src="" alt="QR Code" class="object-contain w-full h-full" />
+                        <!-- Resize handle -->
+                        <div
+                            class="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 rounded-full opacity-50 cursor-se-resize">
                         </div>
                     </div>
+                </div>
 
-                    <div class="flex justify-end mt-4 space-x-2">
-                        <button onclick="saveQrPosition()"
-                                class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
-                            Simpan Posisi
-                        </button>
-                        <button onclick="cancelQrPosition()"
-                                class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300">
+                <div class="flex justify-end mt-4 space-x-2">
+                    <button onclick="saveQrPosition()"
+                        class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
+                        Simpan Posisi
+                    </button>
+                    <button onclick="cancelQrPosition()"
+                        class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300">
+                        Batal
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col justify-end px-6 py-4 space-y-2 border-t border-gray-200 md:flex-row md:space-y-0 md:space-x-3"
+                id="modalButtons">
+                <button onclick="downloadDocument()"
+                    class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Download
+                </button>
+                <button onclick="viewDocument()"
+                    class="px-4 py-2 text-white bg-yellow-500 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2">
+                    Lihat
+                </button>
+                <button onclick="showRevisiForm()"
+                    class="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                    Revisi
+                </button>
+                <button onclick="closeModal()"
+                    class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                    Tutup
+                </button>
+                <button onclick="editQrCode()"
+                    class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                    Bubuhkan QR Code
+                </button>
+            </div>
+
+            <!-- Form Revisi -->
+            <div id="revisiForm" class="hidden p-6">
+                <form id="formRevisi" class="space-y-4">
+                    @csrf
+                    <div>
+                        <label for="keteranganRevisi" class="block text-sm font-medium text-gray-700">
+                            Keterangan Revisi
+                        </label>
+                        <textarea id="keteranganRevisi" name="keterangan" rows="4"
+                            class="block w-full mt-1 border-gray-800 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            required></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="cancelRevisi()"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
                             Batal
                         </button>
+                        <button type="button" onclick="submitRevisi()"
+                            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+                            Kirim Revisi
+                        </button>
                     </div>
-                </div>
-
-                <div class="flex flex-col justify-end px-6 py-4 space-y-2 border-t border-gray-200 md:flex-row md:space-y-0 md:space-x-3" id="modalButtons">
-                    <button onclick="downloadDocument()"
-                            class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        Download
-                    </button>
-                    <button onclick="viewDocument()"
-                            class="px-4 py-2 text-white bg-yellow-500 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2">
-                        Lihat
-                    </button>
-                    <button onclick="showRevisiForm()"
-                            class="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                        Revisi
-                    </button>
-                    <button onclick="closeModal()"
-                            class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
-                        Tutup
-                    </button>
-                    <button onclick="editQrCode()"
-                            class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                        Bubuhkan QR Code
-                    </button>
-                </div>
-
-                <!-- Form Revisi -->
-                <div id="revisiForm" class="hidden p-6">
-                    <form id="formRevisi" class="space-y-4">
-                        @csrf
-                        <div>
-                            <label for="keteranganRevisi" class="block text-sm font-medium text-gray-700">
-                                Keterangan Revisi
-                            </label>
-                            <textarea
-                                id="keteranganRevisi"
-                                name="keterangan"
-                                rows="4"
-                                class="block mt-1 w-full rounded-md border-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                required
-                            ></textarea>
-                        </div>
-                        <div class="flex justify-end space-x-3">
-                            <button
-                                type="button"
-                                onclick="cancelRevisi()"
-                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                type="button"
-                                onclick="submitRevisi()"
-                                class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
-                            >
-                                Kirim Revisi
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.10.11/interact.min.js"></script>
-    <script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.10.11/interact.min.js"></script>
+<script>
     let currentDocumentId = null;
     let currentFileUrl = null;
 
@@ -307,7 +310,7 @@
             .then(data => {
                 document.getElementById('modalContent').innerHTML = `
                     <div class="space-y-4">
-                        <div class="p-4 mb-4 bg-gray-100 rounded-lg border border-blue-500">
+                        <div class="p-4 mb-4 bg-gray-100 border border-blue-500 rounded-lg">
                             <iframe src="${currentFileUrl}" width="100%" height="500px"></iframe>
                         </div>
                         <div>
@@ -617,6 +620,5 @@
             closeModal();
         }
     });
-    </script>
+</script>
 @endsection
-
