@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\OrmawaAuthController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\DosenController;
 use App\Http\Controllers\Api\DosenAuthController;
+use App\Http\Controllers\Api\DosenApiController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -71,5 +72,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('dosen')->group(function () {
         Route::get('documents/{id}/view', [DocumentController::class, 'viewDocument']);
         Route::get('documents/{id}/file', [DocumentController::class, 'viewDocument']); // Alias untuk kompabilitas
+    });
+
+    Route::middleware('auth:sanctum')->prefix('dosen')->group(function () {
+        // Route to generate/get QR code for a document
+        Route::post('dokumen/{id}/generate-qr', [DosenApiController::class, 'generateQrCodeApi'])->name('api.dosen.dokumen.generateQr');
+
+        // Route to save QR position and embed it into the PDF
+        Route::post('dokumen/{id}/embed-qr', [DosenApiController::class, 'embedQrCodeApi'])->name('api.dosen.dokumen.embedQr');
+
+        // Optional: Route to get document details (if needed separately by mobile)
+        Route::get('dokumen/{id}', [DosenApiController::class, 'showDokumenApi'])->name('api.dosen.dokumen.show');
     });
 });

@@ -212,6 +212,7 @@ class DocumentController extends Controller
                         'hal' => $doc->perihal,
                         'status' => $doc->status_dokumen,
                         'tanggal_pengajuan' => $doc->tanggal_pengajuan,
+                        'tanggal_verifikasi' => $doc->tanggal_verifikasi,
                         'keterangan' => $doc->keterangan,
                         'namaMahasiswa' => $doc->ormawa->namaMahasiswa ?? 'Unknown',
                         'tujuan_pengajuan' => $doc->dosen->nama_dosen ?? 'Unknown',
