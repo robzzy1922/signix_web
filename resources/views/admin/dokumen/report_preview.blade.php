@@ -63,7 +63,7 @@
         <div class="inline-block min-w-full py-2">
             <div class="overflow-hidden bg-white rounded-lg shadow-sm">
                 <!-- Header -->
-                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                     <h2 class="text-xl font-semibold text-gray-800">Preview Laporan Mingguan Dokumen</h2>
                     <a href="{{ route('admin.dokumen.generate-report', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}"
                         class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
@@ -307,44 +307,106 @@
                     <!-- Daftar Dokumen -->
                     <div>
                         <h3 class="mb-4 text-lg font-medium text-gray-900">Daftar Dokumen</h3>
-                        @if($dokumens->count() > 0)
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full text-sm text-left text-gray-800">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3 font-medium">No</th>
-                                        <th scope="col" class="px-6 py-3 font-medium">Tanggal</th>
-                                        <th scope="col" class="px-6 py-3 font-medium">Nomor Surat</th>
-                                        <th scope="col" class="px-6 py-3 font-medium">Pengaju</th>
-                                        <th scope="col" class="px-6 py-3 font-medium">Perihal</th>
-                                        <th scope="col" class="px-6 py-3 font-medium">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                    @foreach($dokumens as $index => $doc)
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4">{{ $index + 1 }}</td>
-                                        <td class="px-6 py-4">{{ $doc->created_at->format('d/m/Y') }}</td>
-                                        <td class="px-6 py-4">{{ $doc->nomor_surat }}</td>
-                                        <td class="px-6 py-4">{{ $doc->ormawa?->namaMahasiswa ?? 'N/A' }}</td>
-                                        <td class="px-6 py-4">{{ $doc->perihal }}</td>
-                                        <td class="px-6 py-4">
-                                            <span class="px-2 py-1 text-xs font-medium rounded-full
-                                                    {{ $doc->status_dokumen == 'diajukan' ? 'bg-yellow-100 text-yellow-800' :
+                        <p class="mb-4 text-sm text-gray-600">Periode: {{ $startDate->format('d F Y') }} - {{
+                            $endDate->format('d F Y') }}</p>
+
+                        <!-- Dokumen yang Ditujukan ke Dosen -->
+                        <div class="mb-8">
+                            <h4 class="mb-3 font-medium text-gray-800 text-md">Dokumen yang Ditujukan ke Dosen</h4>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full text-sm text-left text-gray-800">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 font-medium">No</th>
+                                            <th scope="col" class="px-6 py-3 font-medium">Tanggal</th>
+                                            <th scope="col" class="px-6 py-3 font-medium">Nomor Surat</th>
+                                            <th scope="col" class="px-6 py-3 font-medium">Pengaju</th>
+                                            <th scope="col" class="px-6 py-3 font-medium">Dosen Penerima</th>
+                                            <th scope="col" class="px-6 py-3 font-medium">Perihal</th>
+                                            <th scope="col" class="px-6 py-3 font-medium">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        @forelse($dosenDocs as $index => $doc)
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4">{{ $index + 1 }}</td>
+                                            <td class="px-6 py-4">{{ $doc->created_at->format('d/m/Y') }}</td>
+                                            <td class="px-6 py-4">{{ $doc->nomor_surat }}</td>
+                                            <td class="px-6 py-4">{{ $doc->ormawa?->namaOrmawa ?? 'N/A' }}</td>
+                                            <td class="px-6 py-4">{{ $doc->dosen?->nama_dosen ?? 'N/A' }}</td>
+                                            <td class="px-6 py-4">{{ $doc->perihal }}</td>
+                                            <td class="px-6 py-4">
+                                                <span class="px-2 py-1 text-xs font-medium rounded-full {{
+                                                    $doc->status_dokumen == 'diajukan' ? 'bg-yellow-100 text-yellow-800' :
                                                     ($doc->status_dokumen == 'disahkan' ? 'bg-green-100 text-green-800' :
                                                     ($doc->status_dokumen == 'direvisi' ? 'bg-blue-100 text-blue-800' :
-                                                    'bg-red-100 text-red-800')) }}">
-                                                {{ ucfirst($doc->status_dokumen) }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                                    'bg-red-100 text-red-800'))
+                                                }}">
+                                                    {{ ucfirst($doc->status_dokumen) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                                                Tidak ada dokumen yang ditujukan ke dosen pada periode ini
+                                            </td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        @else
-                        <p class="text-sm text-gray-500">Tidak ada dokumen pada periode ini.</p>
-                        @endif
+
+                        <!-- Dokumen yang Ditujukan ke Kemahasiswaan -->
+                        <div class="mb-8">
+                            <h4 class="mb-3 font-medium text-gray-800 text-md">Dokumen yang Ditujukan ke Kemahasiswaan
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full text-sm text-left text-gray-800">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 font-medium">No</th>
+                                            <th scope="col" class="px-6 py-3 font-medium">Tanggal</th>
+                                            <th scope="col" class="px-6 py-3 font-medium">Nomor Surat</th>
+                                            <th scope="col" class="px-6 py-3 font-medium">Pengaju</th>
+                                            <th scope="col" class="px-6 py-3 font-medium">Staff Penerima</th>
+                                            <th scope="col" class="px-6 py-3 font-medium">Perihal</th>
+                                            <th scope="col" class="px-6 py-3 font-medium">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        @forelse($kemahasiswaanDocs as $index => $doc)
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4">{{ $index + 1 }}</td>
+                                            <td class="px-6 py-4">{{ $doc->created_at->format('d/m/Y') }}</td>
+                                            <td class="px-6 py-4">{{ $doc->nomor_surat }}</td>
+                                            <td class="px-6 py-4">{{ $doc->ormawa?->namaOrmawa ?? 'N/A' }}</td>
+                                            <td class="px-6 py-4">{{ $doc->kemahasiswaan?->nama_kemahasiswaan ?? 'N/A'
+                                                }}</td>
+                                            <td class="px-6 py-4">{{ $doc->perihal }}</td>
+                                            <td class="px-6 py-4">
+                                                <span class="px-2 py-1 text-xs font-medium rounded-full {{
+                                                    $doc->status_dokumen == 'diajukan' ? 'bg-yellow-100 text-yellow-800' :
+                                                    ($doc->status_dokumen == 'disahkan' ? 'bg-green-100 text-green-800' :
+                                                    ($doc->status_dokumen == 'direvisi' ? 'bg-blue-100 text-blue-800' :
+                                                    'bg-red-100 text-red-800'))
+                                                }}">
+                                                    {{ ucfirst($doc->status_dokumen) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                                                Tidak ada dokumen yang ditujukan ke kemahasiswaan pada periode ini
+                                            </td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

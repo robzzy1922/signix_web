@@ -9,6 +9,7 @@ use App\Models\Ormawas;
 use Illuminate\Http\Request;
 use App\Models\Kemahasiswaan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf; // Pastikan namespace PDF benar
 
@@ -40,19 +41,28 @@ class AdminDokumenController extends Controller
 
     public function weeklyReport(Request $request)
     {
-        // Mendapatkan tanggal awal dan akhir
-        $endDate = Carbon::now();
-        $startDate = Carbon::now()->subDays(7);
+        // Mendapatkan tanggal awal dan akhir dari request
+        $startDate = $request->has('start_date') ?
+            Carbon::parse($request->start_date)->startOfDay() :
+            Carbon::now()->subDays(7)->startOfDay();
 
-        if ($request->has('start_date') && $request->has('end_date')) {
-            $startDate = Carbon::parse($request->start_date);
-            $endDate = Carbon::parse($request->end_date);
-        }
+        $endDate = $request->has('end_date') ?
+            Carbon::parse($request->end_date)->endOfDay() :
+            Carbon::now()->endOfDay();
 
-        // Mengambil data dokumen dalam rentang waktu
-        $dokumens = Dokumen::whereBetween('created_at', [$startDate, $endDate])
-                        ->orderBy('created_at', 'desc')
-                        ->get();
+        // Mengambil data dokumen dalam rentang waktu dengan eager loading relasi
+        $dokumens = Dokumen::with(['ormawa', 'dosen', 'kemahasiswaan'])
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get();
+
+        // Memisahkan dokumen berdasarkan penerima
+        $dosenDocs = $dokumens->filter(function($doc) {
+            return !is_null($doc->id_dosen);
+        });
+
+        $kemahasiswaanDocs = $dokumens->filter(function($doc) {
+            return !is_null($doc->id_kemahasiswaan);
+        });
 
         // Menghitung statistik dokumen
         $totalDocuments = $dokumens->count();
@@ -60,64 +70,69 @@ class AdminDokumenController extends Controller
         $pendingDocuments = $dokumens->where('status_dokumen', 'diajukan')->count();
         $revisedDocuments = $dokumens->where('status_dokumen', 'direvisi')->count();
 
-        // Statistik berdasarkan ormawa
-        $ormawaStats = DB::table('dokumens')
-                        ->join('ormawas', 'dokumens.id_ormawa', '=', 'ormawas.id')
-                        ->whereBetween('dokumens.created_at', [$startDate, $endDate])
-                        ->select('ormawas.namaOrmawa', DB::raw('count(*) as total'))
-                        ->groupBy('ormawas.namaOrmawa')
-                        ->get();
-
         // Statistik berdasarkan dosen
         $dosenStats = DB::table('dokumens')
-                        ->join('dosen', 'dokumens.id_dosen', '=', 'dosen.id')
-                        ->whereBetween('dokumens.created_at', [$startDate, $endDate])
-                        ->select('dosen.nama_dosen', DB::raw('count(*) as total'))
-                        ->groupBy('dosen.nama_dosen')
-                        ->get();
+            ->join('dosen', 'dokumens.id_dosen', '=', 'dosen.id')
+            ->whereBetween('dokumens.created_at', [$startDate, $endDate])
+            ->groupBy('dosen.id', 'dosen.nama_dosen')
+            ->select('dosen.nama_dosen', DB::raw('count(*) as total'))
+            ->get();
 
-        // Statistik kemahasiswaan
+        // Statistik berdasarkan kemahasiswaan
         $kemahasiswaanStats = DB::table('dokumens')
-                        ->join('kemahasiswaan', 'dokumens.id_kemahasiswaan', '=', 'kemahasiswaan.id')
-                        ->whereBetween('dokumens.created_at', [$startDate, $endDate])
-                        ->select('kemahasiswaan.nama_kemahasiswaan', DB::raw('count(*) as total'))
-                        ->groupBy('kemahasiswaan.nama_kemahasiswaan')
-                        ->get();
+            ->join('kemahasiswaan', 'dokumens.id_kemahasiswaan', '=', 'kemahasiswaan.id')
+            ->whereBetween('dokumens.created_at', [$startDate, $endDate])
+            ->groupBy('kemahasiswaan.id', 'kemahasiswaan.nama_kemahasiswaan')
+            ->select('kemahasiswaan.nama_kemahasiswaan', DB::raw('count(*) as total'))
+            ->get();
 
-        // Statistik semua user
-        $ormawasCount = Ormawas::count();
-        $dosenCount = Dosen::count();
-        $kemahasiswaanCount = Kemahasiswaan::count();
+        // Statistik berdasarkan ormawa
+        $ormawaStats = DB::table('dokumens')
+            ->join('ormawas', 'dokumens.id_ormawa', '=', 'ormawas.id')
+            ->whereBetween('dokumens.created_at', [$startDate, $endDate])
+            ->groupBy('ormawas.id', 'ormawas.namaOrmawa')
+            ->select('ormawas.namaOrmawa', DB::raw('count(*) as total'))
+            ->get();
 
-        // Get most active users
+        // Menghitung jumlah masing-masing role
+        $ormawasCount = DB::table('ormawas')->count();
+        $dosenCount = DB::table('dosen')->count();
+        $kemahasiswaanCount = DB::table('kemahasiswaan')->count();
+
+        // Mengambil data most active users
         $mostActiveOrmawas = DB::table('ormawas')
-                        ->join('dokumens', 'ormawas.id', '=', 'dokumens.id_ormawa')
-                        ->select('ormawas.namaMahasiswa', 'ormawas.namaOrmawa', DB::raw('count(*) as document_count'))
-                        ->groupBy('ormawas.id', 'ormawas.namaMahasiswa', 'ormawas.namaOrmawa')
-                        ->orderBy('document_count', 'desc')
-                        ->limit(5)
-                        ->get();
+            ->join('dokumens', 'ormawas.id', '=', 'dokumens.id_ormawa')
+            ->whereBetween('dokumens.created_at', [$startDate, $endDate])
+            ->groupBy('ormawas.id', 'ormawas.namaOrmawa', 'ormawas.namaMahasiswa')
+            ->select('ormawas.namaOrmawa', 'ormawas.namaMahasiswa', DB::raw('count(*) as document_count'))
+            ->orderByDesc('document_count')
+            ->limit(5)
+            ->get();
 
         $mostActiveDosens = DB::table('dosen')
-                        ->join('dokumens', 'dosen.id', '=', 'dokumens.id_dosen')
-                        ->select('dosen.nama_dosen', DB::raw('count(*) as document_count'))
-                        ->groupBy('dosen.id', 'dosen.nama_dosen')
-                        ->orderBy('document_count', 'desc')
-                        ->limit(5)
-                        ->get();
+            ->join('dokumens', 'dosen.id', '=', 'dokumens.id_dosen')
+            ->whereBetween('dokumens.created_at', [$startDate, $endDate])
+            ->groupBy('dosen.id', 'dosen.nama_dosen')
+            ->select('dosen.nama_dosen', DB::raw('count(*) as document_count'))
+            ->orderByDesc('document_count')
+            ->limit(5)
+            ->get();
 
         $mostActiveKemahasiswaan = DB::table('kemahasiswaan')
-                        ->join('dokumens', 'kemahasiswaan.id', '=', 'dokumens.id_kemahasiswaan')
-                        ->select('kemahasiswaan.nama_kemahasiswaan', DB::raw('count(*) as document_count'))
-                        ->groupBy('kemahasiswaan.id', 'kemahasiswaan.nama_kemahasiswaan')
-                        ->orderBy('document_count', 'desc')
-                        ->limit(5)
-                        ->get();
+            ->join('dokumens', 'kemahasiswaan.id', '=', 'dokumens.id_kemahasiswaan')
+            ->whereBetween('dokumens.created_at', [$startDate, $endDate])
+            ->groupBy('kemahasiswaan.id', 'kemahasiswaan.nama_kemahasiswaan')
+            ->select('kemahasiswaan.nama_kemahasiswaan', DB::raw('count(*) as document_count'))
+            ->orderByDesc('document_count')
+            ->limit(5)
+            ->get();
 
-        // Jika request adalah untuk preview, tampilkan halaman preview
+        // Jika request adalah untuk preview
         if ($request->has('preview')) {
             return view('admin.dokumen.report_preview', compact(
                 'dokumens',
+                'dosenDocs',
+                'kemahasiswaanDocs',
                 'startDate',
                 'endDate',
                 'totalDocuments',
@@ -127,12 +142,12 @@ class AdminDokumenController extends Controller
                 'ormawaStats',
                 'dosenStats',
                 'kemahasiswaanStats',
-                'ormawasCount',
-                'dosenCount',
-                'kemahasiswaanCount',
                 'mostActiveOrmawas',
                 'mostActiveDosens',
-                'mostActiveKemahasiswaan'
+                'mostActiveKemahasiswaan',
+                'ormawasCount',
+                'dosenCount',
+                'kemahasiswaanCount'
             ));
         }
 

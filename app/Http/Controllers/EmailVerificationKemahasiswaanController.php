@@ -42,6 +42,7 @@ class EmailVerificationKemahasiswaanController extends Controller
             $saved = $kemahasiswaan->save();
 
             if (!$saved) {
+
                 Log::error('Failed to save OTP data to database');
                 return response()->json([
                     'success' => false,
@@ -85,8 +86,7 @@ class EmailVerificationKemahasiswaanController extends Controller
                 if (config('app.debug')) {
                     return response()->json([
                         'success' => true,
-                        'message' => 'Email sending failed but OTP generated. For debugging: ' . $otp,
-                        'debug_otp' => $otp
+                        'message' => 'OTP sent to your email. Please check your inbox.',
                     ]);
                 }
 

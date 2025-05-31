@@ -241,29 +241,67 @@
 
     <div class="section">
         <h2>Daftar Dokumen</h2>
-        @if($dokumens->count() > 0)
+        <p>Periode: {{ $startDate->format('d F Y') }} - {{ $endDate->format('d F Y') }}</p>
+
+        <!-- Dokumen yang Ditujukan ke Dosen -->
+        <h3>Dokumen yang Ditujukan ke Dosen</h3>
+        @php $dosenDocs = $dokumens->filter(function($doc) { return !is_null($doc->id_dosen); }); @endphp
+        @if($dosenDocs->count() > 0)
         <table>
             <tr>
-                <th>No.</th>
+                <th>No</th>
                 <th>Tanggal</th>
                 <th>Nomor Surat</th>
                 <th>Pengaju</th>
+                <th>Dosen Penerima</th>
                 <th>Perihal</th>
                 <th>Status</th>
             </tr>
-            @foreach($dokumens as $index => $doc)
+            @foreach($dosenDocs as $index => $doc)
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $doc->created_at->format('d/m/Y') }}</td>
                 <td>{{ $doc->nomor_surat }}</td>
-                <td>{{ $doc->ormawa->namaMahasiswa ?? 'N/A' }}</td>
+                <td>{{ $doc->ormawa?->namaOrmawa ?? 'N/A' }}</td>
+                <td>{{ $doc->dosen?->nama_dosen ?? 'N/A' }}</td>
                 <td>{{ $doc->perihal }}</td>
-                <td>{{ ucfirst($doc->status_dokumen) }}</td>
+                <td align="center">{{ ucfirst($doc->status_dokumen) }}</td>
             </tr>
             @endforeach
         </table>
         @else
-        <p>Tidak ada dokumen pada periode ini.</p>
+        <p>Tidak ada dokumen yang ditujukan ke dosen pada periode ini</p>
+        @endif
+
+        <!-- Dokumen yang Ditujukan ke Kemahasiswaan -->
+        <h3>Dokumen yang Ditujukan ke Kemahasiswaan</h3>
+        @php $kemahasiswaanDocs = $dokumens->filter(function($doc) { return !is_null($doc->id_kemahasiswaan); });
+        @endphp
+        @if($kemahasiswaanDocs->count() > 0)
+        <table>
+            <tr>
+                <th>No</th>
+                <th>Tanggal</th>
+                <th>Nomor Surat</th>
+                <th>Pengaju</th>
+                <th>Staff Penerima</th>
+                <th>Perihal</th>
+                <th>Status</th>
+            </tr>
+            @foreach($kemahasiswaanDocs as $index => $doc)
+            <tr>
+                <td>{{ $index + 1 }}</td>
+                <td>{{ $doc->created_at->format('d/m/Y') }}</td>
+                <td>{{ $doc->nomor_surat }}</td>
+                <td>{{ $doc->ormawa?->namaOrmawa ?? 'N/A' }}</td>
+                <td>{{ $doc->kemahasiswaan?->nama_kemahasiswaan ?? 'N/A' }}</td>
+                <td>{{ $doc->perihal }}</td>
+                <td align="center">{{ ucfirst($doc->status_dokumen) }}</td>
+            </tr>
+            @endforeach
+        </table>
+        @else
+        <p>Tidak ada dokumen yang ditujukan ke kemahasiswaan pada periode ini</p>
         @endif
     </div>
 

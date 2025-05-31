@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DosenController;
 use App\Http\Controllers\OrmawaController;
@@ -8,15 +9,15 @@ use App\Http\Controllers\LoginAuthController;
 use App\Http\Controllers\KemahasiswaanController;
 use App\Http\Middleware\EnsureRoleIsAuthenticated;
 use App\Http\Controllers\Admin\Auth\LoginController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\Admin\Auth\DashboardController;
 use App\Http\Controllers\Admin\Auth\AdminDosenController;
 use App\Http\Controllers\Admin\Auth\AdminLoginController;
 use App\Http\Controllers\Admin\Auth\AdminOrmawaController;
+use App\Http\Controllers\EmailVerificationDosenController;
 use App\Http\Controllers\Admin\Auth\AdminDokumenController;
 use App\Http\Controllers\Admin\Auth\AdminDashboardController;
 use App\Http\Controllers\Admin\Auth\AdminKemahasiswaanController;
-use App\Http\Controllers\EmailVerificationController;
-use App\Http\Controllers\EmailVerificationDosenController;
 use App\Http\Controllers\EmailVerificationKemahasiswaanController;
 
 

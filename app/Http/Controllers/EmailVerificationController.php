@@ -85,8 +85,7 @@ class EmailVerificationController extends Controller
                 if (config('app.debug')) {
                     return response()->json([
                         'success' => true,
-                        'message' => 'Email sending failed but OTP generated. For debugging: ' . $otp,
-                        'debug_otp' => $otp
+                        'message' => 'OTP sent to your email. Please check your inbox.'
                     ]);
                 }
 

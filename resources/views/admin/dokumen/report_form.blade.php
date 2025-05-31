@@ -13,7 +13,7 @@
                 </div>
 
                 <div class="p-6">
-                    <form method="GET" action="{{ route('admin.dokumen.generate-report') }}">
+                    <form method="GET" action="{{ route('admin.dokumen.generate-report') }}" id="reportForm">
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <!-- Tanggal Mulai -->
                             <div>
@@ -32,6 +32,12 @@
                                     value="{{ Carbon\Carbon::now()->format('Y-m-d') }}"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                             </div>
+                        </div>
+
+                        <!-- Alert Error -->
+                        <div id="dateError" class="hidden p-4 mt-4 text-sm text-red-700 bg-red-100 rounded-lg"
+                            role="alert">
+                            Tanggal mulai tidak boleh lebih besar dari tanggal akhir!
                         </div>
 
                         <div class="flex justify-between mt-6 space-x-4">
@@ -54,3 +60,35 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('reportForm');
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    const dateError = document.getElementById('dateError');
+
+    function validateDates() {
+        const start = new Date(startDate.value);
+        const end = new Date(endDate.value);
+
+        if (start > end) {
+            dateError.classList.remove('hidden');
+            return false;
+        }
+        dateError.classList.add('hidden');
+        return true;
+    }
+
+    form.addEventListener('submit', function(e) {
+        if (!validateDates()) {
+            e.preventDefault();
+        }
+    });
+
+    startDate.addEventListener('change', validateDates);
+    endDate.addEventListener('change', validateDates);
+});
+</script>
+@endpush
