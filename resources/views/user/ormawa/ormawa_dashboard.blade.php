@@ -559,55 +559,111 @@
     });
 
     // Function to share document via WhatsApp
-    function shareToWhatsApp() {
-        if (!currentDocumentId) return;
+    // Updated function to share document via WhatsApp with PDF file
+function shareToWhatsApp() {
+    if (!currentDocumentId) return;
 
-        // Get the current document details from the modal
-        const perihalElement = document.getElementById('modalContent').querySelector('.mt-1:nth-of-type(3)');
-        const nomorElement = document.getElementById('modalContent').querySelector('.mt-1:nth-of-type(1)');
-        const tanggalElement = document.getElementById('modalContent').querySelector('.mt-1:nth-of-type(2)');
+    // Get document details from the modal content
+    const modalContent = document.getElementById('modalContent');
+    const documentDetails = {
+        perihal: modalContent.querySelector('dl div:nth-child(3) dd')?.textContent?.trim() || 'Dokumen',
+        nomorSurat: modalContent.querySelector('dl div:nth-child(1) dd')?.textContent?.trim() || '',
+        tanggalPengajuan: modalContent.querySelector('dl div:nth-child(2) dd')?.textContent?.trim() || '',
+        status: modalContent.querySelector('dl div:nth-child(4) dd span')?.textContent?.trim() || '',
+        tujuan: modalContent.querySelector('dl div:last-child dd')?.textContent?.trim() || ''
+    };
 
-        // Extract text content from elements
-        const documentTitle = perihalElement ? perihalElement.textContent.trim() : 'Dokumen';
-        const documentNumber = nomorElement ? nomorElement.textContent.trim() : '';
-        const documentDate = tanggalElement ? tanggalElement.textContent.trim() : '';
+    // Create message text
+    const messageText = `*INFORMASI DOKUMEN RESMI*\n\n` +
+        `Dokumen dengan detail berikut telah disahkan:\n\n` +
+        ` *Perihal:* ${documentDetails.perihal}\n` +
+        ` *Nomor Surat:* ${documentDetails.nomorSurat}\n` +
+        ` *Tanggal Pengajuan:* ${documentDetails.tanggalPengajuan}\n` +
+        ` *Tujuan:* ${documentDetails.tujuan}\n\n` +
+        `Status dokumen: *${documentDetails.status.toUpperCase()}*\n\n` +
+        `Dokumen telah dilampirkan dalam format PDF.`;
 
-        // Generate the document link
-        const documentLink = window.location.origin + `/ormawa/dokumen/${currentDocumentId}/view`;
+    // Create direct download URL
+    const downloadUrl = `/ormawa/dokumen/${currentDocumentId}/download`;
+    const fileName = `dokumen_${documentDetails.nomorSurat.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
 
-        // Create a more detailed message text
-        const messageText = `*INFORMASI DOKUMEN RESMI*\n\n` +
-            `Dokumen dengan detail berikut telah disahkan:\n\n` +
-            `📄 *Perihal:* ${documentTitle}\n` +
-            `📝 *Nomor Surat:* ${documentNumber}\n` +
-            `📅 *Tanggal Pengajuan:* ${documentDate}\n\n` +
-            `Status dokumen: *DISAHKAN*\n\n` +
-            `Silahkan akses dokumen melalui tautan berikut:\n${documentLink}\n\n` +
-            `Pesan ini dikirim melalui Sistem Manajemen Dokumen SigniX.`;
-
-        // Show dialog with message customization
-        Swal.fire({
-            title: 'Bagikan ke WhatsApp',
-            html: `
-                <div class="text-left">
-                    <p class="mb-3">Dokumen akan dibagikan langsung via WhatsApp tanpa perlu diunduh terlebih dahulu.</p>
-                    <p class="mb-2">Teks pesan yang akan dibagikan:</p>
-                    <textarea id="whatsappMessage" class="w-full p-2 border rounded" rows="10" style="font-size: 14px;">${messageText}</textarea>
+    // Show sharing dialog
+    Swal.fire({
+        title: 'Bagikan ke WhatsApp',
+        html: `
+            <div class="text-left">
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-700">Teks pesan:</label>
+                    <textarea id="whatsappMessage" class="w-full p-2 text-sm border border-gray-300 rounded-md resize-none" rows="10">${messageText}</textarea>
                 </div>
-            `,
-            confirmButtonText: 'Bagikan ke WhatsApp',
-            confirmButtonColor: '#25D366',
-            showCancelButton: true,
-            cancelButtonText: 'Batal',
-            icon: 'info'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Get the message and open WhatsApp
-                const message = document.getElementById('whatsappMessage').value;
-                const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-                window.open(whatsappUrl, '_blank');
-            }
+
+                <div class="p-3 rounded-md bg-gray-50">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-sm font-medium text-gray-700">Dokumen PDF:</p>
+                        <button type="button" onclick="downloadPDF('${downloadUrl}', '${fileName}')"
+                           class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Download PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-sm text-gray-500">
+                    <p>Langkah-langkah membagikan dokumen:</p>
+                    <ol class="ml-4 list-decimal">
+                        <li>Klik "Download PDF" untuk mengunduh dokumen</li>
+                        <li>Klik "Bagikan ke WhatsApp" untuk membuka WhatsApp</li>
+                        <li>Pilih tujuan chat di WhatsApp</li>
+                        <li>Kirim pesan teks</li>
+                        <li>Lampirkan file PDF yang sudah diunduh</li>
+                    </ol>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Bagikan ke WhatsApp',
+        confirmButtonColor: '#25D366',
+        cancelButtonText: 'Batal',
+        reverseButtons: true,
+        preConfirm: () => {
+            const updatedMessage = document.getElementById('whatsappMessage').value;
+            return { message: updatedMessage };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Open WhatsApp with the message
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(result.value.message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+    });
+}
+
+// Helper function to download PDF
+function downloadPDF(url, fileName) {
+    fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            console.error('Error downloading file:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal mengunduh dokumen',
+                text: 'Terjadi kesalahan saat mengunduh dokumen.',
+                confirmButtonColor: '#dc2626'
+            });
         });
-    }
+}
 </script>
 @endsection
