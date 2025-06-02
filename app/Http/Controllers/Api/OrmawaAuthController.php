@@ -119,7 +119,7 @@ class OrmawaAuthController extends Controller
             'new_password' => 'required|min:6|confirmed',
         ]);
 
-        if (!\Hash::check($request->current_password, $user->password)) {
+        if (!Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Password lama salah',

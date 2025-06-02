@@ -6,9 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Dokumen;
 use App\Models\Dosen;
+use App\Models\TandaQr;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use setasign\Fpdi\Fpdi;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
 
 class DocumentController extends Controller
 {
@@ -23,31 +27,16 @@ class DocumentController extends Controller
                 'catatan' => 'nullable|string',
             ]);
 
-            // Simpan file dokumen
             $file = $request->file('dokumen');
             $fileName = time() . '_' . $file->getClientOriginalName();
             
-            // Pastikan folder dokumen ada
-            if (!Storage::exists('public/dokumen')) {
-                Storage::makeDirectory('public/dokumen');
-            }
+            // Simpan di folder dokumen
+            $filePath = $file->storeAs('dokumen', $fileName, 'public');
             
-            // Simpan file dengan path yang benar
-            $filePath = $file->storeAs('public/dokumen', $fileName);
-            
-            // Log path file
-            Log::info('File uploaded:', [
-                'original_name' => $file->getClientOriginalName(),
-                'stored_path' => $filePath,
-                'storage_path' => Storage::path($filePath),
-                'exists' => Storage::exists($filePath)
-            ]);
-
-            // Buat dokumen baru
             $dokumen = new Dokumen();
             $dokumen->nomor_surat = $request->nomor_surat;
             $dokumen->perihal = $request->hal;
-            $dokumen->file = str_replace('public/', '', $filePath); // Simpan path relatif
+            $dokumen->file = $filePath; // Path sudah benar tanpa public/
             $dokumen->keterangan = $request->catatan;
             $dokumen->tanggal_pengajuan = now();
             $dokumen->status_dokumen = 'diajukan';
@@ -55,14 +44,6 @@ class DocumentController extends Controller
             $dokumen->id_dosen = (int)$request->tujuan_pengajuan;
 
             $dokumen->save();
-
-            // Log dokumen yang disimpan
-            Log::info('Document saved:', [
-                'id' => $dokumen->id,
-                'file_path' => $dokumen->file,
-                'storage_path' => Storage::path('public/' . $dokumen->file),
-                'exists' => Storage::exists('public/' . $dokumen->file)
-            ]);
 
             return response()->json([
                 'success' => true,
@@ -147,8 +128,8 @@ class DocumentController extends Controller
             $stats = [
                 'diajukan' => $documents->where('status_dokumen', 'diajukan')->count(),
                 'disahkan' => $documents->whereIn('status_dokumen', ['ditandatangani', 'disahkan'])->count(),
-                'butuh_revisi' => $documents->whereIn('status_dokumen', ['perlu_revisi', 'revisi', 'butuh_revisi'])->count(),
-                'sudah_direvisi' => $documents->where('status_dokumen', 'sudah_direvisi')->count(),
+                'butuh revisi' => $documents->whereIn('status_dokumen', ['perlu revisi', 'revisi', 'butuh revisi'])->count(),
+                'sudah direvisi' => $documents->where('status_dokumen', 'sudah direvisi')->count(),
             ];
 
             // Debug: tampilkan detail perhitungan
@@ -159,7 +140,7 @@ class DocumentController extends Controller
                     'diajukan' => $documents->where('status_dokumen', 'diajukan')->count(),
                     'ditandatangani/disahkan' => $documents->whereIn('status_dokumen', ['ditandatangani', 'disahkan'])->count(),
                     'perlu_revisi (all)' => $documents->whereIn('status_dokumen', ['perlu_revisi', 'revisi', 'butuh_revisi'])->count(),
-                    'sudah_direvisi' => $documents->where('status_dokumen', 'sudah_direvisi')->count(),
+                    'sudah direvisi' => $documents->where('status_dokumen', 'sudah direvisi')->count(),
                 ]
             ]);
 
@@ -204,7 +185,7 @@ class DocumentController extends Controller
             Log::info('Getting all documents for ormawa:', ['ormawa_id' => $ormawaId]);
 
             $documents = Dokumen::where('id_ormawa', $ormawaId)
-                ->with(['dosen:id,nama_dosen']) // Include dosen data
+                ->with(['dosen:id,nama_dosen', 'ormawa:id,namaMahasiswa']) // Include dosen and ormawa data
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -216,6 +197,7 @@ class DocumentController extends Controller
                         'nomor_surat' => $doc->nomor_surat,
                         'status' => $doc->status_dokumen,
                         'hal' => $doc->perihal,
+                        'namaMahasiswa' => $doc->ormawa->namaMahasiswa ?? 'Unknown',
                         'tujuan' => $doc->dosen->nama_dosen ?? 'Unknown',
                     ];
                 })
@@ -230,7 +212,9 @@ class DocumentController extends Controller
                         'hal' => $doc->perihal,
                         'status' => $doc->status_dokumen,
                         'tanggal_pengajuan' => $doc->tanggal_pengajuan,
+                        'tanggal_verifikasi' => $doc->tanggal_verifikasi,
                         'keterangan' => $doc->keterangan,
+                        'namaMahasiswa' => $doc->ormawa->namaMahasiswa ?? 'Unknown',
                         'tujuan_pengajuan' => $doc->dosen->nama_dosen ?? 'Unknown',
                         'file' => $doc->file,
                     ];
@@ -362,8 +346,8 @@ class DocumentController extends Controller
         $dokumen = \App\Models\Dokumen::findOrFail($id);
 
         // Hapus file lama jika ada
-        if ($dokumen->file && \Storage::disk('public')->exists($dokumen->file)) {
-            \Storage::disk('public')->delete($dokumen->file);
+        if ($dokumen->file && Storage::disk('public')->exists($dokumen->file)) {
+            Storage::disk('public')->delete($dokumen->file);
         }
 
         // Simpan file baru
@@ -383,6 +367,229 @@ class DocumentController extends Controller
             'success' => true,
             'message' => 'Dokumen berhasil direvisi',
             'data' => $dokumen,
+        ]);
+    }
+
+    public function getFile($id)
+    {
+        try {
+            Log::info('Fetching document with ID: ' . $id);
+            
+            $document = Dokumen::findOrFail($id);
+            $filePath = storage_path('app/public/dokumen/' . $document->file);
+            
+            Log::info('File path: ' . $filePath);
+            
+            if (!file_exists($filePath)) {
+                Log::error('File not found at: ' . $filePath);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak ditemukan'
+                ], 404);
+            }
+
+            // Read file content and encode to base64
+            $fileContent = file_get_contents($filePath);
+            if ($fileContent === false) {
+                throw new \Exception('Gagal membaca file');
+            }
+
+            // Get file size and mime type
+            $fileSize = filesize($filePath);
+            $mimeType = mime_content_type($filePath);
+
+            Log::info('File details', [
+                'size' => $fileSize,
+                'mime' => $mimeType
+            ]);
+
+            // Chunk the response to handle large files
+            return response()->json([
+                'success' => true,
+                'data' => base64_encode($fileContent),
+                'mime_type' => $mimeType,
+                'filename' => basename($document->file)
+            ])->setEncodingOptions(JSON_UNESCAPED_SLASHES);
+
+        } catch (\Exception $e) {
+            Log::error('Error in getFile: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    protected function addQrCodeToPdf($document, $qrPosition)
+    {
+        try {
+            $filePath = storage_path('app/public/' . $document->file);
+            $outputPath = storage_path('app/public/signed/' . basename($document->file));
+            
+            // Create directory if it doesn't exist
+            if (!file_exists(dirname($outputPath))) {
+                mkdir(dirname($outputPath), 0755, true);
+            }
+
+            // Generate QR code
+            $qrCode = QrCode::format('png')
+                           ->size($qrPosition['size'])
+                           ->generate($document->url_verifikasi);
+
+            // Create PDF
+            $pdf = new Fpdi();
+            $pageCount = $pdf->setSourceFile($filePath);
+
+            // Copy all pages
+            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                $template = $pdf->importPage($pageNo);
+                $size = $pdf->getTemplateSize($template);
+                $pdf->AddPage($size['orientation'], array($size['width'], $size['height']));
+                $pdf->useTemplate($template);
+
+                // Add QR code to specified page
+                if ($pageNo == $qrPosition['page']) {
+                    $pdf->Image($qrCode, $qrPosition['x'], $qrPosition['y']);
+                }
+            }
+
+            // Save PDF
+            $pdf->Output($outputPath, 'F');
+
+            // Update document with new file path
+            $document->file = 'signed/' . basename($document->file);
+            $document->save();
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error("Error adding QR code to PDF: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function addQrCode(Request $request, $id)
+    {
+        try {
+            $document = Dokumen::findOrFail($id);
+            $qrPosition = $request->all();
+
+            if (!$document->kode_pengesahan) {
+                $document->kode_pengesahan = strtoupper(Str::random(10));
+                $document->url_verifikasi = url("/verify/{$document->id}/{$document->kode_pengesahan}");
+                $document->save();
+            }
+
+            // Save QR position
+            TandaQr::create([
+                'id_dokumen' => $document->id,
+                'x_coordinate' => $qrPosition['x'],
+                'y_coordinate' => $qrPosition['y'],
+                'page' => $qrPosition['page'],
+                'size' => $qrPosition['size'] ?? 100,
+            ]);
+
+            // Generate QR code
+            $qrCode = QrCode::format('png')
+                         ->size($qrPosition['size'] ?? 100)
+                         ->generate($document->url_verifikasi);
+
+            // Get original PDF path
+            $filePath = storage_path('app/public/' . $document->file);
+            $outputPath = storage_path('app/public/signed/' . basename($document->file));
+
+            // Create signed directory if it doesn't exist
+            if (!file_exists(dirname($outputPath))) {
+                mkdir(dirname($outputPath), 0755, true);
+            }
+
+            // Add QR code to PDF
+            $pdf = new Fpdi();
+            $pageCount = $pdf->setSourceFile($filePath);
+
+            // Copy all pages
+            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                $template = $pdf->importPage($pageNo);
+                $size = $pdf->getTemplateSize($template);
+                $pdf->AddPage($size['orientation'], array($size['width'], $size['height']));
+                $pdf->useTemplate($template);
+
+                // Add QR code to specified page
+                if ($pageNo == $qrPosition['page']) {
+                    $pdf->Image('@'.$qrCode, $qrPosition['x'], $qrPosition['y'], $qrPosition['size']);
+                }
+            }
+
+            // Save new PDF
+            $pdf->Output($outputPath, 'F');
+
+            // Update document record
+            $document->file = 'signed/' . basename($document->file);
+            $document->status_dokumen = 'disahkan';
+            $document->tanggal_pengesahan = now();
+            $document->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'QR Code berhasil ditambahkan dan dokumen telah disahkan',
+                'data' => [
+                    'file' => $document->file,
+                    'kode_pengesahan' => $document->kode_pengesahan,
+                    'url_verifikasi' => $document->url_verifikasi
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Error in addQrCode: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambahkan QR Code: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function viewDocument($id)
+    {
+        try {
+            $document = Dokumen::findOrFail($id);
+            $filePath = storage_path('app/public/' . $document->file);
+
+            if (!file_exists($filePath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak ditemukan'
+                ], 404);
+            }
+
+            // Kirim file PDF asli
+            return response()->file($filePath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . basename($document->file) . '"'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function downloadFile($id)
+    {
+        $document = Dokumen::findOrFail($id);
+        $filePath = storage_path('app/public/' . $document->file);
+
+        if (!file_exists($filePath)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->download($filePath, basename($document->file), [
+            'Content-Type' => 'application/pdf',
         ]);
     }
 }
