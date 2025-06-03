@@ -181,13 +181,24 @@ class DocumentController extends Controller
     public function getAllDocuments(Request $request)
     {
         try {
-            $ormawaId = $request->user()->id;
-            Log::info('Getting all documents for ormawa:', ['ormawa_id' => $ormawaId]);
+            $user = $request->user();
+            $userType = $request->header('X-User-Type'); // Get user type from header
+            
+            Log::info('Getting documents for user:', [
+                'user_id' => $user->id,
+                'user_type' => $userType
+            ]);
 
-            $documents = Dokumen::where('id_ormawa', $ormawaId)
-                ->with(['dosen:id,nama_dosen', 'ormawa:id,namaMahasiswa']) // Include dosen and ormawa data
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query = Dokumen::with(['dosen:id,nama_dosen', 'ormawa:id,namaMahasiswa']);
+
+            // Filter berdasarkan tipe user
+            if ($userType === 'dosen') {
+                $query->where('id_dosen', $user->id);
+            } elseif ($userType === 'ormawa') {
+                $query->where('id_ormawa', $user->id);
+            }
+
+            $documents = $query->orderBy('created_at', 'desc')->get();
 
             Log::info('Found documents:', [
                 'count' => $documents->count(),
