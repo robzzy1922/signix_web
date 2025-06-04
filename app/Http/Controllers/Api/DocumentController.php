@@ -13,6 +13,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use setasign\Fpdi\Fpdi;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Auth;
 
 class DocumentController extends Controller
 {
@@ -186,7 +187,8 @@ class DocumentController extends Controller
             
             Log::info('Getting documents for user:', [
                 'user_id' => $user->id,
-                'user_type' => $userType
+                'user_type' => $userType,
+                'auth_guard' => Auth::getDefaultDriver()
             ]);
 
             $query = Dokumen::with(['dosen:id,nama_dosen', 'ormawa:id,namaMahasiswa']);
@@ -200,16 +202,18 @@ class DocumentController extends Controller
 
             $documents = $query->orderBy('created_at', 'desc')->get();
 
+            // Log untuk debugging
             Log::info('Found documents:', [
                 'count' => $documents->count(),
+                'user_id' => $user->id,
+                'user_type' => $userType,
                 'documents' => $documents->map(function($doc) {
                     return [
                         'id' => $doc->id,
                         'nomor_surat' => $doc->nomor_surat,
                         'status' => $doc->status_dokumen,
-                        'hal' => $doc->perihal,
-                        'namaMahasiswa' => $doc->ormawa->namaMahasiswa ?? 'Unknown',
-                        'tujuan' => $doc->dosen->nama_dosen ?? 'Unknown',
+                        'id_ormawa' => $doc->id_ormawa,
+                        'id_dosen' => $doc->id_dosen,
                     ];
                 })
             ]);
