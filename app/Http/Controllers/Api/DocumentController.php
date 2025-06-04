@@ -225,6 +225,7 @@ class DocumentController extends Controller
                         'tanggal_pengajuan' => $doc->tanggal_pengajuan,
                         'tanggal_verifikasi' => $doc->tanggal_verifikasi,
                         'keterangan' => $doc->keterangan,
+                        'keterangan_revisi' => $doc->keterangan_revisi,
                         'namaMahasiswa' => $doc->ormawa->namaMahasiswa ?? 'Unknown',
                         'tujuan_pengajuan' => $doc->dosen->nama_dosen ?? 'Unknown',
                         'file' => $doc->file,
