@@ -40,6 +40,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Dosen routes
     Route::get('/dosen/document-stats', [DocumentController::class, 'getDosenDocumentStats']);
     Route::post('/documents/{id}/qr-code', [DocumentController::class, 'addQrCode']);
+    
+    // Dosen profile routes
+    Route::put('/dosen/profile', [DosenAuthController::class, 'updateProfile']);
+    Route::put('/dosen/profile/password', [DosenAuthController::class, 'updatePassword']);
+    Route::post('/dosen/profile/photo', [DosenAuthController::class, 'updatePhoto']);
+    Route::delete('/dosen/profile/photo', [DosenAuthController::class, 'destroyPhoto']);
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {
